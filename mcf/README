@@ -2,13 +2,13 @@
  
   clean.sh
 
-first to clean all olds files
+first to clean all old files
 
 2 run script
 
   bootstrap.sh
 
-to make use of GNU autoconf+automake.
+to make use of GNU autoconf+automake
 
 3 run 
 
@@ -16,7 +16,7 @@ to make use of GNU autoconf+automake.
 LDFLAGS=-L$HOME/MCF/ppm/local/lib/ FCFLAGS=-I$HOME/MCF/ppm/local/include/
 MAKEDEPF90=$HOME/MCF/ppm/local/bin/makedepf90 
 
- to generate Makefile
+to generate Makefile
 
 4 run 
 
