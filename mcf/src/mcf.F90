@@ -962,7 +962,10 @@
         CALL kernel_finalize(mcf_kern,stat_info_sub)
         CALL marching_finalize(mcf_marching,stat_info_sub)
         
-        CALL MPI_Barrier(comm,stat_info_sub)        
+        IF ( stat_info == 0 ) THEN
+           CALL MPI_Barrier(comm,stat_info_sub)
+        END IF
+
         CALL technique_finalize(mcf_tech,stat_info,stat_info_sub)
         
         
