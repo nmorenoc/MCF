@@ -36,8 +36,6 @@
         stat_info     = 0
         stat_info_sub = 0
         
-        CALL technique_finalize_parallelization(this,error_info,stat_info_sub)
-        
         IF (ASSOCIATED(this%min_phys_t)) THEN
            DEALLOCATE(this%min_phys_t)
         END IF
@@ -111,6 +109,8 @@
         END IF
 
         PRINT *, "technique_finalize : ", "Finished!"
+
+        CALL technique_finalize_parallelization(this,error_info,stat_info_sub)
 
         RETURN
         
