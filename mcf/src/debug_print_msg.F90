@@ -256,7 +256,7 @@
         
         stat_info    = 0
         
-        WRITE(fbuf,'(F10.8)'), fnum
+        WRITE(fbuf,'(F11.8)'), fnum
         
         CALL debug_print_msg_a(this,rank,caller,fbuf,stat_info)
         
@@ -474,7 +474,7 @@
       	!----------------------------------------------------
         
         stat_info    = 0
-        WRITE(cbuf,'(A,F10.8)'), abuf//' : ',fnum
+        WRITE(cbuf,'(A,F11.8)'), abuf//' : ',fnum
         
         CALL debug_print_msg_a(this,rank,caller,cbuf,stat_info)
         

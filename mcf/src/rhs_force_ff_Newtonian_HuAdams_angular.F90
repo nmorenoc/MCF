@@ -5,9 +5,15 @@
 ! dissipative(viscous) force and random(thermal noise) force.
 ! Using Hu & Adams (2006 Physics of fluids) formulation.
 !----------------------------------------------------------------
+#ifdef __FORCE_SEPARATE
       SUBROUTINE rhs_force_ff_Newtonian_HuAdams_angular(this,&
            xi,xj,dij,vi,vj,numi,numj, pi,pj,&
            mi,mj,w,gradw,fi,fj,fpi,fpj,fvi,fvj,fri,frj,auij,stat_info)
+#else
+  SUBROUTINE rhs_force_ff_Newtonian_HuAdams_angular(this,&
+           xi,xj,dij,vi,vj,numi,numj, pi,pj,&
+           mi,mj,w,gradw,fi,fj,auij,stat_info)
+#endif
         !----------------------------------------------------
         ! Subroutine : rhs_force_ff_Newtonian_HuAdams_angular
         !----------------------------------------------------
@@ -57,12 +63,14 @@
         REAL(MK), INTENT(IN)                    :: gradw
         REAL(MK), DIMENSION(:), INTENT(INOUT)   :: fi
         REAL(MK), DIMENSION(:), INTENT(INOUT)   :: fj
+#ifdef __FORCE_SEPARATE
         REAL(MK), DIMENSION(:), INTENT(OUT), OPTIONAL     :: fpi
         REAL(MK), DIMENSION(:), INTENT(OUT), OPTIONAL     :: fpj
         REAL(MK), DIMENSION(:), INTENT(OUT), OPTIONAL     :: fvi
         REAL(MK), DIMENSION(:), INTENT(OUT), OPTIONAL     :: fvj
         REAL(MK), DIMENSION(:), INTENT(OUT), OPTIONAL     :: fri
         REAL(MK), DIMENSION(:), INTENT(OUT), OPTIONAL     :: frj     
+#endif
         REAL(MK), INTENT(OUT), OPTIONAL         :: auij
         INTEGER, INTENT(OUT)                    :: stat_info
         
