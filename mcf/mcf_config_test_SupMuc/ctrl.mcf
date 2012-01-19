@@ -1,0 +1,211 @@
+#**********************************************************************
+#	Sample control configuration file for
+#       MCF: Multiscale(micro-meso-macroscopic) Complex Fluids simulation.
+#
+#	Edit the settings below before start simulation.
+#
+#	Author : Xin Bian
+#	Date   : 22.03.2009
+#**********************************************************************
+#       Dr. Marco Ellero's Emmy Noether Group	
+#	at Prof.Dr. Nikolaus Adams' Chair of Aerodynamics, 
+#	Faculty of Mechanical Engineering,
+#	Technische Universitaet Muenchen, Germany.
+#**********************************************************************
+
+#**********************************************************************
+#       Job name and date
+#       job name : no space between names considered
+#       job date : CCYYMMDD/CCYY_MM_DD, no space considered
+#**********************************************************************
+
+job_name           = ppm_mcf_scalability
+
+job_date           = 2012_01_18
+
+#**********************************************************************
+#       File name for Physics configuration information.
+#**********************************************************************
+
+mcf_physics_config_file = physics_config.mcf
+
+#**********************************************************************
+#       File name for IO configuration information.
+#**********************************************************************
+
+mcf_io_config_file      = io_config.mcf
+
+
+#**********************************************************************
+#       Control information of components used in the simulation.
+#**********************************************************************
+
+#----------------------------------------------------------------------
+#        
+#       debug_flag       : if the simulation runs in debug mode,
+#                          this flag determines the level of debug,
+#                          the higher, the more extensive.
+#
+#       relax_run        : if relax particles' positions.
+#                          (using SDPD pre-run)
+#                              	       
+#       read_external    : read config	uration externally or not
+#                          (logical variable).
+#			   It includes particles' configuration
+#                          (x, v, rho, m, p_id, s_id) and
+#                          conformation tensor(if Non-Newtonian oldroyd-B).
+#                          IO parameters have to be set accordingly in
+#                          mcf_io_config_file, if TRUE.
+#	
+#       kernel_type      : type of kernel used
+#                          1: Quintic Spline (Morris J. et al. 1997).
+#                          2: Lucy kernel.
+#                          3: B-Spline (not available).
+#
+#	symmetry	 : set this to TRUE if use symmetry 
+#                          inter-processor communiction and
+#                          inter-particle interaction;
+#			   to FALSE otherwise.
+#
+#	rhs_density_type : formulation of right hand side for density.
+#                          1: Summation formulation of physical density.
+#                          2: Summation formulation of number density.
+#                          3: Integration formulation of physical density 
+#                             in continuity equation (not available).
+#
+#       dynamic_density_ref: if we calculate reference density
+#                            dynamically.
+#
+#       stateEuqation_type: the type of state equation
+#                           1: Morris J. et al. 1997.
+#                           2: Batchelor G. K. 1967.
+#
+#       Newtonian        : Non-Newtonian fluid(viscoelastic).
+#			   currently only works for 
+#                          rhs_density_type = 2
+#                          rhs_force_type   = 3.
+#
+#       Brownian         : Brownian motion of fluid 
+#			   currently only works for 
+#	                   rhs_density_type = 2
+#                          rhs_force_type   = 3,4.
+#
+#       random_seed      : if random_seed is provided,
+#                          it will be used to start the random numbers.
+#                          if it is negative, the default one
+#                          of the system will be used.
+#
+#	rhs_force_type   : formulation of right hand side for force.
+#                          1: Morris et al. J. Comput. Phys. 1997.
+#                          2: Espanol and Revenga Phys. Rev. E 2003.
+#                          3: Hu and Adams. J. Comput. Phys. 2006.
+#                          4: Hu and Adams. Angular momentum conservative.
+#                              Phys. Fluids. 2006.
+#
+#       pp_interact_cc   : particle-particle interaction between 
+#                          colloidal boundary particles from any 
+#                          2 different colloids.
+#
+#       pp_interact_cw   :particle-particle interaction between 
+#                          colloidal and wall boundary particles.
+#
+#
+#       cc_lub_type:     direct lubrication between colloid-colloid
+#                        0 no interaction.
+#                        1 lubrication theory, 1st order.
+#
+#       cc_repul_type:   direct repulsion between colloid-colloid
+#                        0 no interaction.
+#                        1 Hookean spring repulsive force.
+#                        2 DLVO type repulsive force.
+#
+#       cw_lub_type:     direct lubrication force between colloid-wall
+#                        0 no interaction.
+#                        1 lubrication theory, 1st order.
+#
+#       cw_repul_type:   direct repulsion between colloid-wall
+#                        0 no interaction.
+#                        1 Hookean spring repulsive force.
+#                        2 DLVO type repulsive force.
+#
+#       p_energy         : logical value indicating if potential
+#                          energy is calculated.
+#
+#       flow_v_fixed     : in-flow velocity is a constant value
+#                          adjusting body force dynamically.
+#
+#       integrate_type   : time integration scheme.
+#                          1: Explicit Euler.
+#                          2: Velocity Verlet.
+#
+#       adaptive_dt      : adapting time step due to certain time step
+#                          constraints. 
+#                          1: maximum accleration of particles,colloids.
+#                          2: non-overlap of colloids.
+#
+#       write_output     : write information during simulatin,
+#                          0: no writing.
+#                          1: according to simulation step
+#                          2: according to simulation time.
+#
+#       write_restart    : write particles' information during simulation
+#                          for restarting (logical variable).
+#                          Have to set IO paramters accordingly in
+#                          mcf_io_config_file.
+#                          0: no restart files.
+#                          1: according to simulation step
+#                          2: according to simulation time.
+#                          3: according to wall time.
+#----------------------------------------------------------------------
+
+debug_flag           = 1
+
+relax_run            = F 
+
+read_external        = F
+
+kernel_type          = 1
+
+symmetry             = T
+
+rhs_density_type     = 2
+
+dynamic_density_ref  = F
+
+stateEquation_type   = 2
+
+Newtonian            = T
+
+Brownian             = F
+
+random_seed          = -1
+
+rhs_force_type       = 4
+
+pp_interact_cc       = F
+
+pp_interact_cw       = F
+
+cc_lub_type          = 0
+
+cc_repul_type        = 0
+
+cw_lub_type          = 0
+
+cw_repul_type        = 0
+
+p_energy             = F
+
+flow_v_fixed         = F
+
+integrate_type       = 2
+
+adaptive_dt          = 0
+
+write_output         = 1
+
+write_restart        = 1
+
+#**********************************************************************
+#    Control information for mcf simulation ends here
+#**********************************************************************
