@@ -141,7 +141,7 @@ ppm_configure:
 	cd ${WRKDIR}/libppm-$(PPM_VERSION); \
 	./configure --prefix=$(PREFIX) --enable-mpi \
 	MPIFC=$(MPIFC) LDFLAGS=-L$(PREFIX)/lib \
-	MAKEDEPF90=$(MAKEDEPF90) FCFLAGS="-I$(PREFIX)/include"
+	MAKEDEPF90=$(MAKEDEPF90) FCFLAGS="-I$(PREFIX)/include -g"
 
 ppm_compile:
 	cd ${WRKDIR}/libppm-$(PPM_VERSION); \
