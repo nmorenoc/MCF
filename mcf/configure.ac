@@ -7,7 +7,7 @@
 AC_INIT([mcf], [1.0], [xin.bian@aer.mw.tum.de])
 
 #Require a minimum Autoconf version.
-AC_PREREQ(2.68)
+AC_PREREQ(2.60)
 
 #A safety check. 
 #src/mcf.F90 should be a distributed source file.
