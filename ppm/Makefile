@@ -2,13 +2,14 @@
 # libarieris go to $PREFIX/lib 
 # binaries go to  $PREFIX/bin
 # headers go to $PREFIX/bin 
-PREFIX=$(PWD)/local
+PREFIX=$(PWD)/local_mpich_ifort121_o0_g
+BUILD_MAKE_FLAGS='-j 8'
 
 # a directory to store tarbars
 DISTDIR=$(PWD)/distfiles
 
 # c++ compiler 
-CXX=g++
+CXX=icc
 
 # c  compiler
 CC=icc
@@ -44,7 +45,7 @@ RSH=/usr/bin/ssh
 
 
 EXTRACT_COMAND=scripts/extract
-WRKDIR=$(PWD)/work
+WRKDIR=$(PWD)/work_mpich_ifort121_o0_g
 
 
 all: 
@@ -56,8 +57,7 @@ all:
 # compile and install 
 install_all_but_mpi: install_fftw \
 	install_vizing install_metis \
-	install_ppm \
-	install_pse install_sph
+	install_makedepf90 install_ppm	
 
 
 # install mpich localy
@@ -93,15 +93,15 @@ mpich_extract: $(DISTDIR)/mpich2-$(MPICH_VERSION).tar.gz
 
 mpich_configure:
 	cd ${WRKDIR}/mpich2-$(MPICH_VERSION) ; \
+	./configure  RSHCOMMAND="$(RSH)" MPICH2LIB_FCFLAGS=-O2  \
 	FCFLAGS="$(FCFLAGS)" FC="$(FC)" F77="$(FC)" F90="$(FC)" \
 	CC=$(CC) \
-	RSHCOMMAND="$(RSH)" MPICH2LIB_FCFLAGS=-O2 ./configure  \
-            --disable-romio --enable-f90 --disable-cxx --enable-fast=O3 \
-            --prefix=$(PREFIX)
+        --disable-romio --enable-f90 --disable-cxx --enable-fast=O3 \
+        --prefix=$(PREFIX)
 
 mpich_compile:
 	cd ${WRKDIR}/mpich2-$(MPICH_VERSION) ; \
-	make -j 4
+	make ${BUILD_MAKE_FLAGS}
 
 mpich_install:
 	cd ${WRKDIR}/mpich2-$(MPICH_VERSION) ; \
@@ -123,12 +123,12 @@ fftw_extract: $(DISTDIR)/fftw-$(FFTW_VERSION).tar.gz
 
 fftw_compile: 
 	cd ${WRKDIR}/fftw-$(FFTW_VERSION); \
-	CC=$(CC) FC=$(FC) F77=$(FC) F90=$(FC) FCFLAGS="$(FCFLAGS)" ./configure --prefix=$(PREFIX) \
+	./configure --prefix=$(PREFIX) CC=$(CC) FC=$(FC) F77=$(FC) F90=$(FC) FCFLAGS="$(FCFLAGS)" \
 	--enable-fortran --enable-float; \
-	make && make install; \
-	CC=$(CC) FC=$(FC) F77=$(FC) F90=$(FC) FCFLAGS="$(FCFLAGS)" ./configure --prefix=$(PREFIX) \
+	make ${BUILD_MAKE_FLAGS} && make install; \
+	./configure --prefix=$(PREFIX) CC=$(CC) FC=$(FC) F77=$(FC) F90=$(FC) FCFLAGS="$(FCFLAGS)" \
 	--enable-fortran; \
-	make && make install
+	make ${BUILD_MAKE_FLAGS} && make install
 
 fftw_clean:
 	-rm -rf ${WRKDIR}/fftw-$(FFTW_VERSION)
@@ -139,13 +139,13 @@ ppm_extract: $(DISTDIR)/$(PPM_DISTR_FILE)
 
 ppm_configure:
 	cd ${WRKDIR}/libppm-$(PPM_VERSION); \
+	./configure --prefix=$(PREFIX) --enable-mpi \
 	MPIFC=$(MPIFC) LDFLAGS=-L$(PREFIX)/lib \
-	MAKEDEPF90=$(MAKEDEPF90) FCFLAGS="-O2 -I$(PREFIX)/include" \
-	./configure --prefix=$(PREFIX) --enable-mpi
+	MAKEDEPF90=$(MAKEDEPF90) FCFLAGS="-I$(PREFIX)/include -g -O0"
 
 ppm_compile:
 	cd ${WRKDIR}/libppm-$(PPM_VERSION); \
-	make 
+	make ${BUILD_MAKE_FLAGS}
 
 ppm_install:
 	cd ${WRKDIR}/libppm-$(PPM_VERSION); \
@@ -165,11 +165,11 @@ vizing_extract: $(DISTDIR)/vizing-0.1.tar.gz
 
 vizing_configure:
 	cd ${WRKDIR}/vizing-*; \
-	CXX=$(CXX) ./configure --prefix=${PREFIX}
+	./configure --prefix=${PREFIX} CXX=$(CXX)
 
 vizing_compile:
 	cd ${WRKDIR}/vizing-*; \
-	make 
+	make ${BUILD_MAKE_FLAGS}
 
 vizing_install:
 	cd ${WRKDIR}/vizing-*; \
@@ -184,11 +184,11 @@ makedepf90_extract: $(DISTDIR)/makedepf90-2.8.8.tar.gz
 
 makedepf90_configure:
 	cd ${WRKDIR}/makedepf90-*; \
-	CC=$(CC) ./configure --prefix=${PREFIX}
+	./configure --prefix=${PREFIX} CC=$(CC)
 
 makedepf90_compile:
 	cd ${WRKDIR}/makedepf90-*; \
-	make 
+	make ${BUILD_MAKE_FLAGS}
 
 makedepf90_install:
 	cd ${WRKDIR}/makedepf90-*; \
@@ -200,11 +200,11 @@ metis_extract: $(DISTDIR)/metis-4.1.1.tar.gz
 
 metis_configure:
 	cd ${WRKDIR}/metis-*; \
-	CC=$(CC) ./configure --prefix=${PREFIX}
+	./configure --prefix=${PREFIX} CC=$(CC)
 
 metis_compile:
 	cd ${WRKDIR}/metis-*; \
-	make 
+	make ${BUILD_MAKE_FLAGS}
 
 metis_install:
 	cd ${WRKDIR}/metis-*; \
