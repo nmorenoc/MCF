@@ -1,0 +1,262 @@
+#**********************************************************************
+#	Sample IO configuration file for
+#       MCF: Multiscale(micro-meso-macroscopic) Complex Fluids simulation.
+#
+#	Edit the settings below before start simulation.
+#
+#	Author : Xin Bian
+#	Date   : 22.03.2009
+#**********************************************************************
+#       Dr. Marco Ellero's Emmy Noether Group	
+#	at Prof.Dr. Nikolaus Adams' Chair of Aerodynamics, 
+#	Faculty of Mechanical Engineering,
+#	Technische Universitaet Muenchen, Germany.
+#**********************************************************************
+
+
+
+#*********************************************************************
+#
+#        IO: Input/Output parameters starts	
+#
+#*********************************************************************
+
+#---------------------------------------------------------------------
+# <read particles information, if reading from external files>
+#         
+# read_particles_file : name of particles file for reading. 
+#
+# read_particles_fmt  : format of the file. One of:
+#                             FORMATTED    (i.e. ASCII text)
+#                             UNFORMATTED  (i.e. binary)
+#---------------------------------------------------------------------
+
+read_particles_file  = mcf_restart_particles.dat
+read_particles_fmt   = FORMATTED
+
+#---------------------------------------------------------------------
+# <read conformation tensor information, if reading from external files
+#   and it is Non-Newtonian Viscoelastic fluids>
+#          
+# read_conformation_file : name of conformation file for reading.
+#
+# read_conformation_fmt  : format of the  file. One of:
+#                             FORMATTED    (i.e. ASCII text)
+#                             UNFORMATTED  (i.e. binary)
+#---------------------------------------------------------------------
+
+read_conformation_file  = mcf_restart_conformation.dat
+read_conformation_fmt   = FORMATTED
+
+#---------------------------------------------------------------------
+# <output pre-run(relax) particles results>
+#          
+# output_relax_particles_file: prefix name of ouput files. 
+#	   	       <timestep>.out will be appended.
+# output_relax_particles_fmt : format of output file. One of:
+#                             FORMATTED    (i.e. ASCII text)
+#                             UNFORMATTED  (i.e. binary)
+# output_relax_particles_freq_step: frequency for writing output files.
+#	   	        (in simulation time step)
+#---------------------------------------------------------------------
+
+output_particles_relax_file       = mcf_init_particles
+output_particles_relax_fmt        = FORMATTED
+output_particles_relax_freq_step  = 200
+
+#---------------------------------------------------------------------
+# <output particles results>
+#          
+# output_particles_file: prefix name of ouput files. 
+#	   	       <timestep>.out will be appended.
+# output_particles_fmt : format of output file. One of:
+#                             FORMATTED    (i.e. ASCII text)
+#                             UNFORMATTED  (i.e. binary)
+# output_particles_freq_step: frequency for writing output files.
+#	   	        (in simulation time step)
+# output_particles_freq_time: frequency for writing output files.
+#	   	        (in simulation time)
+#
+#---------------------------------------------------------------------
+
+output_particles_file       = mcf_particles
+output_particles_fmt        = FORMATTED
+output_particles_freq_step  = 100
+output_particles_freq_time  = -1.0
+
+#---------------------------------------------------------------------
+# <output conformation tensor, if it is Non-Newtonian Viscoelastic fluid>
+#          
+# output_conformation_file : prefix name of conformation files. 
+#	   	             <timestep>.out will be appended.
+# output_conformation_fmt  : format of conformaiont file. One of:
+#                             FORMATTED    (i.e. ASCII text)
+#                             UNFORMATTED  (i.e. binary)
+# output_conformation_freq_step:  frequency for writing conformation files.
+#	   	                  (in simulation time step)
+# output_conformation_freq_time:  frequency for writing conformation files.
+#	   	                  (in simulation time)
+#---------------------------------------------------------------------
+
+output_conformation_file       = mcf_conformation
+output_conformation_fmt        = FORMATTED
+output_conformation_freq_step  = 1000
+output_conformation_freq_time  = -1.0
+
+#---------------------------------------------------------------------
+# <output colloid(s) information, if there is colloid>
+#
+# colloid_file: the prefix of name of colloid output file.
+# colloid_fmt : format of colloid output file. One of
+#	   	       	      FORMATTED    (i.e. ASCII text)
+#                             UNFORMATTED  (i.e. binary)
+# colloid_freq_step: frequency for writing colloid output.
+#	   	       (in simulation time step)
+# colloid_freq_time: frequency for writing colloid output.
+#	   	       (in simulation time)
+#---------------------------------------------------------------------
+
+colloid_file       = mcf_colloid
+colloid_fmt        = FORMATTED
+colloid_freq_step  = 1
+colloid_freq_time  = -1.0
+
+#---------------------------------------------------------------------
+# <output pre-run statistics >
+#
+# statistic_relax_file: name of statistics output file.
+#                       	  
+# statistic_relax_fmt : format of statistics output file. One of
+#	 	       	      FORMATTED    (i.e. ASCII text)
+#                             UNFORMATTED  (i.e. binary)
+# statistic_relax_freq_step: frequency for writing statistics output.
+#	   	       (in simulation time step)
+#---------------------------------------------------------------------
+
+statistic_relax_file       = mcf_init_statistic.dat
+statistic_relax_fmt        = FORMATTED
+statistic_relax_freq_step  = 1
+
+#---------------------------------------------------------------------
+# <output statistics >
+#
+# statistic_file: name of statistics output file.
+#                       	  
+# statistic_fmt : format of statistics output file. One of
+#	 	       	      FORMATTED    (i.e. ASCII text)
+#                             UNFORMATTED  (i.e. binary)
+# statistic_freq_step: frequency for writing statistics output.
+#	   	       (in simulation time step)
+# statistic_freq_time: frequency for writing statistics output.
+#	   	       (in simulation time)
+#---------------------------------------------------------------------
+
+statistic_file       = mcf_statistic.dat
+statistic_fmt        = FORMATTED
+statistic_freq_step  = 1
+statistic_freq_time  = -1.0
+
+#---------------------------------------------------------------------
+# <output boundary information, if there is wall>
+#
+# boundary_file: the prefix of name of boundary output file.
+# boundary_fmt : format of boundary output file. One of
+#	   	       	      FORMATTED    (i.e. ASCII text)
+#                             UNFORMATTED  (i.e. binary)
+# boundary_freq_step: frequency for writing boundary output.
+#	   	       (in simulation time steps)
+# boundary_freq_time: frequency for writing boundary output.
+#	   	       (in simulation time steps)
+#---------------------------------------------------------------------
+
+boundary_file       = mcf_boundary.dat
+boundary_fmt        = FORMATTED
+boundary_freq_step  = 100
+boundary_freq_time  = -1.0
+
+#---------------------------------------------------------------------
+# <write restart information from relax run for preparing restart>
+#          
+# restart_particles_relax_file :
+#                         prefix of the name of restart file for particles 
+#                         <time step>.dat will be appended,
+#                         namely, restart_particles_file****.dat
+#
+# restart_particles_relax_fmt   : 
+#                         format of restart particles file. One of:
+#                         FORMATTED    (i.e. ASCII text)
+#                         UNFORMATTED  (i.e. binary)
+#
+# It is written at the end of relax run.
+#
+#---------------------------------------------------------------------
+
+restart_particles_relax_file  = mcf_init_restart_particles
+restart_particles_relax_fmt   = FORMATTED
+
+#---------------------------------------------------------------------
+# <write restart information for preparing restart, 
+# if write_restart is required>
+#          
+# restart_physics_file :
+#                       prefix of the name of restart file for physics 
+#                       <time step>.dat will be appended,
+#                       namely,restart_physics_file****.dat
+#
+# restart_physics_fmt  : 
+#                       format of read physics file. One of:
+#                       FORMATTED    (i.e. ASCII text)
+#                       UNFORMATTED  (i.e. binary)
+#
+# restart_particles_file :
+#                         prefix of the name of restart file for particles 
+#                         <time step>.dat will be appended,
+#                         namely, restart_particles_file****.dat
+#
+# restart_particles_fmt   : 
+#                         format of restart particles file. One of:
+#                         FORMATTED    (i.e. ASCII text)
+#                         UNFORMATTED  (i.e. binary)
+#
+# restart_conformation_file :
+#                            prefix of the name of restart file for 
+#                            conformation tensory, 
+#                            <time step>.dat will be appended,
+#                            namely,restart_conformation_file****.dat
+#
+# restart_conformation_fmt : 
+#                           format of restart conformation file. One of:
+#                           FORMATTED    (i.e. ASCII text)
+#                           UNFORMATTED  (i.e. binary)
+#
+# restart_freq_step: frequency for writing restart files
+#                       (physics and particles have same frequencey).
+#	   	        (in simulation time step)
+#
+# restart_freq_time: frequency for writing restart files
+#                       (physics and particles have same frequencey).
+#	   	        (in simulation time)
+# restart_freq_time_wall: frequency for writing restart files
+#                      (physics and particles have same frequencey).
+#	   	       (in wall time)
+#---------------------------------------------------------------------
+
+restart_physics_file    = mcf_restart_physics
+restart_physics_fmt     = FORMATTED
+
+restart_particles_file  = mcf_restart_particles
+restart_particles_fmt   = FORMATTED
+
+restart_conformation_file = mcf_restart_conformation
+restart_conformation_fmt  = FORMATTED
+
+restart_freq_step      = 2000
+restart_freq_time      = -1.0
+rsstart_freq_time_wall = -1.0
+
+#*********************************************************************
+#
+#			IO: Input/Output parameters end !
+#
+#*********************************************************************
+
