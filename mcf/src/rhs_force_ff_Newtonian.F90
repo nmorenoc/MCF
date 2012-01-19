@@ -5,10 +5,15 @@
 ! dissipative(viscous) force and random(thermal noise) force.
 ! Currently, only Hu-Adams formulation has random force.
 !----------------------------------------------------------------
-
+#ifdef __FORCE_SEPARATE
       SUBROUTINE rhs_force_ff_Newtonian(this,&
            xi,xj,dij,vi,vj,rhoi,rhoj,pi,pj,&      
            mi,mj,w,gradw,fi,fj,fpi,fpj,fvi,fvj,fri,frj,auij,stat_info)
+#else
+     SUBROUTINE rhs_force_ff_Newtonian(this,&
+           xi,xj,dij,vi,vj,rhoi,rhoj,pi,pj,&      
+           mi,mj,w,gradw,fi,fj,auij,stat_info)
+#endif 
         !----------------------------------------------------
         ! Subroutine  :  Return pair-wise force per unit
         !                mass, i.e., acceleration between
@@ -80,12 +85,14 @@
         REAL(MK), INTENT(IN)                    :: gradw
         REAL(MK), DIMENSION(:), INTENT(OUT)     :: fi
         REAL(MK), DIMENSION(:), INTENT(OUT)     :: fj
+#ifdef __FORCE_SEPARATE
         REAL(MK), DIMENSION(:), INTENT(OUT), OPTIONAL     :: fpi
         REAL(MK), DIMENSION(:), INTENT(OUT), OPTIONAL     :: fpj
         REAL(MK), DIMENSION(:), INTENT(OUT), OPTIONAL     :: fvi
         REAL(MK), DIMENSION(:), INTENT(OUT), OPTIONAL     :: fvj
         REAL(MK), DIMENSION(:), INTENT(OUT), OPTIONAL     :: fri
         REAL(MK), DIMENSION(:), INTENT(OUT), OPTIONAL     :: frj
+#endif
         REAL(MK), INTENT(OUT), OPTIONAL         :: auij 
         INTEGER, INTENT(OUT)                    :: stat_info
         

@@ -16,8 +16,8 @@ CC=icc
 
 # fortran compiler 
 FC=ifort
-FCFLAGS=-O2
-MPIFC=$(PREFIX)/bin/mpif90
+FCFLAGS="-O2 -g"
+MPIFC=mpif90
 
 # for g95
 #FCFLAGS=-fno-second-underscore
@@ -141,7 +141,7 @@ ppm_configure:
 	cd ${WRKDIR}/libppm-$(PPM_VERSION); \
 	./configure --prefix=$(PREFIX) --enable-mpi \
 	MPIFC=$(MPIFC) LDFLAGS=-L$(PREFIX)/lib \
-	MAKEDEPF90=$(MAKEDEPF90) FCFLAGS="-I$(PREFIX)/include -g -O0"
+	MAKEDEPF90=$(MAKEDEPF90) FCFLAGS="-I$(PREFIX)/include -g"
 
 ppm_compile:
 	cd ${WRKDIR}/libppm-$(PPM_VERSION); \
