@@ -3,7 +3,7 @@
 # binaries go to  $PREFIX/bin
 # headers go to $PREFIX/bin 
 PREFIX=$(PWD)/local_mpich_ifort121_o0_g
-BUILD_MAKE_FLAGS='-j 8'
+BUILD_MAKE_FLAGS=-j 8
 
 # a directory to store tarbars
 DISTDIR=$(PWD)/distfiles
@@ -17,7 +17,7 @@ CC=icc
 # fortran compiler 
 FC=ifort
 FCFLAGS=-O2
-MPIFC=mpif90
+MPIFC=$(PREFIX)/bin/mpif90
 
 # for g95
 #FCFLAGS=-fno-second-underscore
@@ -57,7 +57,7 @@ all:
 # compile and install 
 install_all_but_mpi: install_fftw \
 	install_vizing install_metis \
-	install_makedepf90 install_ppm	
+	install_makedepf90 install_ppm
 
 
 # install mpich localy
