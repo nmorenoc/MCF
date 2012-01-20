@@ -1,0 +1,114 @@
+#------------------------------------------------------------
+#************************************************************
+# Comments about
+# compiling flags to indicate program components.
+#************************************************************
+#------------------------------------------------------------
+
+#------------------------------------------------------------
+# Computing flags
+#------------------------------------------------------------
+
+-D_MPI          :
+
+in context of MPI2
+otherwise, no MPI is used.
+
+#------------------------------------------------------------
+# Debug flags
+
+#------------------------------------------------------------
+-D__DEBUG       :
+
+in debug mode
+otherwise, no debug information.
+
+-D__DEBUG_MARCHING :
+
+in debug mode, debugging for marching_marching() routine.
+otherwise, no debug information about marching_marching routine.
+
+-D__DEBUG_INTEGRATE_VV :
+
+in debug mode, debugging for integrator velocity verlet.
+otherwise, no debug information about marching_integrate_VV routine.
+
+#------------------------------------------------------------
+# Physics flags
+#------------------------------------------------------------
+
+-D__IGNORE_SOLVENT :
+
+ignore solvent particles,
+1: useful of testing lubrication correction forces.
+2: colloidal forces between colloids and walls.
+3: test for colloidal motions, e.g., rotation.
+
+-D__FLOW_DEVELOPED :
+
+initial velocity is set up as developed in shear flow.
+
+-D__FORCE_SEPARATE :
+
+forces are separated into pressure, viscous (and random) forces.
+for now it is useful to measure shear-induced normal stress
+on the wall.
+
+
+#------------------------------------------------------------
+# SPH/SDPD particles flags
+#------------------------------------------------------------
+
+-D__POSITION_FIXED :
+all particles position fixed.
+
+-D__WRITE_FORCE :
+
+force will be writing into output particle files.
+otherwise, force is not recorded.
+
+#------------------------------------------------------------
+# Colloid related flags
+#------------------------------------------------------------
+
+-D__COLLOID_ON_LATTICE
+
+Shift colloid centers to its nearest
+lattice grid, to make the shape consisting
+of boundary particles symmetrically.
+
+-D__COLLOID_RELAX :
+
+colloids can be moving during relax run.
+otherwise, colloid stay fixed during relax run.
+
+-D__COLLOID_NOACCE :
+
+colloids have no acceleration(translation & rotation) during simulation.
+otherwise, colloids are free to move.
+
+-D__COLLOID_GLOBAL :
+
+colloid interaction is calculated globally,
+not locally.
+otherwise, colloid-colloid interaction is calculated 
+efficiently locally.
+
+-D__COLLOID_SEPARATE_FILE :
+
+writing colloids into separate file,
+each colloid has its own file.
+otherwise, by default, all colloids are written into the same
+file every step/time freq, just like SPH/SDPD particles.
+
+
+#------------------------------------------------------------
+# Wall related flags
+#------------------------------------------------------------
+
+-D__WALL_FIXED
+
+the wall may have speed but not move.
+(useful when the number of wall is equal
+to 2*num_dim, for example, lid driven cavity)
+
