@@ -2,5 +2,4 @@ MCF:
 multiscale complex fluids simulation
 has implemeted an Lagrangian mesh-free numerical scheme,
 that is smoothed dissipative particle dynamics (SDPD),
-under a parallel framework,
-that is parallel particle-mesh library (PPM).
+under a parallel framework, that is parallel particle-mesh library (PPM).

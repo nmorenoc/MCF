@@ -1,0 +1,402 @@
+#**********************************************************************
+#	Sample physics configuration file for
+#       MCF: Multiscale(micro-meso-macroscopic) Complex Fluids simulation.
+#
+#	Edit the settings below before start simulation.
+#
+#	Author : Xin Bian
+#	Date   : 22.03.2009
+#**********************************************************************
+#       Dr. Marco Ellero's Emmy Noether Group	
+#	at Prof.Dr. Nikolaus Adams' Chair of Aerodynamics, 
+#	Faculty of Mechanical Engineering,
+#	Technische Universitaet Muenchen, Germany.
+#**********************************************************************
+
+
+
+#**********************************************************************
+#
+#	physical/numerical parameters starts
+#
+#**********************************************************************
+
+
+#----------------------------------------------------------------------
+#	num_species  : number of species
+#                      if set to 1, colloids will be ignored,
+#                      there is only fluid.
+#                      if set to 2, colloids must be given later. 
+#                      Remark :		       
+#                      wall boundary are not considered as one different
+#		       species.
+#----------------------------------------------------------------------
+	
+num_species = 1
+		
+		
+#----------------------------------------------------------------------
+#	< Spatial Definition >
+#
+#	num_dim   : space dimensions. Either 2 or 3.
+#
+#       computational domain :
+#       min_phys  : down boundary coordinates min_x,min_y(, min_z).
+#       max_phys  : up boundary coordinates max_x,max_y(, max_z).
+#	 	    
+#       lattice   : 2D :
+#                       1 square; 2 staggered; 3 hexagonal.
+#                   3D : 
+#                       1 simple cubic lattice;
+#                       2 body centered lattice;
+#                       3 face centered lattice.	
+#	num_part  : initial estimated number of particles 
+#                   in x, y(, z) directions.
+#       cut_off   : cut_off of compact support domain.
+#----------------------------------------------------------------------
+	
+num_dim   = 3
+min_phys  = 0.0, 0.0, 0.0
+max_phys  = 10.0, 10.0, 10.0
+lattice   = 1
+num_part  = 100, 100, 100
+cut_off   = 0.4
+
+
+#----------------------------------------------------------------------
+#	< Temporal Scale >
+#
+#	dt       : time step.
+#                  If negative value is given,
+#                  dt(in explicit scheme) will be calculated in MCF 
+#                  according to
+#                  1 CFL,
+#                  2 viscous diffusion, and
+#                  3 magnitude of particle accerleartion.
+#                  (Morris et al. J.Comput.Phys.1997)
+#
+#     step_start : number of time step to start with.
+#	
+#     step_end   : number of time step to end.
+#                   
+#                
+#     time_start   : time to start with.
+#
+#     time_end     : time to end.
+#     
+#
+#     Note that either step pair or time pair needed to be given,
+#     the other pair must be set to be negative.
+#----------------------------------------------------------------------
+
+dt           = -1.0
+step_start   =  0
+step_end     = 2000
+time_start   = -1.0
+time_end     = -1.0
+
+#----------------------------------------------------------------------
+#	< Input parameters for fluid properties >
+#
+#	     rho    	: density of solvent(initial input)
+#      	     eta	: absolute/dynamic(shear) viscosity
+#	     ksai       : bulk viscosity
+#	     kt         : Boltzmann Constant * Temperature for SDPD.
+#            c          : sound speed.
+#            rho_ref    : reference density; 
+#	                  if dynamic_density_reference is required
+#	                  rho_min will be always calculated and
+#			  taken as reference density.
+#			  
+#            gamma      : exponenet in equation of state 
+#            
+#----------------------------------------------------------------------
+
+rho      = 1.0
+eta      = 8.46
+eta_coef = 4.0
+ksai     = 0.0
+kt       = 0.0
+c        = 84.6
+rho_ref  = 0.9
+gamma    = 7.0
+
+
+#----------------------------------------------------------------------
+#       < Relax run / pre-run physics parameters for fluid >
+#       
+#     Note that relax run is taking vantage of SDPD's feature
+#     by swithing a pesudo-temperature(kt_relax) on.
+#     The difference from real simulation is that dt_relax and
+#     c_relax may be different values.
+#
+#     relax_type     : 1 according to given step/time.
+#                      2 according to desired disorder level.
+#     dt_relax       : time step.
+#     step_relax     : steps to end.
+#     time_relax     : time to end.
+#     disorder_level : desired disorder level
+#     kt_relax       : Boltzmann Constant * Temperature.
+#     c_relax        : sound speed.
+#
+#----------------------------------------------------------------------
+
+relax_type     = 2
+dt_relax       = -1.0
+step_relax     = -1
+time_relax     = -1.0
+disorder_level = 0.3
+kt_relax       = 1.25e-3
+c_relax        = 84.6
+
+
+#----------------------------------------------------------------------
+#   < Non-Newtonian viscoelastic (Oldroyd-B) parameters >
+#
+#   tau            : relaxation time of polymer molecules.
+#   n_p            : number of dumbells per unit volume.
+#   kt_p           : Boltzmann Constant * Temperature for dumbell.
+#   eigen_dynamics : logical value indicating if we are
+#                    using eigen-dynamics way.
+#   eval           : initial eigenvalues for eigen-dynamics.
+#   eval_tolerance : if different eigenvalues are different
+#                    more than this tolerance, they are treated
+#                    as different eigenvalues, otherwise, they
+#                    are considered the same.
+#   evec           : initial eigenvectors for eigen-dynamics.
+#                    1 egenvector matrix notation, 2D(3D):
+#                      ev1_x   ev2_x  (ev3_x)
+#                      ev1_y   ev2_y  (ev3_y)
+#                     (ev1_z) (ev2_z) (ev3_z) 
+#                    2 array notation in order(Fortran90) :
+#                      ev1_x, ev1_y, (ev1_z), 
+#                      ev2_x, ev2_y, (ev2_z),
+#                     (ev3_x, ev3_y, ev3_z).
+#                     should be provided here in array notation.
+#  evec_normalize  : if eigenvector needed to be normalized
+#  evec_tolerance  : if the length of eigenvector exceeds the
+#                    unity more than tolerance, it will be normalized.
+#----------------------------------------------------------------------
+
+tau            = 0.02
+n_p            = 10.0
+kt_p           = 0.1
+eigen_dynamics = FALSE
+eval           = 1.0,1.0
+eval_tolerance = 1.0E-4
+evec           = 0.0, 0.0, 0.0, 0.0
+evec_normalize = TRUE
+evec_tolerance = 0.01
+
+#----------------------------------------------------------------------
+#	< External body force >
+#	
+#    body_force_type : type of body force
+#                      0 : no body force
+#                      1 : one direction constant
+#                      2 : two direction constant(shear force)
+#                      3 : F0*sin(ky)
+#    body_force      : starting body force per unit mass
+#                      applied to all solvent particles
+#    body_force_d    : increment of bodyforce, when fixed flow velocity
+#                      strategy is used.
+#----------------------------------------------------------------------
+	
+body_force_type = 0
+body_force      = 0.0, 0.0, 0.0
+body_force_d    = 0.0, 0.0, 0.0
+
+#----------------------------------------------------------------------
+#    < Flow velocity <v> >
+#
+#    flow_direcion    : direction of desird flow.
+#    flow_width       : the box width to calculate the flow velocity.
+#    flow_v           : the imposed flow velocity at far field,
+#                       when flow_velocity_fixed is TRUE.
+#    flow_adjust_freq : the frequency to adjust body_force to get 
+#                       expected flow velocity.
+#----------------------------------------------------------------------
+
+flow_direction   = 1
+flow_width       = 0.1
+flow_v           = 1.2e-4
+flow_adjust_freq = 10
+
+  
+#----------------------------------------------------------------------
+#          <Colloids' parameters>
+#
+#   Note : The order of parameters are fixed here, 
+#   which should better be followed.
+#
+#  Common characteristics:
+#
+#  num_colloid      : number of colloids.
+#  coll_rho_type    : density type
+#                   0 constant 
+#                   1 calculated;
+#  coll_translate   : if colldoids translate.
+#  coll_rotate      : if colldoids rotate.
+#  coll_place       : type of placement of boundary particles
+#                   1 on lattice; 
+#                   2 parallel to the surface, 
+#                     with fixed distance on each layer.
+#                   3 parallel to the surface,
+#                     with fixed number of particles on each layer.
+#  coll_noslip      : type of no slip boundary 
+#                   1 frozen 
+#                   2 Morris J. et al. 1997 
+#                   3 Zhu et al. 1999.
+#  coll_body_force_type:
+#                    see body force type above.
+#
+#  coll_body_force  : body force per unit mass on colloid.
+#
+#
+#  cc_lub_cut_off   : cut off of surface distance for lubrication
+#                     interaction between colloid and colloid.
+#
+#  cc_lub_cut_on    : cut on of surface distance for lubrication
+#                     interaction between colloid and colloid.
+#                     i.e., maximum threshold for lubrication force
+#                     is restricted at this miminum possible gap.
+#
+#  cc_repul_cut_off : cut off for extra repulsive force which
+#                     keeps colloids apart.
+#
+#  cc_repul_cut_on  : cut on of surface distance for repulsion
+#                     interaction between colloid and colloid.
+#                     i.e., maximum threshold for repulsion force
+#                     is restricted at this miminum possible gap.
+#
+#  cc_repul_F0      : constant/ maximum of this repulsive force.
+#
+#
+#  cw_lub_cut_off   : cut off of surface distance for lubrication
+#                     interaction between colloid and wall.
+#
+#  cw_lub_cut_on    : cut on of surface distance for lubrication
+#                     interaction between colloid and wall.
+#                     i.e., maximum threshold for lubrication force
+#                     is restricted at this miminum possible gap.
+#
+#  cw_repul_cut_off : cut off for extra repulsive force which
+#                     keeps colloid and wall apart.
+#
+#  cc_repul_cut_on  : cut on of surface distance for repulsion
+#                     interaction between colloid and colloid.
+#                     i.e., maximum threshold for repulsion force
+#                     is restricted at this miminum possible gap.
+#
+#  cw_repul_F0     : constant, related to maximum repulsive force.
+#
+#
+#
+#  Idividual characteristics:
+#
+#  coll_shape     : 1 disk(2D)/sphere(3D); 2  ellpsoid;  3 arbitrary
+#  coll_radius    : initial radius of the colloid, 2D/3D.
+#                   shape 1: 1st scalar is radius.
+#                   shape 2: radius for different directions.
+#                   shape 3(2D): 1st scalar is radius, 
+#                                2nd is magnitude of shape fluctuation.
+#  coll_freq      : useful for arbitray shape 3, determin the roughness 
+#                   frequency(integer).
+#  coll_m         : mass of a colloid, 
+#                   calculated according to its volume and density.
+#  coll_mmi       : mass momentum inertia of a colloid, 
+#                   calculated according to its distribution of mass.
+#
+#  coll_x         : initial position of its center.
+#  coll_v         : initial translating velocity of its center.
+#  coll_rotation_matrix : initial rotation matrix 
+#                    which indicate its orientation.
+#                    A11,A21(,A31); A12,A22(,A32); A13,A23(,A33).
+#  coll_theta     : rotated angle
+#  coll_omega     : initial rotating velocity of, always 3D vector.
+#----------------------------------------------------------------------
+
+num_colloid          = 0
+coll_rho_type        = 0
+coll_translate       = T
+coll_rotate          = F
+coll_place           = 5
+coll_noslip          = 2
+coll_body_force_type = 0
+coll_body_force      = 0.0,0.0,0.0
+
+
+cc_lub_cut_off = 0.0
+cc_lub_cut_on  = 0.0
+
+cc_repul_cut_off = 0.0
+cc_repul_cut_on  = 0.0
+cc_repul_F0      = 0.0
+
+cw_lub_cut_off = 0.0
+cw_lub_cut_on  = 0.0
+
+cw_repul_cut_off = 0.0
+cw_repul_cut_on  = 0.0
+cw_repul_F0      = 0.0
+
+
+coll_shape      = 1
+coll_radius     = 1.0,0.0
+coll_x          = 5.4,4.5, 4.5
+coll_v          = 0.2115,0.0, 0.0
+
+coll_shape      = 1
+coll_radius     = 1.0,0.0
+coll_x          = 8.6,4.5,4.5
+coll_v          = -0.2115,0.0,0.0
+
+
+#----------------------------------------------------------------------
+#       < Boundary condition of physical domain >
+#
+#       bcdef  : boudary condition definition
+#                2D : x1,x2;y1,y2.
+#                3D : x1,x2;y1,y2;z1,z2.
+#               1 : periodic boundary condition;
+#		3 : symmetry boundary condition:
+#                   Particles interaction or subdomains communication
+#                   must be non-symmetic;
+#	        7 : wall boundary, outside computational domain,
+#		    handeled by PPM using symmetry/mirror boundaries.
+#                   Particles interaction or subdomains communication
+#                   must be non-symmetic;
+#               9 : solid wall boundary, outside of initial computational 
+#  	            domain created by MCF extending computational domains.
+#               10: Leeds-Edwards boundary
+#
+#       shear_type : 1 : normal 
+#                    2 : oscillating with cosine function
+#
+#       shear_v :  Initial magnitude of shear velocity for different sides 
+#                2D : shear velocity in y direction of x_min, x_max;
+#                     shear velocity in x direction of y_min, y_max;
+#                3D : shear velocity in y,z direction of x_min, x_max;
+#                     shear velocity in x,z direction of y_min, y_max;
+#                     shear velocity in x,y direction of z_min, z_max
+#
+#	shear_freq : frequecy of oscillating shear of different sides.
+#
+#       wall_rho_type : density type 
+#                       0 constant.
+#                       1 calculated.
+#       wall_noslip : 
+#                1 : frozen 2 : Morris J. et al. 1997 
+#               
+#----------------------------------------------------------------------
+
+bcdef         = 1,1,1,1,1,1
+shear_type    = 1,1,1,1,1,1
+#shear_v       = 0.0, 0.0, 0.0, 0.0
+#shear_freq    = 0.0, 0.0, 0.0, 0.0
+wall_rho_type = 0
+wall_noslip   = 2
+
+#**********************************************************************
+#	mcf_physics file ends here
+#**********************************************************************
