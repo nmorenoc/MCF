@@ -104,15 +104,15 @@
         stat_info = 0
 
         this%random_type = r_type
-        seed(1)          = d_seed
         k                = 1
         
         this%random_uniform_type  = 1
         this%random_Gaussian_type = 1
 
-        IF ( seed(1) > 0 ) THEN
+        IF ( d_seed > 0 ) THEN
            CALL RANDOM_SEED(SIZE=k)
            ALLOCATE(seed(k))
+           seed(1)  = d_seed
            CALL RANDOM_SEED(PUT=seed(1:k))
 
         ELSE
