@@ -95,7 +95,7 @@
         ! Local variables.
         !----------------------------------------------------
 
-        INTEGER, DIMENSION(1)           :: seed
+        INTEGER, DIMENSION(:),ALLOCATABLE   :: seed
         INTEGER                         :: k
         !----------------------------------------------------
         ! Initialization
@@ -112,11 +112,13 @@
 
         IF ( seed(1) > 0 ) THEN
            CALL RANDOM_SEED(SIZE=k)
+           ALLOCATE(seed(k))
            CALL RANDOM_SEED(PUT=seed(1:k))
 
         ELSE
            CALL RANDOM_SEED()
            CALL RANDOM_SEED(SIZE=k)
+           ALLOCATE(seed(k))
            CALL RANDOM_SEED(GET=seed(1:k))
 
         END IF
