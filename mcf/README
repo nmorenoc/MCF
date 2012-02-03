@@ -12,9 +12,7 @@ to make use of GNU autoconf+automake
 
 3 run 
 
-./configure --prefix=$HOME/MCF/mcf/mcf_install/ FC=ifort MPIFC=mpif90
-LDFLAGS=-L$HOME/MCF/ppm/local/lib/ FCFLAGS=-I$HOME/MCF/ppm/local/include/
-MAKEDEPF90=$HOME/MCF/ppm/local/bin/makedepf90 
+./configure --prefix=$HOME/MCF/mcf/mcf_install/ FC=ifort MPIFC=mpif90 LDFLAGS=-L$HOME/MCF/ppm/local/lib/ FCFLAGS=-I$HOME/MCF/ppm/local/include/ MAKEDEPF90=$HOME/MCF/ppm/local/bin/makedepf90 
 
 to generate Makefile
 
