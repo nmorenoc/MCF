@@ -1,4 +1,4 @@
-AM_FCFLAGS   = -O2 -D__MPI -D__FLOW_DEVELOPED -D__COLLOID_SEPARATE_FILE
+AM_FCFLAGS   = -O2 -D__MPI
 bin_PROGRAMS = mcf
 mcf_SOURCES  = mcf.F90\
 	       mcf_header.F90\
