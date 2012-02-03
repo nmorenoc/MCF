@@ -1,0 +1,14 @@
+TODO:
+add option --without-mpi for single processor version see ppm-single
+
+To find all MPI calls:
+grep 'CALL MPI_.* ' *.inc *.F90 *.h | awk -F '('  '{print $1}' | awk -F 'CALL ' '{print $2}' | sort  | uniq
+MPI_Allreduce
+MPI_Alltoall
+MPI_Gather
+MPI_Irecv
+MPI_Isend
+MPI_Recv
+MPI_Reduce
+MPI_Send
+MPI_SendRecv

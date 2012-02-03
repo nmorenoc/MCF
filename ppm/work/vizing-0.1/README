@@ -1,0 +1,14 @@
+This directory contains a C++ implementation of Vizing's approximate
+solution algorithm to the minimal edge coloring problem. This approximate
+solution uses at most one color more than the optimal solution would. 
+
+Implementation from:
+The Stony Brook Algorithm Repository 
+http://www.cs.sunysb.edu/~algorith/implement/stony/distrib/Vizing/
+The unchanged original implementation can be found in ./original/
+
+Changes made by IFS:
+  (1) vizing_coloring.cc newly added as wrapper which is callable from F90
+  (2) added getResult method to ColorGraph class (in color.h) in order to
+      be able to store the result and not only print it to the screen.
+

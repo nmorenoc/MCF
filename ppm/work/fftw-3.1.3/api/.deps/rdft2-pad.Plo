@@ -1,0 +1,87 @@
+rdft2-pad.lo: rdft2-pad.c /usr/include/string.h /usr/include/features.h \
+ /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
+ /usr/include/bits/wordsize.h /usr/include/gnu/stubs-64.h \
+ /global/intel/Compiler/11.0/074/include/stddef.h api.h fftw3.h \
+ /usr/include/stdio.h /global/intel/Compiler/11.0/074/include/stddef.h \
+ /usr/include/bits/types.h /usr/include/bits/wordsize.h \
+ /usr/include/bits/typesizes.h /usr/include/libio.h /usr/include/_G_config.h \
+ /global/intel/Compiler/11.0/074/include/stddef.h /usr/include/wchar.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.5/include/stdarg.h \
+ /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h ../kernel/ifftw.h \
+ ../config.h /usr/include/stdlib.h \
+ /global/intel/Compiler/11.0/074/include/stddef.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.5/include/stdarg.h \
+ /global/intel/Compiler/11.0/074/include/stddef.h /usr/include/sys/types.h \
+ /usr/include/time.h /global/intel/Compiler/11.0/074/include/stddef.h \
+ /usr/include/stdint.h /usr/include/bits/wchar.h /usr/include/bits/wordsize.h \
+ /usr/include/inttypes.h /usr/include/alloca.h \
+ /global/intel/Compiler/11.0/074/include/stddef.h /usr/include/sys/time.h \
+ /usr/include/time.h /usr/include/bits/time.h /usr/include/sys/select.h \
+ /usr/include/bits/select.h /usr/include/bits/wordsize.h \
+ /usr/include/bits/sigset.h /usr/include/time.h /usr/include/bits/time.h \
+ /usr/include/time.h /global/intel/Compiler/11.0/074/include/stddef.h \
+ /usr/include/bits/time.h
+
+/usr/include/string.h:
+
+/usr/include/features.h:
+
+/usr/include/sys/cdefs.h:
+
+/usr/include/bits/wordsize.h:
+
+/usr/include/gnu/stubs.h:
+
+/usr/include/gnu/stubs-64.h:
+
+/global/intel/Compiler/11.0/074/include/stddef.h:
+
+api.h:
+
+fftw3.h:
+
+/usr/include/stdio.h:
+
+/usr/include/bits/types.h:
+
+/usr/include/bits/typesizes.h:
+
+/usr/include/libio.h:
+
+/usr/include/_G_config.h:
+
+/usr/include/wchar.h:
+
+/usr/lib64/gcc/x86_64-suse-linux/4.5/include/stdarg.h:
+
+/usr/include/bits/stdio_lim.h:
+
+/usr/include/bits/sys_errlist.h:
+
+../kernel/ifftw.h:
+
+../config.h:
+
+/usr/include/stdlib.h:
+
+/usr/include/sys/types.h:
+
+/usr/include/time.h:
+
+/usr/include/stdint.h:
+
+/usr/include/bits/wchar.h:
+
+/usr/include/inttypes.h:
+
+/usr/include/alloca.h:
+
+/usr/include/sys/time.h:
+
+/usr/include/bits/time.h:
+
+/usr/include/sys/select.h:
+
+/usr/include/bits/select.h:
+
+/usr/include/bits/sigset.h:

@@ -1,0 +1,28 @@
+allocate.o: allocate.c bench.h bench-user.h ../config.h \
+ /global/intel/Compiler/11.0/074/include/stddef.h /usr/include/stdlib.h \
+ /usr/include/features.h /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h \
+ /usr/include/gnu/stubs.h /usr/include/bits/wordsize.h \
+ /usr/include/gnu/stubs-64.h /global/intel/Compiler/11.0/074/include/stddef.h \
+ /usr/include/alloca.h /global/intel/Compiler/11.0/074/include/stddef.h
+
+bench.h:
+
+bench-user.h:
+
+../config.h:
+
+/global/intel/Compiler/11.0/074/include/stddef.h:
+
+/usr/include/stdlib.h:
+
+/usr/include/features.h:
+
+/usr/include/sys/cdefs.h:
+
+/usr/include/bits/wordsize.h:
+
+/usr/include/gnu/stubs.h:
+
+/usr/include/gnu/stubs-64.h:
+
+/usr/include/alloca.h:
