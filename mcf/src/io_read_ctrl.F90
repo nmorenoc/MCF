@@ -248,9 +248,9 @@
              CALL control_set_job_name(ctrl,&
                   cvalue(1:LEN_TRIM(cvalue)),stat_info_sub)
              
-          ELSE IF (carg == 'JOB_DATE') THEN
+          ELSE IF (carg == 'JOB_SUBMIT_DATE') THEN
              
-             CALL control_set_job_date(ctrl,&
+             CALL control_set_job_submit_date(ctrl,&
                   cvalue(1:LEN_TRIM(cvalue)),stat_info_sub)
              
           ELSE IF (carg == 'MCF_PHYSICS_CONFIG_FILE') THEN

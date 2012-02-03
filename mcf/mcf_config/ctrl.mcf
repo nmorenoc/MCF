@@ -14,14 +14,14 @@
 #**********************************************************************
 
 #**********************************************************************
-#       Job name and date
-#       job name : no space between names considered
-#       job date : CCYYMMDD/CCYY_MM_DD, no space considered
+#       Job name and submit date
+#        name : no space between names considered
+#        date : CCYYMMDD/CCYY_MM_DD, no space considered
 #**********************************************************************
 
 job_name           = flow_around_cylinder
 
-job_date           = 2010_03_09
+job_submit_date    = 2010_03_09
 
 #**********************************************************************
 #       File name for Physics configuration information.

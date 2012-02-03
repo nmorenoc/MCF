@@ -34,18 +34,18 @@
       END SUBROUTINE control_set_job_name
 
       
-      SUBROUTINE control_set_job_date(this,d_job_date,stat_info)
+      SUBROUTINE control_set_job_submit_date(this,d_job_date,stat_info)
 
         TYPE(Control), INTENT(INOUT)             :: this
         CHARACTER(*)                             :: d_job_date
         INTEGER, INTENT(out)                     :: stat_info
         
         stat_info     = 0
-        this%job_date = d_job_date
+        this%job_submit_date = d_job_date
         
         RETURN 
         
-      END SUBROUTINE control_set_job_date
+      END SUBROUTINE control_set_job_submit_date
       
       
       SUBROUTINE control_set_debug_flag(this,d_debug_flag,stat_info)
