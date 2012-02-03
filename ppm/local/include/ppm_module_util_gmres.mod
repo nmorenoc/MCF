@@ -1,0 +1,139 @@
+GFORTRAN module version '6' created from ppm_module_util_gmres.F90 on Mon Nov  7 17:44:12 2011
+MD5:d23a6e1dd863041b3ed113177a041968 -- If you edit this, you'll get what you deserve.
+
+(() () () () () () () () () () () () () () () () () () () () () () ()
+() () () ())
+
+()
+
+(('ppm_util_gmres_solveupper' 'ppm_module_util_gmres' 2 3))
+
+()
+
+()
+
+()
+
+(4 'ppm_gmres_param_failure' 'ppm_module_util_gmres'
+'ppm_gmres_param_failure' 1 ((PARAMETER UNKNOWN-INTENT UNKNOWN-PROC
+UNKNOWN IMPLICIT-SAVE 0 0) (INTEGER 4 0 0 INTEGER ()) 0 0 () (CONSTANT (
+INTEGER 4 0 0 INTEGER ()) 0 '1') () 0 () () () 0 0)
+5 'ppm_gmres_param_maxiter' 'ppm_module_util_gmres'
+'ppm_gmres_param_maxiter' 1 ((PARAMETER UNKNOWN-INTENT UNKNOWN-PROC
+UNKNOWN IMPLICIT-SAVE 0 0) (INTEGER 4 0 0 INTEGER ()) 0 0 () (CONSTANT (
+INTEGER 4 0 0 INTEGER ()) 0 '2') () 0 () () () 0 0)
+6 'ppm_gmres_param_success' 'ppm_module_util_gmres'
+'ppm_gmres_param_success' 1 ((PARAMETER UNKNOWN-INTENT UNKNOWN-PROC
+UNKNOWN IMPLICIT-SAVE 0 0) (INTEGER 4 0 0 INTEGER ()) 0 0 () (CONSTANT (
+INTEGER 4 0 0 INTEGER ()) 0 '0') () 0 () () () 0 0)
+7 'ppm_module_util_gmres' 'ppm_module_util_gmres' 'ppm_module_util_gmres'
+1 ((MODULE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN UNKNOWN 0 0) (UNKNOWN 0 0
+0 UNKNOWN ()) 0 0 () () 0 () () () 0 0)
+8 'ppm_util_gmres_d' 'ppm_module_util_gmres' 'ppm_util_gmres_d' 1 ((
+PROCEDURE UNKNOWN-INTENT MODULE-PROC DECL UNKNOWN 0 0 SUBROUTINE
+ALWAYS_EXPLICIT) (UNKNOWN 0 0 0 UNKNOWN ()) 9 0 (10 11 12 13 14 15 16 17)
+() 0 () () () 0 0)
+18 'ppm_util_gmres_s' 'ppm_module_util_gmres' 'ppm_util_gmres_s' 1 ((
+PROCEDURE UNKNOWN-INTENT MODULE-PROC DECL UNKNOWN 0 0 SUBROUTINE
+ALWAYS_EXPLICIT) (UNKNOWN 0 0 0 UNKNOWN ()) 19 0 (20 21 22 23 24 25 26
+27) () 0 () () () 0 0)
+2 'ppm_util_gmres_solveupper_d' 'ppm_module_util_gmres'
+'ppm_util_gmres_solveupper_d' 1 ((PROCEDURE UNKNOWN-INTENT MODULE-PROC
+DECL UNKNOWN 0 0 SUBROUTINE IMPLICIT_PURE ALWAYS_EXPLICIT) (UNKNOWN 0 0
+0 UNKNOWN ()) 28 0 (29 30 31 32 33) () 0 () () () 0 0)
+3 'ppm_util_gmres_solveupper_s' 'ppm_module_util_gmres'
+'ppm_util_gmres_solveupper_s' 1 ((PROCEDURE UNKNOWN-INTENT MODULE-PROC
+DECL UNKNOWN 0 0 SUBROUTINE IMPLICIT_PURE ALWAYS_EXPLICIT) (UNKNOWN 0 0
+0 UNKNOWN ()) 34 0 (35 36 37 38 39) () 0 () () () 0 0)
+35 'u' '' 'u' 34 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DIMENSION DUMMY) (REAL 4 0 0 REAL ()) 0 0 () (2 0 ASSUMED_SHAPE (
+CONSTANT (INTEGER 4 0 0 INTEGER ()) 0 '1') () (CONSTANT (INTEGER 4 0 0
+INTEGER ()) 0 '1') ()) 0 () () () 0 0)
+36 'b' '' 'b' 34 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DIMENSION DUMMY) (REAL 4 0 0 REAL ()) 0 0 () (1 0 ASSUMED_SHAPE (
+CONSTANT (INTEGER 4 0 0 INTEGER ()) 0 '1') ()) 0 () () () 0 0)
+37 'x' '' 'x' 34 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN UNKNOWN
+0 0 DIMENSION POINTER DUMMY) (REAL 4 0 0 REAL ()) 0 0 () (1 0 DEFERRED ()
+()) 0 () () () 0 0)
+38 'n' '' 'n' 34 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 DUMMY) (
+INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+39 'info' '' 'info' 34 ((VARIABLE OUT UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+29 'u' '' 'u' 28 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DIMENSION DUMMY) (REAL 8 0 0 REAL ()) 0 0 () (2 0 ASSUMED_SHAPE (
+CONSTANT (INTEGER 4 0 0 INTEGER ()) 0 '1') () (CONSTANT (INTEGER 4 0 0
+INTEGER ()) 0 '1') ()) 0 () () () 0 0)
+30 'b' '' 'b' 28 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DIMENSION DUMMY) (REAL 8 0 0 REAL ()) 0 0 () (1 0 ASSUMED_SHAPE (
+CONSTANT (INTEGER 4 0 0 INTEGER ()) 0 '1') ()) 0 () () () 0 0)
+31 'x' '' 'x' 28 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN UNKNOWN
+0 0 DIMENSION POINTER DUMMY) (REAL 8 0 0 REAL ()) 0 0 () (1 0 DEFERRED ()
+()) 0 () () () 0 0)
+32 'n' '' 'n' 28 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 DUMMY) (
+INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+33 'info' '' 'info' 28 ((VARIABLE OUT UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+20 'a' '' 'a' 19 ((PROCEDURE UNKNOWN-INTENT DUMMY-PROC BODY UNKNOWN 0 0
+DUMMY FUNCTION ALWAYS_EXPLICIT) (INTEGER 4 0 0 INTEGER ()) 40 0 (41 42
+43 44) () 20 () () () 0 0)
+21 'b' '' 'b' 19 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN UNKNOWN
+0 0 DIMENSION POINTER DUMMY) (REAL 4 0 0 REAL ()) 0 0 () (1 0 DEFERRED ()
+()) 0 () () () 0 0)
+22 'x' '' 'x' 19 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN UNKNOWN
+0 0 DIMENSION POINTER DUMMY) (REAL 4 0 0 REAL ()) 0 0 () (1 0 DEFERRED ()
+()) 0 () () () 0 0)
+23 'n' '' 'n' 19 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 DUMMY) (
+INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+24 'm' '' 'm' 19 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 DUMMY) (
+INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+25 'tol' '' 'tol' 19 ((VARIABLE INOUT UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (REAL 4 0 0 REAL ()) 0 0 () () 0 () () () 0 0)
+26 'info' '' 'info' 19 ((VARIABLE OUT UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+27 'maxiter' '' 'maxiter' 19 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN
+0 0 OPTIONAL DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+41 'in' '' 'in' 40 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DIMENSION DUMMY) (REAL 4 0 0 REAL ()) 0 0 () (1 0 ASSUMED_SHAPE (
+CONSTANT (INTEGER 4 0 0 INTEGER ()) 0 '1') ()) 0 () () () 0 0)
+42 'out' '' 'out' 40 ((VARIABLE OUT UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DIMENSION DUMMY) (REAL 4 0 0 REAL ()) 0 0 () (1 0 ASSUMED_SHAPE (
+CONSTANT (INTEGER 4 0 0 INTEGER ()) 0 '1') ()) 0 () () () 0 0)
+43 'ninout' '' 'ninout' 40 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0
+0 DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+44 'info' '' 'info' 40 ((VARIABLE OUT UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+10 'a' '' 'a' 9 ((PROCEDURE UNKNOWN-INTENT DUMMY-PROC BODY UNKNOWN 0 0
+DUMMY FUNCTION ALWAYS_EXPLICIT) (INTEGER 4 0 0 INTEGER ()) 45 0 (46 47
+48 49) () 10 () () () 0 0)
+11 'b' '' 'b' 9 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN UNKNOWN 0
+0 DIMENSION POINTER DUMMY) (REAL 8 0 0 REAL ()) 0 0 () (1 0 DEFERRED ()
+()) 0 () () () 0 0)
+12 'x' '' 'x' 9 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN UNKNOWN 0
+0 DIMENSION POINTER DUMMY) (REAL 8 0 0 REAL ()) 0 0 () (1 0 DEFERRED ()
+()) 0 () () () 0 0)
+13 'n' '' 'n' 9 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 DUMMY) (
+INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+14 'm' '' 'm' 9 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0 DUMMY) (
+INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+15 'tol' '' 'tol' 9 ((VARIABLE INOUT UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (REAL 8 0 0 REAL ()) 0 0 () () 0 () () () 0 0)
+16 'info' '' 'info' 9 ((VARIABLE OUT UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+17 'maxiter' '' 'maxiter' 9 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0
+0 OPTIONAL DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+46 'in' '' 'in' 45 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DIMENSION DUMMY) (REAL 8 0 0 REAL ()) 0 0 () (1 0 ASSUMED_SHAPE (
+CONSTANT (INTEGER 4 0 0 INTEGER ()) 0 '1') ()) 0 () () () 0 0)
+47 'out' '' 'out' 45 ((VARIABLE OUT UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DIMENSION DUMMY) (REAL 8 0 0 REAL ()) 0 0 () (1 0 ASSUMED_SHAPE (
+CONSTANT (INTEGER 4 0 0 INTEGER ()) 0 '1') ()) 0 () () () 0 0)
+48 'ninout' '' 'ninout' 45 ((VARIABLE IN UNKNOWN-PROC UNKNOWN UNKNOWN 0
+0 DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+49 'info' '' 'info' 45 ((VARIABLE OUT UNKNOWN-PROC UNKNOWN UNKNOWN 0 0
+DUMMY) (INTEGER 4 0 0 INTEGER ()) 0 0 () () 0 () () () 0 0)
+)
+
+('ppm_gmres_param_failure' 0 4 'ppm_gmres_param_maxiter' 0 5
+'ppm_gmres_param_success' 0 6 'ppm_module_util_gmres' 0 7
+'ppm_util_gmres_d' 0 8 'ppm_util_gmres_s' 0 18
+'ppm_util_gmres_solveupper_d' 0 2 'ppm_util_gmres_solveupper_s' 0 3)
