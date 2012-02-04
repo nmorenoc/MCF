@@ -5,7 +5,9 @@
   ! Velocity gradient tensor calculation of particle jp.
   !  
   ! Here we handle currently only number density 
-  ! as in Espanol&Revenga 2003 or Hu&Admas 2006 formulation.
+  ! as in Espanol&Revenga Phys. Rev. E 2003 or 
+  !       Hu&Adams J. Comput.Phys. 2006 or
+  !       Hu&Adams Phys.Fluids 2006  formulations.
   !----------------------------------------------------------
 
   
