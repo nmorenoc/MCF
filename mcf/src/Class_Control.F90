@@ -35,7 +35,9 @@
            
            CHARACTER(LEN=MAX_CHAR)    :: job_name
            CHARACTER(LEN=MAX_CHAR)    :: job_submit_date
-           CHARACTER(LEN=MAX_CHAR)    :: job_execute_date
+           CHARACTER(LEN=10)          :: job_execute_date
+           CHARACTER(LEN=10)          :: job_execute_time
+           CHARACTER(LEN=10)          :: job_execute_zone
            INTEGER                    :: debug_flag
            LOGICAL                    :: relax_run
            LOGICAL                    :: read_external
