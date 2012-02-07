@@ -38,6 +38,8 @@
         this%job_name            = ""
         this%job_submit_date     = ""
         CALL DATE_AND_TIME(this%job_submit_date)
+        this%job_execute_date     = ""
+        CALL DATE_AND_TIME(this%job_execute_date)      
         this%debug_flag          = 1
         this%relax_run           = .FALSE.
         this%read_external       = .FALSE.
@@ -102,9 +104,10 @@
         
         PRINT *, "job_name           : ", &
              this%job_name(1:LEN_TRIM(this%job_name))
-        PRINT *, "job_submit_date           : ", &
+        PRINT *, "job_submit_date    : ", &
              this%job_submit_date(1:LEN_TRIM(this%job_submit_date))
-        
+        PRINT *, "job_execute_date   : ", &
+             this%job_execute_date(1:LEN_TRIM(this%job_execute_date))      
         PRINT *, "debug_flag         : ", this%debug_flag
         
         PRINT *, "relax run          : ", this%relax_run
