@@ -1,6 +1,0 @@
-TestRunner.o : TestRunner.F90 ppm_module_get_revision_test.o ppm_module_map_part_ghost_test.o ppm_module_mktopo_test.o ppm_module_init_test.o 
-mod_unit.o : mod_unit.F90 
-ppm_module_init_test.o : ppm_module_init_test.F90 ../config.h mod_unit.o 
-ppm_module_mktopo_test.o : ppm_module_mktopo_test.F90 ../config.h mod_unit.o 
-ppm_module_map_part_ghost_test.o : ppm_module_map_part_ghost_test.F90 ../config.h mod_unit.o 
-ppm_module_get_revision_test.o : ppm_module_get_revision_test.F90 ../config.h mod_unit.o 
