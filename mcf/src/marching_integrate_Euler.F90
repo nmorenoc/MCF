@@ -868,7 +868,7 @@
            ! since it guarantee the boundary condition also.
            !-------------------------------------------------
            
-#ifdef __WALL_FORCE_SEPARATE
+#ifdef __PARTICLES_FORCE_SEPARATE
 
            CALL particles_map_ghost_put(this%particles, &
                 l_map_x   = .TRUE., l_map_f  = .TRUE., &

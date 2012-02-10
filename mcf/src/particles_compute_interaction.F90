@@ -249,7 +249,7 @@
         
         REAL(MK), DIMENSION(3)          :: fip
         REAL(MK), DIMENSION(3)          :: fjp
-#ifdef __WALL_FORCE_SEPARATE
+#ifdef __PARTICLES_FORCE_SEPARATE
         REAL(MK), DIMENSION(3)          :: fpip
         REAL(MK), DIMENSION(3)          :: fpjp
         REAL(MK), DIMENSION(3)          :: fvip
@@ -408,7 +408,7 @@
         
         this%f(:,:) = 0.0_MK
 
-#ifdef __WALL_FORCE_SEPARATE
+#ifdef __PARTICLES_FORCE_SEPARATE
         IF (ASSOCIATED(this%fp)) THEN
            DEALLOCATE(this%fp,STAT=stat_info_sub)
         END IF
@@ -680,7 +680,7 @@
                              
                              fip (1:num_dim) = 0.0_MK
                              fjp (1:num_dim) = 0.0_MK
-#ifdef __WALL_FORCE_SEPARATE
+#ifdef __PARTICELS_FORCE_SEPARATE
                              fpip (1:num_dim) = 0.0_MK
                              fpjp (1:num_dim) = 0.0_MK
                              fvip (1:num_dim) = 0.0_MK
@@ -723,7 +723,7 @@
                                 
                              END IF
                              
-#ifdef __WALL_FORCE_SEPARATE
+#ifdef __PARTICLES_FORCE_SEPARATE
                              this%fp(1:num_dim,ip) = &
                                   this%fp(1:num_dim,ip) + fpip(1:num_dim)
                              this%fv(1:num_dim,ip) = &

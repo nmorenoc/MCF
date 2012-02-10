@@ -37,7 +37,7 @@
         stat_info_sub = 0
         dim           = this%num_dim
 
-#ifdef __POSITION_FIXED
+#ifdef __PARTICLES_POSITION_FIXED
 #else
         IF( this%translate ) THEN
            

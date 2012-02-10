@@ -55,7 +55,7 @@
         
         dim       = this%num_dim
         
-#ifdef __POSITION_FIXED
+#ifdef __PARTICLES_POSITION_FIXED
 #else
 
 #ifdef __WALL_FIXED

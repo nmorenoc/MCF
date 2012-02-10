@@ -73,7 +73,7 @@
              colloid_get_rotate(colloids,stat_info_sub)
         NULLIFY(coll_rot_matrix)
         
-#ifdef __POSITION_FIXED
+#ifdef __PARTICLES_POSITION_FIXED
 #else
         
         IF ( translate .OR. rotate ) THEN

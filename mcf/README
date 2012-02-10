@@ -2,6 +2,8 @@ After download MCF/mcf/ folder,
 I suppose you have already installed PPM library
 in a proper path,
 which needs to be given when you configure mcf client.
+I also suppose you have installed makedepf90,
+which is to check routines dependency of mcf/src/*.F90.
 
 1) run script
  

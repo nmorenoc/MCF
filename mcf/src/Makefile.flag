@@ -1,7 +1,7 @@
 #------------------------------------------------------------
 #************************************************************
-# Comments about
-# compiling flags to indicate program components.
+# Comments about compiling flags,
+# which are used to select program components.
 #************************************************************
 #------------------------------------------------------------
 
@@ -16,7 +16,6 @@ otherwise, no MPI is used.
 
 #------------------------------------------------------------
 # Debug flags
-
 #------------------------------------------------------------
 
 -D__DEBUG       :
@@ -38,14 +37,6 @@ otherwise, no debug information about marching_integrate_VV routine.
 # Physics flags
 #------------------------------------------------------------
 
--D__IGNORE_SOLVENT :
-
-ignore solvent particles and only generate boundary particles
-
-1: useful of testing lubrication correction forces.
-2: colloidal forces between colloids and walls.
-3: test for colloidal motions, e.g., rotation.
-
 -D__FLOW_DEVELOPED :
 
 initial velocity is set up as a developed shear flow.
@@ -55,14 +46,26 @@ initial velocity is set up as a developed shear flow.
 # SPH/SDPD particles flags
 #------------------------------------------------------------
 
--D__POSITION_FIXED :
+-D__PARTICLES_NO_SOLVENT :
 
-all particles position fixed.
+ignore solvent particles and only generate boundary particles
 
--D__WRITE_FORCE :
+1: useful of testing lubrication correction forces.
+2: colloidal forces between colloids and walls.
+3: test for colloidal motions, e.g., rotation.
 
-force will be writing into output particle files.
-otherwise, force is not recorded.
+-D__PARTICLES_POSITION_FIXED :
+
+all particles position fixed,
+then SDPD/SPH is kind of Euler method without moving
+particles in Lagrangian framework.
+
+-D__PARTICLES_FORCE_SEPARATE :
+
+all pair forces, pressure, viscous, (and stachastic) forces,
+are calculated and used separately during the simulation.
+It is currently only implemented for Hu&Adams Physics of Fluids 2006
+angular momentum conserved formulation.
 
 #------------------------------------------------------------
 # Colloid related flags
@@ -106,11 +109,16 @@ file every step/time freq, just like SPH/SDPD particles.
 
 -D__WALL_FORCE_SEPARATE :
 
-forces on the wall 
-are separated into pressure, viscous (and random) forces.
-1) it is useful to measure shear-induced 
+forces on the wall are separated into 
+pressure, viscous (and random) forces.
+1) make sure that -D__PARTICLES_FORCE_SEPARATE
+is set and forces are calculated spearately.
+2) make sure that -D__IO_WALL_FORCE_SEPARATE
+is set, otherwise, the separate forces on wall
+will not be written into output
+2) it is useful to measure shear-induced 
 normal stress on the wall.
-2) it is useful to measure different contribution of 
+3) it is useful to measure different contribution of 
 shear stress or viscosity.
 
 -D__WALL_FIXED
@@ -118,4 +126,24 @@ shear stress or viscosity.
 the wall may have speed but not move.
 (useful when the number of wall is equal
 to 2*num_dim, for example, lid driven cavity)
+
+#------------------------------------------------------------
+# Input/output related flags.
+#------------------------------------------------------------
+
+#-D__WRITE_FORCE :
+-D__IO_PARTICLES_FORCE :
+
+total force will be written into output particle files.
+otherwise, force is not recorded.
+
+-D__IO_PARTICLES_FORCE_SEPARATE :
+
+separate forces will be written into output particle files.
+otherwise, they are not recorded.
+
+-D__IO_WALL_FORCE_SEPARATE :
+
+separate forces will be written into boundary files.
+otherwise, they are not recorded separately.
 

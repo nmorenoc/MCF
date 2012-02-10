@@ -44,7 +44,7 @@
         INTEGER,DIMENSION(:), POINTER   :: bcdef
         REAL(MK),DIMENSION(:,:),POINTER :: drag
 
-#ifdef __WALL_FORCE_SEPARATE
+#ifdef __IO_WALL_FORCE_SEPARATE
         REAL(MK),DIMENSION(:,:),POINTER :: drag_p
         REAL(MK),DIMENSION(:,:),POINTER :: drag_v
         REAL(MK),DIMENSION(:,:),POINTER :: drag_r
@@ -62,7 +62,7 @@
         NULLIFY(bcdef)
         NULLIFY(drag)        
         
-#ifdef __WALL_FORCE_SEPARATE
+#ifdef __IO_WALL_FORCE_SEPARATE
         NULLIFY(drag_p)
         NULLIFY(drag_v)
         NULLIFY(drag_r)
@@ -105,7 +105,7 @@
            CALL boundary_get_bcdef(d_boundary,bcdef,stat_info_sub)
            CALL boundary_get_drag(d_boundary,drag,stat_info_sub)
            
-#ifdef __WALL_FORCE_SEPARATE
+#ifdef __IO_WALL_FORCE_SEPARATE
            CALL boundary_get_drag_p(d_boundary,drag_p,stat_info_sub)
            CALL boundary_get_drag_v(d_boundary,drag_v,stat_info_sub)
            num = num + &
@@ -146,7 +146,7 @@
               
            END DO
            
-#ifdef __WALL_FORCE_SEPARATE
+#ifdef __IO_WALL_FORCE_SEPARATE
            
            DO i = 1, 2*num_dim
               
@@ -205,7 +205,7 @@
            DEALLOCATE(drag)
         END IF
         
-#ifdef __WALL_FORCE_SEPARATE
+#ifdef __IO_WALL_FORCE_SEPARATE
         IF(ASSOCIATED(drag_p)) THEN
            DEALLOCATE(drag_p)
         END IF

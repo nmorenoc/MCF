@@ -70,7 +70,7 @@
         dim           = &
              physics_get_num_dim(this%phys,stat_info_sub)
 
-#ifdef __POSITION_FIXED
+#ifdef __PARTICLES_POSITION_FIXED
         
 #else      
         !----------------------------------------------------

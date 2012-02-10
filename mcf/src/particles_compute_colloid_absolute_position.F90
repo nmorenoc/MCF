@@ -67,7 +67,7 @@
         
         CALL colloid_get_x(colloids,coll_x,stat_info_sub)
         
-#ifdef __POSITION_FIXED
+#ifdef __PARTICLES_POSITION_FIXED
 #else
         
         IF ( translate .OR. rotate ) THEN

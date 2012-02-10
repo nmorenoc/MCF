@@ -41,7 +41,7 @@
         stat_info_sub = 0
         dim           = this%num_dim
 
-#if __POSITION_FIXED
+#if __PARTICLES_POSITION_FIXED
 #else        
         IF ( this%rotate ) THEN
 

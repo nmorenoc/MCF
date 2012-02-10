@@ -527,7 +527,7 @@
               
            END IF ! NOT counted_wall_solid AND num_colloid > 0
            
-#if __IGNORE_SOLVENT
+#if __PARTICLES_NO_SOLVENT
            !-------------------------------------------------
            ! ignore solvent particles, for special usage only.
            !-------------------------------------------------

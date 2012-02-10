@@ -40,7 +40,7 @@
            DEALLOCATE(this%f)
         END IF
 
-#ifdef __WALL_FORCE_SEPARATE
+#ifdef __PARTICLES_FORCE_SEPARATE
         IF(ASSOCIATED(this%fp)) THEN
            DEALLOCATE(this%fp)
         END IF

@@ -64,6 +64,8 @@
            ! f     : force per unit mass / acceleration
            ! fa_min: minimum force acceleration.
            ! fa_max: maximum force acceleration.
+           ! dt_f  : time step limit due to force acceleration.
+           !
            ! fp    : pressure force per unit mass / acceleration
            ! fv    : viscous force per unit mass / acceleration
            ! fr    : randome force per unit mass / acceleration
@@ -91,14 +93,16 @@
            INTEGER, DIMENSION(:,:), POINTER     :: id
            REAL(MK), DIMENSION(:,:), POINTER    :: f
 
-           REAL(MK), DIMENSION(:,:), POINTER    :: fp
-           REAL(MK), DIMENSION(:,:), POINTER    :: fv
-           REAL(MK), DIMENSION(:,:), POINTER    :: fr
-
            REAL(MK)                             :: fa_min
            REAL(MK)                             :: fa_max
            REAL(MK)                             :: dt_f
            
+#ifdef __PARTICLES_FORCE_SEPARATE
+           REAL(MK), DIMENSION(:,:), POINTER    :: fp
+           REAL(MK), DIMENSION(:,:), POINTER    :: fv
+           REAL(MK), DIMENSION(:,:), POINTER    :: fr
+#endif
+            
            REAL(MK), DIMENSION(:), POINTER      :: u
            REAL(MK), DIMENSION(:), POINTER      :: au
            
