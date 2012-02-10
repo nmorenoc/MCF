@@ -106,9 +106,15 @@
                 xi,xj,dij,vi,vj,rhoi,rhoj,pi,pj,&
                 mi,mj,w,gradw,fi,fj,stat_info_sub)
            
+        case (4)
+
+           CALL  rhs_force_ff_non_Newtonian_HuAdams_angular(this,&
+                xi,xj,dij,vi,vj,rhoi,rhoj,pi,pj,&
+                mi,mj,w,gradw,fi,fj,stat_info_sub)
+           
         CASE DEFAULT
            
-           PRINT *, "rhs_force_ff__Non_Newtonian : ", & 
+           PRINT *, "rhs_force_ff_non_Newtonian : ", & 
                 "Not existing formulation !"
            stat_info = -1
            GOTO 9999
@@ -128,6 +134,8 @@
         
       END SUBROUTINE rhs_force_ff_non_Newtonian
       
-#include "rhs_force_ff_non_Newtonian_HuAdams.F90"          
-#include "rhs_force_ff_non_Newtonian_Espanol.F90"          
+
+#include "rhs_force_ff_non_Newtonian_Espanol.F90"
+#include "rhs_force_ff_non_Newtonian_HuAdams.F90"
+#include "rhs_force_ff_non_Newtonian_HuAdams_angular.F90"
       

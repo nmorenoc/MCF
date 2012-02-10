@@ -162,7 +162,7 @@
                  
                  output(j_start:j_end) = &
                       drag_p(1:num_dim,i)
-
+                 
                  j_start = j_end + 1
                  j_end   = j_start + num_dim -1
                  
