@@ -1,5 +1,44 @@
+Introduction:
 Multiscale complex fluids simulation (MCF)
 has implemeted an Lagrangian mesh-free numerical scheme,
 which is smoothed dissipative particle dynamics (SDPD),
-under a MPI-based parallel framework, 
-which is parallel particle-mesh library (PPM).
+under a MPI-based parallel framework
+named parallel particle-mesh library (PPM).
+
+SDPD method:
+SDPD is an extension of smoothed particle hydrodynamics (SPH),
+which is a Lagrangian solver for continuum equations, 
+such as Navier-Stokes equations.
+SDPD cast SPH into GENERIC framework and
+introduced thermal fluctuations in a consistent way,
+which satisfies dissipation-fluctuation theorem.
+The resulted form of SDPD has a similiar structure
+as another mesoscopic method, 
+dissipative particle dynamics (DPD).
+Therefore, SDPD is considered a framework combining
+SPH and DPD.
+
+PPM:
+It is a parallel particle-mesh library developed
+at CSElab of ETH Zurich.
+PPM is constructued based on 
+message passing interface (MPI) routines and
+covers many communication requirements for
+a typical particle method,
+such as SPH, DPD, molecular dynamics (MD).
+
+
+MCF:
+It is kind of client software,
+which calls PPM regularly to handle communication 
+between processors.
+All the physics or numerical parts are done
+in this client for the simulation.
+
+
+
+
+
+
+
+
