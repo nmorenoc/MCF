@@ -15,8 +15,8 @@ which satisfies dissipation-fluctuation theorem.
 The resulted form of SDPD has a similiar structure
 as another mesoscopic method, 
 dissipative particle dynamics (DPD).
-Therefore, SDPD is considered a framework combining
-SPH and DPD.
+Therefore, SDPD is considered as a multiscale framework
+combining SPH and DPD.
 
 PPM:
 It is a parallel particle-mesh library developed
@@ -33,7 +33,7 @@ It is kind of client software,
 which calls PPM regularly to handle communication 
 between processors.
 All the physics or numerical parts are done
-in this client for the simulation.
+in this client for a fluid simulation.
 
 
 
