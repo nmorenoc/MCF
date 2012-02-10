@@ -82,12 +82,17 @@
         NULLIFY(this%f)
         this%fa_min = 0.0_MK
         this%fa_max = 0.0_MK
-        
-#ifdef __PARTICLES_FORCE_SEPARATE
+
         NULLIFY(this%fp)
         NULLIFY(this%fv)
         NULLIFY(this%fr)
-#endif
+     
+        NULLIFY(this%s)
+        
+        NULLIFY(this%sp)
+        NULLIFY(this%sv)
+        NULLIFY(this%sr)
+        
         
         NULLIFY(this%u)
         NULLIFY(this%au)

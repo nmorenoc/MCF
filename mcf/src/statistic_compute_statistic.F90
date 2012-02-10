@@ -52,7 +52,7 @@
         INTEGER                                 :: stat_info_sub
         TYPE(Control), POINTER                  :: ctrl
         LOGICAL                                 :: p_energy
-        INTEGER                                 :: num_dim
+        INTEGER                                 :: dim, dim2
 
         !----------------------------------------------------
         ! Particles variables,  
@@ -64,6 +64,9 @@
         REAL(MK), DIMENSION(:,:), POINTER       :: v
         REAL(MK), DIMENSION(:), POINTER         :: m
         INTEGER, DIMENSION(:), POINTER          :: sid
+#if __PARTICLES_STRESS
+        REAL(MK), DIMENSION(:,:), POINTER       :: s
+#endif
         REAL(MK), DIMENSION(:), POINTER         :: u
         
         !----------------------------------------------------
@@ -81,6 +84,9 @@
         REAL(MK)                                :: k_energy_tot
         REAL(MK), DIMENSION(3)                  :: momentum_tot
         REAL(MK)                                :: v2
+#if __PARTICLES_STRESS
+        REAL(MK), DIMENSION(:), ALLOCATABLE     :: stress_tot
+#endif
         REAL(MK)                                :: p_energy_tot
         
         !----------------------------------------------------
@@ -98,12 +104,18 @@
         stat_info_sub = 0
         
         NULLIFY(ctrl)
-        num_dim = this%num_dim
+        dim  = this%num_dim
+        dim2 = dim**2
         
         NULLIFY(x)
         NULLIFY(v)
         NULLIFY(m)
         NULLIFY(sid)
+
+#if __PARTICLES_STRESS
+        NULLIFY(s)
+#endif
+
         NULLIFY(u)
         
         NULLIFY(tech)
@@ -117,12 +129,18 @@
         momentum_tot(:) = 0.0_MK
         p_energy_tot    = 0.0_MK
 
+#if __PARTICLES_STRESS
+        this%stress(:)  = 0.0_MK
+        ALLOCATE(stress_tot(dim2))
+        stress_tot(:)   = 0.0_MK        
+#endif
+        
         !----------------------------------------------------
         ! Check if dimension of additional momentum match.
         !----------------------------------------------------
         
         IF( PRESENT(extra_mom) .AND. &
-             SIZE(extra_mom,1) /= this%num_dim) THEN
+             SIZE(extra_mom,1) /= dim) THEN
            PRINT *, "statistic_compute_statistic : ", &
                 "Extra momentum has different dimension !"
            stat_info = -1
@@ -158,23 +176,28 @@
         CALL particles_get_v(d_particles,v,num_part,stat_info_sub)
         CALL particles_get_m(d_particles,m,num_part,stat_info_sub)
         CALL particles_get_sid(d_particles,sid,num_part,stat_info_sub)
+
+#ifdef __PARTICLES_STRESS
+        CALL particles_get_s(d_particles,s,num_part,stat_info_sub)
+#endif
         
         !----------------------------------------------------
-        ! Kienetic engergy : K = 0.5 * m * v**2; 
-        ! Momentum         : M = m * v; 
+        ! Kinetic engergy : K = 0.5 * m * v**2; 
+        ! Momentum        : M = m * v; 
         !----------------------------------------------------
         
         DO j = 1, num_part
            
            !-------------------------------------------------
-           ! Count only fluid particles.
+           ! Count only fluid particles here 
+           ! when calculate total kinetic energy and momentum.
            !-------------------------------------------------
            
            IF( sid(j) == 0 ) THEN
               
               v2 = 0.0_MK
               
-              DO i = 1, num_dim
+              DO i = 1, dim
                  
                  v2 = v2 + v(i,j)**2
                  
@@ -183,11 +206,21 @@
               this%k_energy  = this%k_energy + &
                    0.5_MK * m(j) * v2
               
-              this%momentum(1:num_dim) = &
-                   this%momentum(1:num_dim) + &
-                   m(j) * v(1:num_dim,j)
+              this%momentum(1:dim) = &
+                   this%momentum(1:dim) + &
+                   m(j) * v(1:dim,j)
               
            END IF ! sid(j) == 0
+           
+#if __PARTICLES_STRESS
+           !-------------------------------------------------
+           ! Count all particles for total stress tensor
+           !-------------------------------------------------
+           
+           this%stress(1:dim2) = &
+                this%stress(1:dim2) + s(1:dim2,j)
+#endif
+
            
         END DO ! j = 1, num_part
         
@@ -242,8 +275,8 @@
         ! broadcast the result.
         !----------------------------------------------------
         
-        CALL MPI_ALLREDUCE (this%momentum(1:num_dim),  &
-             momentum_tot(1:num_dim),num_dim,MPI_PREC, &
+        CALL MPI_ALLREDUCE (this%momentum(1:dim),  &
+             momentum_tot(1:dim),dim,MPI_PREC, &
              MPI_SUM,comm,stat_info_sub) 
         
         IF( stat_info_sub /= 0 ) THEN
@@ -252,6 +285,25 @@
            stat_info = -1
            GOTO 9999
         END IF
+
+ 
+#ifdef __PARTICLES_STRESS
+        !----------------------------------------------------
+        ! Sum up the stress tensor from all the processes,
+        ! broadcast the result.
+        !----------------------------------------------------
+        
+        CALL MPI_ALLREDUCE (this%stress(1:dim2),  &
+             stress_tot(1:dim2),dim2,MPI_PREC, &
+             MPI_SUM,comm,stat_info_sub) 
+        
+        IF( stat_info_sub /= 0 ) THEN
+           PRINT *, "statistic_compute_statistic : ", &
+                "MPI_ALLREDUCE() for stress has problem !"
+           stat_info = -1
+           GOTO 9999
+        END IF
+#endif
         
         !----------------------------------------------------
         ! All processes get total kinetic energy, 
@@ -259,7 +311,16 @@
         !----------------------------------------------------
         
         this%k_energy = k_energy_tot
-        this%momentum(1:num_dim) = momentum_tot(1:num_dim)
+        this%momentum(1:dim) = momentum_tot(1:dim)
+
+        
+#ifdef __PARTICLES_STRESS
+        !----------------------------------------------------
+        ! All processes get total stress tensor.
+        !----------------------------------------------------
+   
+        this%stress(1:dim2)  = stress_tot(1:dim2)
+#endif
         
         !----------------------------------------------------
         ! Sum up the potential energy from all processes,
@@ -284,7 +345,7 @@
         END IF
         
 #endif
-      
+        
         !----------------------------------------------------
         ! Add extra kinetic energy and momentum.
         !----------------------------------------------------
@@ -297,8 +358,8 @@
         
         IF ( PRESENT(extra_mom)) THEN
            
-           this%momentum(1:num_dim) =  &
-                this%momentum(1:num_dim) + extra_mom(1:num_dim)
+           this%momentum(1:dim) =  &
+                this%momentum(1:dim) + extra_mom(1:dim)
            
         END IF
         
@@ -324,6 +385,12 @@
         IF(ASSOCIATED(sid)) THEN
            DEALLOCATE(sid)
         END IF
+        
+#if __PARTICLES_STRESS        
+        IF(ASSOCIATED(s)) THEN
+           DEALLOCATE(s)
+        END IF
+#endif
         
         IF(ASSOCIATED(u)) THEN
            DEALLOCATE(u)

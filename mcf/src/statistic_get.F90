@@ -85,6 +85,68 @@
         RETURN        
         
       END SUBROUTINE statistic_get_statistic
+
+      
+      REAL(MK) FUNCTION statistic_get_kinetic_energy(this,stat_info)
+
+        TYPE(Statistic), INTENT(IN)     :: this
+        INTEGER, INTENT(OUT)            :: stat_info 
+        
+        stat_info = 0
+        statistic_get_kinetic_energy = this%k_energy
+        
+        RETURN
+        
+      END FUNCTION statistic_get_kinetic_energy
+
+
+      SUBROUTINE statistic_get_momentum(this, &
+           d_momentum,stat_info)
+        
+        TYPE(Statistic), INTENT(IN)     :: this
+        REAL(MK), DIMENSION(:), POINTER :: d_momentum
+        INTEGER, INTENT(OUT)            :: stat_info 
+        
+        
+        stat_info = 0
+        
+        IF(ASSOCIATED(d_momentum)) THEN
+           DEALLOCATE(d_momentum)
+        END IF
+        
+        ALLOCATE(d_momentum(this%num_dim))
+        
+        d_momentum(:) = this%momentum(1:this%num_dim)
+        
+        RETURN        
+        
+      END SUBROUTINE statistic_get_momentum
+
+
+      SUBROUTINE statistic_get_stress(this, &
+           d_stress,stat_info)
+        
+        TYPE(Statistic), INTENT(IN)     :: this
+        REAL(MK), DIMENSION(:), POINTER :: d_stress
+        INTEGER, INTENT(OUT)            :: stat_info 
+        
+        INTEGER                         :: dim2
+
+        
+        stat_info = 0
+        dim2      = this%num_dim**2
+        
+        IF(ASSOCIATED(d_stress)) THEN
+           DEALLOCATE(d_stress)
+        END IF
+        
+        ALLOCATE(d_stress(dim2))
+        
+        d_stress(1:dim2) = this%stress(1:dim2)
+        
+        RETURN        
+        
+      END SUBROUTINE statistic_get_stress
       
       
       SUBROUTINE statistic_get_disorder(this,d_disorder,stat_info)

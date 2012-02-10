@@ -390,7 +390,7 @@
         INTEGER,INTENT(OUT)                     :: stat_info
         
         !-----------------------
-        !Local variables
+        ! Local variables
         !------------------------
         
         INTEGER                         :: dim
@@ -509,14 +509,17 @@
       
       
       SUBROUTINE particles_get_f(this,f,num,stat_info)
-
+        !----------------------------------------------------
+        ! Return force per unit mass of each particle
+        !----------------------------------------------------
+     
         TYPE(Particles),INTENT(IN)              :: this
         REAL(MK),DIMENSION(:,:),POINTER         :: f
         INTEGER, INTENT(IN)                     :: num
         INTEGER,INTENT(OUT)                     :: stat_info
         
         !-----------------------
-        !Local variables
+        ! Local variables
         !------------------------
         
         INTEGER                         :: dim
@@ -592,6 +595,52 @@
         
       END FUNCTION particles_get_dt_f
       
+
+      SUBROUTINE particles_get_s(this,s,num,stat_info)
+        !----------------------------------------------------
+        ! Return stress tensor of each particle
+        !----------------------------------------------------
+        
+        TYPE(Particles),INTENT(IN)              :: this
+        REAL(MK),DIMENSION(:,:),POINTER         :: s
+        INTEGER, INTENT(IN)                     :: num
+        INTEGER,INTENT(OUT)                     :: stat_info
+        
+        !-----------------------
+        ! Local variables
+        !------------------------
+        
+        INTEGER                         :: dim
+
+        stat_info = 0
+        
+        IF( num > this%num_part_all) THEN
+           PRINT *, "particles_get_s :  ",&
+                "Required particles is more than existed !"
+           stat_info = -1
+           GOTO 9999
+        END IF
+        
+        IF(ASSOCIATED(s)) THEN 
+           DEALLOCATE(s)
+        END IF
+        
+        IF( num > 0 ) THEN
+           
+           dim = SIZE(this%s,1)
+           
+           ALLOCATE(s(dim,num))
+           
+           s(1:dim,1:num) = this%s(1:dim,1:num)
+           
+        END IF
+        
+9999    CONTINUE
+        
+        RETURN
+        
+      END SUBROUTINE particles_get_s
+
 
       SUBROUTINE particles_get_vgt(this,vgt,num,stat_info)
         

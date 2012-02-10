@@ -52,6 +52,18 @@
            LOGICAL                              :: pp_interact_cw
            
            !-------------------------------------------------
+           ! General remarks:
+           ! 
+           ! Some variables/quantities are only useful when 
+           ! some specific compiler flags are set. 
+           ! However we define them all here,  and 
+           ! initialize them in particles_new() and 
+           ! finalize in particles_finalize().
+           ! Only when they need to be given memory,
+           ! we decide wethear they are used or allocated.
+           ! This ways saves a lot of setting for compiler flags.
+           !
+           !
            ! x     : position
            ! v     : velocity
            ! rho   : mass / number density
@@ -70,6 +82,36 @@
            ! fv    : viscous force per unit mass / acceleration
            ! fr    : randome force per unit mass / acceleration
            !           
+           ! s     : stress tensor
+           !
+           ! sp    : stress tensor from potential/pressure force
+           ! sv    : stress tensor from viscous force
+           ! sr    : stress tensor from random force.
+           !
+           ! Remark :
+           !         Since PPM doesn't support tensor/matrix 
+           !         for particles, i.e., it doesn't support 
+           !         rank=3 dimensional data,
+           !         we have to use dim**2 array for each particle, 
+           !         if a matrix is needed.
+           !
+           !         In context of Fortran language, column 
+           !         dominating convention is used, 
+           !         i.e., index change first by rows then columns.
+           !
+           !
+           ! s, sp, sv, sr
+           ! matrix notation, 2D(3D):
+           !  sxx   sxy  (sxz)
+           !  syx   syy  (syz)
+           ! (szx) (szy) (szz)
+           !
+           ! array notation of 2D in order:
+           ! sxx, syx, sxy, syy;
+           ! array notation of 3D in order:
+           ! sxx, syx, szx, sxy, syy, szy,
+           ! sxz, syz, szz.
+           !
            ! u     : thermal energy.
            ! au    : acceleration of thermal energy.
            !
@@ -97,12 +139,19 @@
            REAL(MK)                             :: fa_max
            REAL(MK)                             :: dt_f
            
-#ifdef __PARTICLES_FORCE_SEPARATE
+
            REAL(MK), DIMENSION(:,:), POINTER    :: fp
            REAL(MK), DIMENSION(:,:), POINTER    :: fv
-           REAL(MK), DIMENSION(:,:), POINTER    :: fr
-#endif
-            
+           REAL(MK), DIMENSION(:,:), POINTER    :: fr           
+
+           
+           REAL(MK), DIMENSION(:,:), POINTER    :: s
+
+           REAL(MK), DIMENSION(:,:), POINTER    :: sp
+           REAL(MK), DIMENSION(:,:), POINTER    :: sv
+           REAL(MK), DIMENSION(:,:), POINTER    :: sr
+           
+           
            REAL(MK), DIMENSION(:), POINTER      :: u
            REAL(MK), DIMENSION(:), POINTER      :: au
            
@@ -119,23 +168,19 @@
            ! 
            ! ct    : conformation tensor
            ! act   : acceleation of conformation tensor
-
+           !
            ! Remark :
-           !         2) Since PPM doesn't support,
-           !         tensor/matrix for particles,
-           !         i.e., it doesn't support 
+           !         Since PPM doesn't support tensor/matrix 
+           !         for particles, i.e., it doesn't support 
            !         rank=3 dimensional data,
-           !         we have to use dim**2 array
-           !         for each particle, if matrix
-           !         is needed. 
-           !         In context of Fortran language,
-           !         column dominating convention
-           !         is used, i.e., index change
-           !         first by rows then columns.
-
+           !         we have to use dim**2 array for each particle, 
+           !         if a matrix is needed.
            !
+           !         In context of Fortran language, column 
+           !         dominating convention is used, 
+           !         i.e., index change first by rows then columns.
            !
-           ! vgt,evgt, ct or act's
+           ! vgt, evgt, ct or act's
            ! matrix notation, 2D(3D):
            !  Cxx   Cxy  (Cxz)
            !  Cyx   Cyy  (Cyz)
@@ -163,8 +208,9 @@
            ! ev3_x, ev3_y, ev3_z
            !
            ! However, pressure tensor(pt) is not needed
-           ! to communicate between processors,
-           ! therefore is is matrxi notation.
+           ! to communicate between processors and
+           ! not using PPM,
+           ! therefore is is matrix notation.
            !-------------------------------------------------
            
            REAL(MK), DIMENSION(:,:), POINTER    :: vgt

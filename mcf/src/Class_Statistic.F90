@@ -49,6 +49,7 @@
            REAL(MK), DIMENSION(3)             :: v_aver
            REAL(MK)                           :: rho_min
            REAL(MK)                           :: rho_max
+           REAL(MK), DIMENSION(9)             :: stress
            REAL(MK)                           :: p_energy
         END TYPE Statistic
         

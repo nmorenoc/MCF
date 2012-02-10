@@ -122,7 +122,7 @@
         !----------------------------------------------------
         
         INTEGER                         :: num_species
-        INTEGER                         :: num_dim
+        INTEGER                         :: num_dim, num_dim2
         REAL(MK)                        :: cut_off
         REAL(MK)                        :: cut_off2
         REAL(MK), DIMENSION(:),POINTER  :: dx
@@ -326,6 +326,7 @@
              physics_get_num_species(this%phys,stat_info_sub)
         num_dim     = &
              physics_get_num_dim(this%phys,stat_info_sub)
+        num_dim2    = num_dim**2
         cut_off     = &
              physics_get_cut_off(this%phys,stat_info_sub)
         cut_off2 = cut_off * cut_off
@@ -373,7 +374,7 @@
         END IF
         
         !----------------------------------------------------
-        ! Allocate memory for force,
+        ! Allocate memory for force, stress tensor
         !
         ! for symmetry     : allocate num_part_all
         ! for non-symmetry : allocate num_part_real
@@ -445,6 +446,27 @@
         this%fr(:,:) = 0.0_MK
 #endif 
         
+#ifdef __PARTICLES_STRESS
+        IF (ASSOCIATED(this%s)) THEN
+           DEALLOCATE(this%s,STAT=stat_info_sub)
+        END IF
+     
+        IF(  symmetry .OR. &
+             num_wall_sym > 0 .OR. num_le > 0 ) THEN
+           
+           ALLOCATE(this%s(num_dim2,this%num_part_all), &
+                STAT=stat_info_sub)
+           
+        ELSE
+           
+           ALLOCATE(this%s(num_dim2,this%num_part_real), &
+                STAT=stat_info_sub)
+           
+        END IF
+        
+        this%s(:,:) = 0.0_MK
+#endif
+
         !----------------------------------------------------
         ! Allocate memory for veocity gradient 
         ! tensor in case of non-Newtonian Oldroyd-B

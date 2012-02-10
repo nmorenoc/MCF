@@ -51,6 +51,9 @@
         REAL(MK)                        :: k_energy
         REAL(MK), DIMENSION(:), POINTER :: momentum
         REAL(MK), DIMENSION(:), POINTER :: v_aver
+#ifdef __IO_STATISTIC_STRESS
+        REAL(MK), DIMENSION(:), POINTER :: stress
+#endif
         REAL(MK)                        :: p_energy
         INTEGER                         :: num_data
         REAL(MK), DIMENSION(8)          :: data
@@ -67,7 +70,10 @@
         stat_info_sub = 0
         NULLIFY(momentum)
         NULLIFY(v_aver)
-        
+#ifdef __IO_STATISTIC_STRESS
+        NULLIFY(stress)
+#endif
+
         IF ( rank /= 0 ) THEN
            PRINT *, "io_write_statistic : ", &
                 "can only be used by root processor !"
@@ -87,6 +93,9 @@
         CALL  statistic_get_statistic(d_statistic, &
              k_energy, momentum,stat_info_sub)
         
+#ifdef __IO_STATISTIC_STRESS
+        CALL statistic_get_stress(d_statistic, & stress, stat_info_sub)
+#endif
         !----------------------------------------------------
         ! Kienetic energy and momentum.
         !----------------------------------------------------
@@ -118,6 +127,16 @@
            num_data = num_data +1
            
         END IF
+        
+#ifdef __IO_STATISTIC_STRESS
+        !----------------------------------------------------
+        ! For 2D case, off diagonal components only.
+        !----------------------------------------------------
+        data(num_data+1) = stress(2)
+        num_data = num_data + 1
+        data(num_data+1) = stress(3)
+        num_data = num_data + 1
+#endif
         
         IF( l_p_energy ) THEN
            
@@ -155,7 +174,13 @@
         IF(ASSOCIATED(v_aver)) THEN
            DEALLOCATE(v_aver)
         END IF
-        
+
+#ifdef __IO_STATISTIC_STRESS
+        IF(ASSOCIATED(stress)) THEN
+           DEALLOCATE(stress)
+        END IF
+#endif
+
         RETURN
         
       END SUBROUTINE io_write_statistic

@@ -33,6 +33,7 @@
         this%momentum(1:d_num_dim) = 0.0_MK
         this%disorder(1:d_num_dim) = 0.0_MK
         this%v_aver(1:d_num_dim)   = 0.0_MK
+        this%stress(1:d_num_dim**2)= 0.0_MK
         this%p_energy              = 0.0_MK
         this%rho_min               = 0.0_MK
         this%rho_max               = 0.0_MK
@@ -62,6 +63,7 @@
         PRINT *, "Totoal momentum  : ", this%momentum(1:this%num_dim)
         PRINT *, "Disorder level   : ", this%disorder(1:this%num_dim)
         PRINT *, "Average velocity : ", this%v_aver(1:this%num_dim)
+        PRINT *, "Totoal stress    : ", this%stress(1:this%num_dim**2)
         
         IF( this%l_p_energy ) THEN
            PRINT *, "Potential energy : ", "Needed "
