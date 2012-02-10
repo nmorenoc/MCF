@@ -33,4 +33,8 @@ FCFLAGS: indicate ppm library header files.
 to compile mcf code,
 -j 8 specify to use 8 processors to accelerate compiling.
 
+5) run installation
 
+  make install
+
+to install mcf executable binary at ...../mcf/mcf_install/ folder.
