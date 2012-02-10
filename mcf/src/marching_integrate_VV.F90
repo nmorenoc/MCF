@@ -84,7 +84,7 @@
         INTEGER                         :: num_shear
         REAL(MK),DIMENSION(3,6)         :: wall_drag_p
         REAL(MK),DIMENSION(3,6)         :: wall_drag_c
-#ifdef __FORCE_SEPARATE
+#ifdef __WALL_FORCE_SEPARATE
         REAL(MK),DIMENSION(3,6)         :: wall_drag_pp
         REAL(MK),DIMENSION(3,6)         :: wall_drag_pv
         REAL(MK),DIMENSION(3,6)         :: wall_drag_pr        
@@ -142,7 +142,7 @@
         NULLIFY(tboundary)
         wall_drag_p(:,:) = 0.0_MK
         wall_drag_c(:,:) = 0.0_MK
-#ifdef __FORCE_SEPARATE
+#ifdef __WALL_FORCE_SEPARATE
         wall_drag_pp(:,:) = 0.0_MK
         wall_drag_pv(:,:) = 0.0_MK
         wall_drag_pr(:,:) = 0.0_MK
@@ -1084,7 +1084,7 @@
            ! since it guarantee the boundary condition also.
            !-------------------------------------------------
            
-#ifdef __FORCE_SEPARATE
+#ifdef __WALL_FORCE_SEPARATE
            CALL particles_map_ghost_put(this%particles, &
                 l_map_x   = .TRUE., l_map_f  = .TRUE., &
                 l_map_fp  = .TRUE., l_map_fv = .TRUE., &
@@ -1383,7 +1383,7 @@
         
         IF ( num_shear > 0 ) THEN
            
-#ifdef __FORCE_SEPARATE
+#ifdef __WALL_FORCE_SEPARATE
            
            CALL particles_collect_boundary_interaction(this%particles,&
                 wall_drag_p(1:num_dim,1:num_dim*2),& 
@@ -1404,7 +1404,7 @@
               GOTO 9999
            END IF
            
-#ifdef __FORCE_SEPARATE
+#ifdef __WALL_FORCE_SEPARATE
 
            CAll boundary_collect_particles_interaction(tboundary,comm,&
                 MPI_PREC, wall_drag_p(1:num_dim,1:num_dim*2),&

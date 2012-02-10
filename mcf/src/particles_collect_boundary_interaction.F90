@@ -87,7 +87,7 @@
         END IF
         
         drag(:,:) = 0.0_MK
-#ifdef __FORCE_SEPARATE
+#ifdef __WALL_FORCE_SEPARATE
         drag_p(:,:) = 0.0_MK
         drag_v(:,:) = 0.0_MK
         drag_r(:,:) = 0.0_MK        
@@ -123,7 +123,7 @@
                       drag(1:num_dim,sid) + &
                       this%f(1:num_dim,ip) * this%m(ip)
                  
-#ifdef __FORCE_SEPARATE
+#ifdef __WALL_FORCE_SEPARATE
                  drag_p(1:num_dim,sid) = &
                       drag_p(1:num_dim,sid) + &
                       this%fp(1:num_dim,ip) * this%m(ip)   
@@ -153,7 +153,7 @@
                    drag(1:num_dim,sid) + &
                    this%f(1:num_dim,ip) * this%m(ip)
               
-#ifdef __FORCE_SEPARATE
+#ifdef __WALL_FORCE_SEPARATE
               drag_p(1:num_dim,sid) = &
                    drag_p(1:num_dim,sid) + &
                    this%fp(1:num_dim,ip) * this%m(ip)   

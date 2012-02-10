@@ -40,7 +40,7 @@
            DEALLOCATE(this%f)
         END IF
 
-#ifdef __FORCE_SEPARATE
+#ifdef __WALL_FORCE_SEPARATE
         IF(ASSOCIATED(this%fp)) THEN
            DEALLOCATE(this%fp)
         END IF

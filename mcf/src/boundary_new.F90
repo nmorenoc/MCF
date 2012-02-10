@@ -51,7 +51,7 @@
         NULLIFY(this%drag)
         ALLOCATE(this%drag(2,4))
         this%drag(:,:) = 0.0_MK
-#ifdef __FORCE_SEPARATE
+#ifdef __WALL_FORCE_SEPARATE
         NULLIFY(this%drag_p)
         ALLOCATE(this%drag_p(2,4))
         this%drag_p(:,:) = 0.0_MK
@@ -130,7 +130,7 @@
         NULLIFY(this%drag)
         ALLOCATE(this%drag(d_num_dim,2*d_num_dim))
         this%drag(:,:) = 0.0_MK
-#ifdef __FORCE_SEPARATE
+#ifdef __WALL_FORCE_SEPARATE
         NULLIFY(this%drag_p)
         ALLOCATE(this%drag_p(d_num_dim,2*d_num_dim))
         this%drag_p(:,:) = 0.0_MK

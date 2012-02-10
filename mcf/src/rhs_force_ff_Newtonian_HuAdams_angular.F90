@@ -5,7 +5,7 @@
 ! dissipative(viscous) force and random(thermal noise) force.
 ! Using Hu & Adams (2006 Physics of fluids) formulation.
 !----------------------------------------------------------------
-#ifdef __FORCE_SEPARATE
+#ifdef __WALL_FORCE_SEPARATE
       SUBROUTINE rhs_force_ff_Newtonian_HuAdams_angular(this,&
            xi,xj,dij,vi,vj,numi,numj, pi,pj,&
            mi,mj,w,gradw,fi,fj,fpi,fpj,fvi,fvj,fri,frj,auij,stat_info)
@@ -63,7 +63,7 @@
         REAL(MK), INTENT(IN)                    :: gradw
         REAL(MK), DIMENSION(:), INTENT(INOUT)   :: fi
         REAL(MK), DIMENSION(:), INTENT(INOUT)   :: fj
-#ifdef __FORCE_SEPARATE
+#ifdef __WALL_FORCE_SEPARATE
         REAL(MK), DIMENSION(:), INTENT(OUT), OPTIONAL     :: fpi
         REAL(MK), DIMENSION(:), INTENT(OUT), OPTIONAL     :: fpj
         REAL(MK), DIMENSION(:), INTENT(OUT), OPTIONAL     :: fvi
@@ -103,7 +103,7 @@
         fi(:) = 0.0_MK
         fj(:) = 0.0_MK
         
-#ifdef __FORCE_SEPARATE
+#ifdef __WALL_FORCE_SEPARATE
         IF ( PRESENT(fpi) .AND. PRESENT (fpj) .AND. &
              PRESENT(fvi) .AND. PRESENT (fvj) .AND. &
              PRESENT(fri) .AND. PRESENT (frj) ) THEN
@@ -198,7 +198,7 @@
         fj(1:num_dim) = fj(1:num_dim) - &
              f_d  * eij(1:num_dim) / mj
         
-#ifdef __FORCE_SEPARATE
+#ifdef __WALL_FORCE_SEPARATE
         IF ( PRESENT(fpi) .AND. PRESENT (fpj) .AND. &
              PRESENT(fvi) .AND. PRESENT (fvj) ) THEN
              
@@ -228,7 +228,7 @@
            fj(1:num_dim)  = fj(1:num_dim) - &
                 f_r * eij(1:num_dim) / mj 
            
-#ifdef __FORCE_SEPARATE
+#ifdef __WALL_FORCE_SEPARATE
            
            IF ( PRESENT(fri) .AND. PRESENT (frj) ) THEN
               

@@ -5,7 +5,7 @@
 ! dissipative(viscous) force and random(thermal noise) force.
 ! Currently, only Hu-Adams formulation has random force.
 !----------------------------------------------------------------
-#ifdef __FORCE_SEPARATE
+#ifdef __WALL_FORCE_SEPARATE
       SUBROUTINE rhs_force_ff_Newtonian(this,&
            xi,xj,dij,vi,vj,rhoi,rhoj,pi,pj,&      
            mi,mj,w,gradw,fi,fj,fpi,fpj,fvi,fvj,fri,frj,auij,stat_info)
@@ -85,7 +85,7 @@
         REAL(MK), INTENT(IN)                    :: gradw
         REAL(MK), DIMENSION(:), INTENT(OUT)     :: fi
         REAL(MK), DIMENSION(:), INTENT(OUT)     :: fj
-#ifdef __FORCE_SEPARATE
+#ifdef __WALL_FORCE_SEPARATE
         REAL(MK), DIMENSION(:), INTENT(OUT), OPTIONAL     :: fpi
         REAL(MK), DIMENSION(:), INTENT(OUT), OPTIONAL     :: fpj
         REAL(MK), DIMENSION(:), INTENT(OUT), OPTIONAL     :: fvi
@@ -148,7 +148,7 @@
            
         CASE (4)
            
-#if __FORCE_SEPARATE
+#if __WALL_FORCE_SEPARATE
            IF ( PRESENT(fpi) .AND. PRESENT (fpj) .AND. &
                 PRESENT(fvi) .AND. PRESENT (fvj) .AND. &
                 PRESENT(fri) .AND. PRESENT (frj) ) THEN

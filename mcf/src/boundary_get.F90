@@ -238,7 +238,7 @@
         
       END SUBROUTINE  boundary_get_drag
       
-#ifdef __FORCE_SEPARATE
+#ifdef __WALL_FORCE_SEPARATE
       SUBROUTINE boundary_get_drag_p(this,d_drag,stat_info)
         
         TYPE(Boundary), INTENT(IN)              :: this

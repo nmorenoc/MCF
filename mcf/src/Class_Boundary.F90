@@ -89,7 +89,7 @@
            INTEGER                              :: noslip_type
            REAL(MK)                             :: dout
            REAL(MK), DIMENSION(:,:),POINTER     :: drag
-#ifdef __FORCE_SEPARATE
+#ifdef __WALL_FORCE_SEPARATE
            REAL(MK), DIMENSION(:,:),POINTER     :: drag_p
            REAL(MK), DIMENSION(:,:),POINTER     :: drag_v
            REAL(MK), DIMENSION(:,:),POINTER     :: drag_r

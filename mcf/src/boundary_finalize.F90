@@ -41,7 +41,7 @@
            DEALLOCATE(this%drag)
         END IF
         
-#ifdef __FORCE_SEPARATE
+#ifdef __WALL_FORCE_SEPARATE
         IF (ASSOCIATED(this%drag_p)) THEN
            DEALLOCATE(this%drag_p)
         END IF

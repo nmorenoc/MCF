@@ -18,6 +18,7 @@ otherwise, no MPI is used.
 # Debug flags
 
 #------------------------------------------------------------
+
 -D__DEBUG       :
 
 in debug mode
@@ -39,20 +40,15 @@ otherwise, no debug information about marching_integrate_VV routine.
 
 -D__IGNORE_SOLVENT :
 
-ignore solvent particles,
+ignore solvent particles and only generate boundary particles
+
 1: useful of testing lubrication correction forces.
 2: colloidal forces between colloids and walls.
 3: test for colloidal motions, e.g., rotation.
 
 -D__FLOW_DEVELOPED :
 
-initial velocity is set up as developed in shear flow.
-
--D__FORCE_SEPARATE :
-
-forces are separated into pressure, viscous (and random) forces.
-for now it is useful to measure shear-induced normal stress
-on the wall.
+initial velocity is set up as a developed shear flow.
 
 
 #------------------------------------------------------------
@@ -60,6 +56,7 @@ on the wall.
 #------------------------------------------------------------
 
 -D__POSITION_FIXED :
+
 all particles position fixed.
 
 -D__WRITE_FORCE :
@@ -105,6 +102,16 @@ file every step/time freq, just like SPH/SDPD particles.
 #------------------------------------------------------------
 # Wall related flags
 #------------------------------------------------------------
+
+
+-D__WALL_FORCE_SEPARATE :
+
+forces on the wall 
+are separated into pressure, viscous (and random) forces.
+1) it is useful to measure shear-induced 
+normal stress on the wall.
+2) it is useful to measure different contribution of 
+shear stress or viscosity.
 
 -D__WALL_FIXED
 

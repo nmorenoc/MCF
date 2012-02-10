@@ -47,7 +47,7 @@
         INTEGER                                 :: dim
         INTEGER                                 :: num
         REAL(MK), DIMENSION(:,:), POINTER       :: t_drag
-#ifdef __FORCE_SEPARATE
+#ifdef __WALL_FORCE_SEPARATE
         REAL(MK), DIMENSION(:,:), POINTER       :: t_drag_p
         REAL(MK), DIMENSION(:,:), POINTER       :: t_drag_v
         REAL(MK), DIMENSION(:,:), POINTER       :: t_drag_r
@@ -80,7 +80,7 @@
         this%drag(:,:) = 0.0_MK        
         NULLIFY(t_drag)
 
-#ifdef __FORCE_SEPARATE
+#ifdef __WALL_FORCE_SEPARATE
         this%drag_p(:,:) = 0.0_MK        
         NULLIFY(t_drag_p)
         this%drag_v(:,:) = 0.0_MK        
@@ -111,7 +111,7 @@
         
         this%drag(1:dim,1:num) = t_drag(1:dim,1:num)
         
-#ifdef __FORCE_SEPARATE
+#ifdef __WALL_FORCE_SEPARATE
 
         ALLOCATE(t_drag_p(dim,num))
         t_drag_p(:,:) = 0.0_MK        
@@ -137,7 +137,7 @@
         
         this%drag(1:dim,1:num) = drag(1:dim,1:num)
         
-#ifdef __FORCE_SEPARATE
+#ifdef __WALL_FORCE_SEPARATE
         
         this%drag_p(1:dim,1:num) = drag_p(1:dim,1:num)
         this%drag_v(1:dim,1:num) = drag_v(1:dim,1:num)
@@ -154,7 +154,7 @@
            DEALLOCATE(t_drag)
         END IF
         
-#ifdef __FORCE_SEPARATE
+#ifdef __WALL_FORCE_SEPARATE
         IF(ASSOCIATED(t_drag_p)) THEN
            DEALLOCATE(t_drag_p)
         END IF
