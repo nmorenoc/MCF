@@ -131,7 +131,6 @@ to 2*num_dim, for example, lid driven cavity)
 # Input/output related flags.
 #------------------------------------------------------------
 
-#-D__WRITE_FORCE :
 -D__IO_PARTICLES_FORCE :
 
 total force will be written into output particle files.

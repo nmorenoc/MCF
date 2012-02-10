@@ -58,7 +58,7 @@
      
      this%p(jp) = this%p(ip)
      
-#ifdef __FORCE_SEPARATE
+#ifdef __PARTICLES_FORCE_SEPARATE
 
      CALL rhs_force_ff(this%rhs, &
           this%x(1:num_dim,ip), &

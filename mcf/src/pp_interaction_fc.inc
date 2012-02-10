@@ -51,15 +51,31 @@
      
      this%p(jp) = this%p(ip)
      
+#ifdef __PARTICLES_FORCE_SEPARATE
+
+     CALL rhs_force_ff(this%rhs, &
+          this%x(1:num_dim,ip), &
+          this%x(1:num_dim,jp),dij, &
+          v_ip(1:num_dim),v_jp(1:num_dim), &
+          this%rho(ip),this%rho(jp), &
+          this%p(ip),this%p(jp), &
+          this%m(ip),this%m(jp), &
+          w,gradw,fip,fjp,&
+          fpip,fpjp,fvip,fvjp,frip,frjp,&
+          stat_info=stat_info_sub)
+     
+#else
+
      CALL rhs_force_ff(this%rhs,&
           this%x(1:num_dim,ip),&
           this%x(1:num_dim,jp),dij,&
-          v_ip(1:num_dim),&
-          v_jp(1:num_dim),&
+          v_ip(1:num_dim),v_jp(1:num_dim),&
           this%rho(ip),this%rho(jp),&
           this%p(ip),this%p(jp),&
           this%m(ip),this%m(jp),&
           w,gradw,fip,fjp,stat_info=stat_info_sub)
+
+#endif
      
   ELSE ! non-Newtonian
      

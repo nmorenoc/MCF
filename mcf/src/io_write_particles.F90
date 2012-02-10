@@ -80,7 +80,7 @@
         INTEGER                                 :: num_x
         INTEGER                                 :: num_v
         INTEGER                                 :: num_id
-#if __WRITE_FORCE        
+#if __IO_PARTICLES_FORCE        
         INTEGER                                 :: num_f
 #endif
         INTEGER                                 :: data_dim
@@ -133,7 +133,7 @@
         CALL particles_get_rho(d_particles,rho,num_part,stat_info)
         CALL particles_get_m(d_particles,m,num_part,stat_info)
         
-#ifdef __WRITE_FORCE
+#ifdef __IO_PARTICLES_FORCE
         CALL particles_get_f(d_particles,f,num_part,stat_info)
 #endif
         
@@ -194,7 +194,7 @@
         
         data_dim = num_x + num_v + 1 + 1 + num_id
         
-#ifdef __WRITE_FORCE
+#ifdef __IO_PARTICLES_FORCE
         num_f = SIZE(f,1)
         data_dim = data_dim + num_f
 #endif
@@ -235,7 +235,7 @@
         
         current_dim = current_dim + num_id
         
-#ifdef __WRITE_FORCE
+#ifdef __IO_PARTICLES_FORCE
         output(current_dim+1:current_dim+num_f,1:num_part) = &
              f(1:num_f,1:num_part)
         current_dim = current_dim + num_f
