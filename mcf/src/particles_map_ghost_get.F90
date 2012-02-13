@@ -115,7 +115,7 @@
         ! Physics parameters :
         !----------------------------------------------------
         
-        INTEGER                         :: num_dim        
+        INTEGER                         :: num_dim, num_dim2
         TYPE(Boundary), POINTER         :: tboundary
         REAL(MK),DIMENSION(:,:),POINTER :: shear_length
         INTEGER                         :: num_le
@@ -272,7 +272,8 @@
         ! Get physics dimesnion.
         !----------------------------------------------------
         
-        num_dim = this%num_dim
+        num_dim  = this%num_dim
+        num_dim2 = num_dim**2
         CALL physics_get_boundary(this%phys, &
              tboundary,stat_info_sub)
         CALL boundary_get_shear_length(tboundary, &
@@ -391,7 +392,7 @@
         
         IF ( map_vgt ) THEN
            
-           CALL  ppm_map_part_ghost(this%vgt,num_dim**2,&
+           CALL  ppm_map_part_ghost(this%vgt,num_dim2,&
                 this%num_part_real,this%num_part_all,&
                 isymm,ghost_size,map_type,stat_info_sub)
            
@@ -399,7 +400,7 @@
         
         IF ( map_evgt ) THEN
            
-           CALL  ppm_map_part_ghost(this%evgt,num_dim**2,&
+           CALL  ppm_map_part_ghost(this%evgt,num_dim2,&
                 this%num_part_real,this%num_part_all,&
                 isymm,ghost_size,map_type,stat_info_sub)
            
@@ -423,7 +424,7 @@
         
         IF ( map_evec ) THEN
            
-           CALL  ppm_map_part_ghost(this%evec,num_dim**2,&
+           CALL  ppm_map_part_ghost(this%evec,num_dim2,&
                 this%num_part_real,this%num_part_all,&
                 isymm,ghost_size,map_type,stat_info_sub)
            
@@ -431,7 +432,7 @@
         
         IF ( map_aevec ) THEN
            
-           CALL  ppm_map_part_ghost(this%aevec,num_dim**2,&
+           CALL  ppm_map_part_ghost(this%aevec,num_dim2,&
                 this%num_part_real,this%num_part_all,&
                 isymm,ghost_size,map_type,stat_info_sub)
            
@@ -439,7 +440,7 @@
         
         IF ( map_ct ) THEN
            
-           CALL  ppm_map_part_ghost(this%ct,num_dim**2,&
+           CALL  ppm_map_part_ghost(this%ct,num_dim2,&
                 this%num_part_real,this%num_part_all,&
                 isymm,ghost_size,map_type,stat_info_sub)
            
@@ -447,7 +448,7 @@
 
         IF ( map_act ) THEN
            
-           CALL  ppm_map_part_ghost(this%act,num_dim**2,&
+           CALL  ppm_map_part_ghost(this%act,num_dim2,&
                 this%num_part_real,this%num_part_all,&
                 isymm,ghost_size,map_type,stat_info_sub)
            
@@ -520,7 +521,7 @@
         
         IF ( map_act ) THEN
            
-           CALL ppm_map_part_ghost(this%act,num_dim**2,&
+           CALL ppm_map_part_ghost(this%act,num_dim2,&
                 this%num_part_real,this%num_part_all,&
                 isymm,ghost_size,map_type,stat_info_sub)
            
@@ -528,7 +529,7 @@
         
         IF ( map_ct ) THEN
            
-           CALL ppm_map_part_ghost(this%ct,num_dim**2,&
+           CALL ppm_map_part_ghost(this%ct,num_dim2,&
                 this%num_part_real,this%num_part_all,&
                 isymm,ghost_size,map_type,stat_info_sub)
            
@@ -536,7 +537,7 @@
         
         IF ( map_aevec ) THEN
            
-           CALL  ppm_map_part_ghost(this%aevec,num_dim**2,&
+           CALL  ppm_map_part_ghost(this%aevec,num_dim2,&
                 this%num_part_real,this%num_part_all,&
                 isymm,ghost_size,map_type,stat_info_sub)
            
@@ -544,7 +545,7 @@
         
         IF ( map_evec ) THEN
            
-           CALL  ppm_map_part_ghost(this%evec,num_dim**2,&
+           CALL  ppm_map_part_ghost(this%evec,num_dim2,&
                 this%num_part_real,this%num_part_all,&
                 isymm,ghost_size,map_type,stat_info_sub)
            
@@ -568,7 +569,7 @@
         
         IF ( map_evgt ) THEN
            
-           CALL  ppm_map_part_ghost(this%evgt,num_dim**2,&
+           CALL  ppm_map_part_ghost(this%evgt,num_dim2,&
                 this%num_part_real,this%num_part_all,&
                 isymm,ghost_size,map_type,stat_info_sub)
            
@@ -576,7 +577,7 @@
         
         IF ( map_vgt ) THEN
            
-           CALL ppm_map_part_ghost(this%vgt,num_dim**2,&
+           CALL ppm_map_part_ghost(this%vgt,num_dim2,&
                 this%num_part_real,this%num_part_all,&
                 isymm,ghost_size,map_type,stat_info_sub)
            

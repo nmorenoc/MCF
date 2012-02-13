@@ -43,25 +43,27 @@
         IF(ASSOCIATED(this%fp)) THEN
            DEALLOCATE(this%fp)
         END IF
+
         IF(ASSOCIATED(this%fv)) THEN
            DEALLOCATE(this%fv)
         END IF
+
         IF(ASSOCIATED(this%fr)) THEN
            DEALLOCATE(this%fr)
         END IF
 
-        
         IF(ASSOCIATED(this%s)) THEN
            DEALLOCATE(this%s)
         END IF
-
         
         IF(ASSOCIATED(this%sp)) THEN
            DEALLOCATE(this%sp)
         END IF
+
         IF(ASSOCIATED(this%sv)) THEN
            DEALLOCATE(this%sv)
         END IF
+
         IF(ASSOCIATED(this%sr)) THEN
            DEALLOCATE(this%sr)
         END IF

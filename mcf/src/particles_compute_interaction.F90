@@ -95,6 +95,7 @@
         LOGICAL                         :: symmetry
         LOGICAL                         :: Newtonian
         LOGICAL                         :: Brownian
+        LOGICAL                         :: stress_tensor
         LOGICAL                         :: p_energy
         
         !----------------------------------------------------
@@ -257,7 +258,24 @@
         REAL(MK), DIMENSION(3)          :: frip
         REAL(MK), DIMENSION(3)          :: frjp        
 #endif
-        
+
+        !----------------------------------------------------
+        ! sip, sjp : pair-wise stress tensor
+        ! sa, sb   : indices for calculating stress tensor
+        !----------------------------------------------------
+        REAL(MK), DIMENSION(9)          :: sip
+        REAL(MK), DIMENSION(9)          :: sjp
+#ifdef __PARTICLES_STRESS_SEPARATE
+        REAL(MK), DIMENSION(9)          :: spip
+        REAL(MK), DIMENSION(9)          :: spjp
+        REAL(MK), DIMENSION(9)          :: svip
+        REAL(MK), DIMENSION(9)          :: svjp
+        REAL(MK), DIMENSION(9)          :: srip
+        REAL(MK), DIMENSION(9)          :: srjp        
+#endif
+        INTEGER                         :: sa, sb
+
+
         !----------------------------------------------------
         ! First try for colloid-colloid interaction.
         !
@@ -312,9 +330,11 @@
              control_get_Newtonian(this%ctrl,stat_info_sub)
         Brownian = &
              control_get_Brownian(this%ctrl,stat_info_sub)      
+        stress_tensor = &
+             control_get_stress_tensor(this%ctrl,stat_info_sub)
         p_energy  = &
              control_get_p_energy(this%ctrl,stat_info_sub)
-        
+      
         !----------------------------------------------------
         ! Physics parameters :
         !
@@ -416,7 +436,7 @@
         IF (ASSOCIATED(this%fv)) THEN
            DEALLOCATE(this%fv,STAT=stat_info_sub)
         END IF
-        IF (ASsOCIATED(this%fr)) THEN
+        IF (ASSOCIATED(this%fr)) THEN
            DEALLOCATE(this%fr,STAT=stat_info_sub)
         END IF
         
@@ -427,8 +447,10 @@
                 STAT=stat_info_sub)
            ALLOCATE(this%fv(num_dim,this%num_part_all), &
                 STAT=stat_info_sub)
-           ALLOCATE(this%fr(num_dim,this%num_part_all), &
-                STAT=stat_info_sub)
+           IF ( Brownian ) THEN
+              ALLOCATE(this%fr(num_dim,this%num_part_all), &
+                   STAT=stat_info_sub)
+           END IF
            
         ELSE
            
@@ -436,37 +458,86 @@
                 STAT=stat_info_sub)
            ALLOCATE(this%fv(num_dim,this%num_part_real), &
                 STAT=stat_info_sub)
-           ALLOCATE(this%fr(num_dim,this%num_part_real), &
-                STAT=stat_info_sub)
+           IF ( Brownian ) THEN
+              ALLOCATE(this%fr(num_dim,this%num_part_real), &
+                   STAT=stat_info_sub)
+           END IF
            
         END IF
         
         this%fp(:,:) = 0.0_MK
         this%fv(:,:) = 0.0_MK
-        this%fr(:,:) = 0.0_MK
+        IF ( Brownian ) THEN
+           this%fr(:,:) = 0.0_MK
+        END IF
 #endif 
         
-#ifdef __PARTICLES_STRESS
-        IF (ASSOCIATED(this%s)) THEN
-           DEALLOCATE(this%s,STAT=stat_info_sub)
-        END IF
-     
-        IF(  symmetry .OR. &
-             num_wall_sym > 0 .OR. num_le > 0 ) THEN
+        IF ( stress_tensor ) THEN
+
+           IF (ASSOCIATED(this%s)) THEN
+              DEALLOCATE(this%s,STAT=stat_info_sub)
+           END IF
            
-           ALLOCATE(this%s(num_dim2,this%num_part_all), &
-                STAT=stat_info_sub)
+#ifdef __PARTICLES_STRESS_SEPARATE
+           IF (ASSOCIATED(this%sp)) THEN
+              DEALLOCATE(this%sp,STAT=stat_info_sub)
+           END IF
+           IF (ASSOCIATED(this%sv)) THEN
+              DEALLOCATE(this%sv,STAT=stat_info_sub)
+           END IF
+           IF (ASSOCIATED(this%sr)) THEN
+              DEALLOCATE(this%sr,STAT=stat_info_sub)
+           END IF
+#endif
            
-        ELSE
+           IF(  symmetry .OR. &
+                num_wall_sym > 0 .OR. num_le > 0 ) THEN
+              
+              ALLOCATE(this%s(num_dim2,this%num_part_all), &
+                   STAT=stat_info_sub)
+              
+#ifdef __PARTICLES_STRESS_SEPARATE
+              ALLOCATE(this%sp(num_dim2,this%num_part_all), &
+                   STAT=stat_info_sub)
+              ALLOCATE(this%sv(num_dim2,this%num_part_all), &
+                   STAT=stat_info_sub)
+              IF ( Brownian ) THEN
+                 ALLOCATE(this%sr(num_dim2,this%num_part_all), &
+                      STAT=stat_info_sub)
+              END IF
+#endif
+              
+           ELSE
+              
+              ALLOCATE(this%s(num_dim2,this%num_part_real), &
+                   STAT=stat_info_sub)
+              
+#ifdef __PARTICLES_STRESS_SEPARATE              
+              ALLOCATE(this%sp(num_dim2,this%num_part_real), &
+                   STAT=stat_info_sub)
+              ALLOCATE(this%sv(num_dim2,this%num_part_real), &
+                   STAT=stat_info_sub)
+              IF ( Brownian ) THEN
+                 ALLOCATE(this%sr(num_dim2,this%num_part_real), &
+                      STAT=stat_info_sub)
+              END IF
+#endif
+              
+           END IF
            
-           ALLOCATE(this%s(num_dim2,this%num_part_real), &
-                STAT=stat_info_sub)
+           this%s(:,:) = 0.0_MK          
+           
+#ifdef __PARTICLES_STRESS_SEPARATE
+           this%sp(:,:) = 0.0_MK
+           this%sv(:,:) = 0.0_MK
+           IF ( Brownian ) THEN
+              this%sr(:,:) = 0.0_MK
+           END IF
+#endif
            
         END IF
         
-        this%s(:,:) = 0.0_MK
-#endif
-
+        
         !----------------------------------------------------
         ! Allocate memory for veocity gradient 
         ! tensor in case of non-Newtonian Oldroyd-B
@@ -707,11 +778,30 @@
                              fpjp (1:num_dim) = 0.0_MK
                              fvip (1:num_dim) = 0.0_MK
                              fvjp (1:num_dim) = 0.0_MK
-                             frip (1:num_dim) = 0.0_MK
-                             frjp (1:num_dim) = 0.0_MK
+                             IF ( Brownian ) THEN
+                                frip (1:num_dim) = 0.0_MK
+                                frjp (1:num_dim) = 0.0_MK
+                             END IF
                              
 #endif
-                             
+
+                             IF ( stress_tensor ) THEN
+                                
+                                sip (1:num_dim2) = 0.0_MK
+                                sjp (1:num_dim2) = 0.0_MK
+#ifdef __PARTICELS_STRESS_SEPARATE
+                                spip (1:num_dim2) = 0.0_MK
+                                spjp (1:num_dim2) = 0.0_MK
+                                svip (1:num_dim2) = 0.0_MK
+                                svjp (1:num_dim2) = 0.0_MK
+                                IF ( Brownian ) THEN
+                                   srip (1:num_dim2) = 0.0_MK
+                                   srjp (1:num_dim2) = 0.0_MK
+                                END IF
+                                
+#endif
+                             END IF
+
 #include "pp_interaction.inc"
                              
                              !----------------------------------
@@ -720,6 +810,33 @@
                              
                              this%f(1:num_dim,ip) = &
                                   this%f(1:num_dim,ip) + fip(1:num_dim)
+#ifdef __PARTICLES_FORCE_SEPARATE
+                             this%fp(1:num_dim,ip) = &
+                                  this%fp(1:num_dim,ip) + fpip(1:num_dim)
+                             this%fv(1:num_dim,ip) = &
+                                  this%fv(1:num_dim,ip) + fvip(1:num_dim)
+                             IF ( Brownian ) THEN
+                                this%fr(1:num_dim,ip) = &
+                                     this%fr(1:num_dim,ip) + frip(1:num_dim)
+                             END IF
+#endif                            
+                             
+                             IF ( stress_tensor ) THEN
+                                
+                                this%s(1:num_dim2,ip) = &
+                                     this%s(1:num_dim2,ip) + sip(1:num_dim2)
+#ifdef __PARTICELS_STRESS_SEPARATE
+                                this%sp(1:num_dim2,ip) = &
+                                     this%sp(1:num_dim2,ip) + spip(1:num_dim2)
+                                this%sv(1:num_dim2,ip) = &
+                                     this%sv(1:num_dim2,ip) + svip(1:num_dim2)
+                                IF ( Brownian ) THEN
+                                   this%sr(1:num_dim2,ip) = &
+                                        this%sr(1:num_dim2,ip) + &
+                                        srip(1:num_dim2)
+                                END IF
+#endif
+                             END IF
                              
                              !----------------------------------
                              ! 1)In symmetry inter-communiction,
@@ -743,29 +860,37 @@
                                 this%f(1:num_dim,jp) = &
                                      this%f(1:num_dim,jp) + fjp(1:num_dim)
                                 
-                             END IF
-                             
 #ifdef __PARTICLES_FORCE_SEPARATE
-                             this%fp(1:num_dim,ip) = &
-                                  this%fp(1:num_dim,ip) + fpip(1:num_dim)
-                             this%fv(1:num_dim,ip) = &
-                                  this%fv(1:num_dim,ip) + fvip(1:num_dim)
-                             this%fr(1:num_dim,ip) = &
-                                  this%fr(1:num_dim,ip) + frip(1:num_dim)
-                            
-                             IF ( symmetry .OR. &
-                                  ( this%id(this%sid_idx,jp) < 0  .AND. &
-                                  num_wall_sym > 0 ) ) THEN
-                                
                                 this%fp(1:num_dim,jp) = &
                                      this%fp(1:num_dim,jp) + fpjp(1:num_dim)
                                 this%fv(1:num_dim,jp) = &
                                      this%fv(1:num_dim,jp) + fvjp(1:num_dim)
-                                this%fr(1:num_dim,jp) = &
-                                     this%fr(1:num_dim,jp) + frjp(1:num_dim)
+                                IF ( Brownian ) THEN
+                                   this%fr(1:num_dim,jp) = &
+                                        this%fr(1:num_dim,jp) + frjp(1:num_dim)
+                                END IF
+#endif
+                                
+                                IF ( stress_tensor ) THEN
+                                   
+                                   this%s(1:num_dim2,jp) = &
+                                        this%s(1:num_dim2,jp) + sjp(1:num_dim2)
+                                   
+#ifdef __PARTICELS_STRESS_SEPARATE
+                                   this%sp(1:num_dim2,jp) = &
+                                        this%sp(1:num_dim2,jp) + spjp(1:num_dim2)
+                                   this%sv(1:num_dim2,jp) = &
+                                        this%sv(1:num_dim2,jp) + svjp(1:num_dim2)
+                                   IF ( Brownian ) THEN
+                                      this%sr(1:num_dim2,jp) = &
+                                           this%sr(1:num_dim2,jp) + &
+                                           srjp(1:num_dim2)
+                                   END IF
+#endif
+                                END IF
                                 
                              END IF
-#endif
+                             
                              
                           END DO ! jpart
                           

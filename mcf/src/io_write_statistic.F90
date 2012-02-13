@@ -46,14 +46,13 @@
         INTEGER                         :: stat_info_sub
         LOGICAL                         :: dynamic_density_ref
         LOGICAL                         :: flow_v_fixed
+        LOGICAL                         :: l_stress_tensor
         LOGICAL                         :: l_p_energy
         INTEGER                         :: num_dim
         REAL(MK)                        :: k_energy
         REAL(MK), DIMENSION(:), POINTER :: momentum
         REAL(MK), DIMENSION(:), POINTER :: v_aver
-#ifdef __IO_STATISTIC_STRESS
         REAL(MK), DIMENSION(:), POINTER :: stress
-#endif
         REAL(MK)                        :: p_energy
         INTEGER                         :: num_data
         REAL(MK), DIMENSION(8)          :: data
@@ -70,10 +69,8 @@
         stat_info_sub = 0
         NULLIFY(momentum)
         NULLIFY(v_aver)
-#ifdef __IO_STATISTIC_STRESS
         NULLIFY(stress)
-#endif
-
+        
         IF ( rank /= 0 ) THEN
            PRINT *, "io_write_statistic : ", &
                 "can only be used by root processor !"
@@ -85,17 +82,20 @@
              control_get_dynamic_density_ref(this%ctrl,stat_info_sub)
         flow_v_fixed = &
              control_get_flow_v_fixed(this%ctrl,stat_info_sub)
+        l_stress_tensor = &
+             control_get_stress_tensor(this%ctrl,stat_info_sub)
         l_p_energy   = &
              control_get_p_energy(this%ctrl,stat_info_sub)
-        
+      
         num_dim      = &
              statistic_get_num_dim(d_statistic,stat_info_sub)
         CALL  statistic_get_statistic(d_statistic, &
              k_energy, momentum,stat_info_sub)
         
-#ifdef __IO_STATISTIC_STRESS
-        CALL statistic_get_stress(d_statistic, & stress, stat_info_sub)
-#endif
+        IF ( l_stress_tensor ) THEN
+           CALL statistic_get_stress(d_statistic, & stress, stat_info_sub)
+        END IF
+        
         !----------------------------------------------------
         ! Kienetic energy and momentum.
         !----------------------------------------------------
@@ -128,15 +128,18 @@
            
         END IF
         
-#ifdef __IO_STATISTIC_STRESS
         !----------------------------------------------------
         ! For 2D case, off diagonal components only.
         !----------------------------------------------------
-        data(num_data+1) = stress(2)
-        num_data = num_data + 1
-        data(num_data+1) = stress(3)
-        num_data = num_data + 1
-#endif
+        
+        IF ( l_stress_tensor ) THEN
+           
+           data(num_data+1) = stress(2)
+           num_data = num_data + 1
+           data(num_data+1) = stress(3)
+           num_data = num_data + 1
+           
+        END IF
         
         IF( l_p_energy ) THEN
            
@@ -174,13 +177,13 @@
         IF(ASSOCIATED(v_aver)) THEN
            DEALLOCATE(v_aver)
         END IF
-
+        
 #ifdef __IO_STATISTIC_STRESS
         IF(ASSOCIATED(stress)) THEN
            DEALLOCATE(stress)
         END IF
 #endif
-
+        
         RETURN
         
       END SUBROUTINE io_write_statistic

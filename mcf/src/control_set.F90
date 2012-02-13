@@ -323,6 +323,21 @@
       END SUBROUTINE control_set_cw_repul_type
       
 
+      SUBROUTINE control_set_stress_tensor(this,d_stress_tensor,stat_info)
+        
+        TYPE(Control), INTENT(INOUT)             :: this
+        LOGICAL, INTENT(IN)                      :: d_stress_tensor
+        INTEGER, INTENT(out)                     :: stat_info
+        
+        stat_info = 0
+        
+        this%stress_tensor =d_stress_tensor
+        
+        RETURN
+        
+      END SUBROUTINE control_set_stress_tensor
+
+      
       SUBROUTINE control_set_p_energy(this,d_p_energy,stat_info)
         
         TYPE(Control), INTENT(INOUT)             :: this

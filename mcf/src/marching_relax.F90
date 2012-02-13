@@ -779,18 +779,18 @@
            ! since it guarantee the boundary condition also.
            !-------------------------------------------------
            
-#ifdef __PARTICLES_FORCE_SEPARATE
-           CALL particles_map_ghost_put(this%particles, &
-                l_map_x   = .TRUE., l_map_f  = .TRUE., &
-                l_map_fp  = .TRUE., l_map_fv = .TRUE., &
-                l_map_au  = p_energy, &
-                stat_info = stat_info_sub)           
-#else
+!#ifdef __PARTICLES_FORCE_SEPARATE
+!           CALL particles_map_ghost_put(this%particles, &
+!                l_map_x   = .TRUE., l_map_f  = .TRUE., &
+!                l_map_fp  = .TRUE., l_map_fv = .TRUE., &
+!                l_map_au  = p_energy, &
+!                stat_info = stat_info_sub)           
+!#else
            CALL particles_map_ghost_put(this%particles, &
                 l_map_x   = .TRUE., l_map_f  = .TRUE., &
                 l_map_au  = p_energy, &
                 stat_info = stat_info_sub)
-#endif
+!#endif
            IF ( stat_info_sub /= 0 ) THEN
               PRINT *, 'marching_relax : ',&
                    'Receiving force(au) from ghosts failed !'

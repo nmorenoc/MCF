@@ -63,6 +63,10 @@
         LOGICAL                         :: dynamic_density_ref
         LOGICAL                         :: symmetry
         LOGICAL                         :: Newtonian
+        LOGICAL                         :: stress_tensor
+        LOGICAL                         :: stress_tensor_p
+        LOGICAL                         :: stress_tensor_v
+        LOGICAL                         :: stress_tensor_r     
         LOGICAL                         :: p_energy
         
         !----------------------------------------------------
@@ -159,6 +163,17 @@
              control_get_symmetry(this%ctrl,stat_info_sub)
         Newtonian = &
              control_get_Newtonian(this%ctrl,stat_info_sub)
+        stress_tensor = &
+             control_get_stress_tensor(this%ctrl,stat_info_sub)
+#ifdef __PARTICLES_STRESS_SEPARATE
+        stress_tensor_p = stress_tensor
+        stress_tensor_p = stress_tensor
+        stress_tensor_p = stress_tensor
+#else
+        stress_tensor_p = .FALSE.
+        stress_tensor_v = .FALSE.
+        stress_tensor_r = .FALSE.
+#endif
         p_energy  = &
              control_get_p_energy(this%ctrl,stat_info_sub) 
         
@@ -1088,20 +1103,25 @@
            CALL particles_map_ghost_put(this%particles, &
                 l_map_x   = .TRUE., l_map_f  = .TRUE., &
                 l_map_fp  = .TRUE., l_map_fv = .TRUE., &
+                l_map_s   = stress_tensor,   &
+                l_map_sp  = stress_tensor_p, &
+                l_map_sv  = stress_tensor_v, &
                 l_map_vgt = (.NOT. Newtonian),&
                 l_map_au  = p_energy, &
                 stat_info = stat_info_sub)
+           
 #else
            CALL particles_map_ghost_put(this%particles, &
-                l_map_x   = .TRUE., l_map_f = .TRUE.,   &
-                l_map_vgt = ( .NOT. Newtonian), &
+                l_map_x   = .TRUE., l_map_f  = .TRUE., &
+                l_map_s   = stress_tensor,    &
+                l_map_vgt = (.NOT. Newtonian),&
                 l_map_au  = p_energy, &
                 stat_info = stat_info_sub)
-           
 #endif
+           
            IF ( stat_info_sub /= 0 ) THEN
               PRINT *, "marching_integrate_VV : ", &
-                   "Receiving force from ghosts failed !"
+                   "Receiving force (stress, vgt, au) from ghosts failed !"
               stat_info = -1
               GOTO 9999
            END IF

@@ -61,6 +61,7 @@
         this%cc_repul_type       = 0
         this%cw_lub_type         = 0
         this%cw_repul_type       = 0
+        this%stress_tensor       = .FALSE.
         this%p_energy            = .FALSE.
         this%flow_v_fixed        = .FALSE.
         this%integrate_type      = 1
@@ -196,6 +197,8 @@
         PRINT *, "cw_lub_type        : ", this%cw_lub_type
         
         PRINT *, "cw_repul_type      : ", this%cw_repul_type
+        
+        PRINT *, "stress tensor      : ", this%stress_tensor
         
         PRINT *, "potential energy   : ", this%p_energy
         

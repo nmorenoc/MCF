@@ -59,6 +59,7 @@
         INTEGER                         :: cc_repul_type
         INTEGER                         :: cw_lub_type
         INTEGER                         :: cw_repul_type
+        LOGICAL                         :: stress_tensor
         LOGICAL                         :: p_energy
         LOGICAL                         :: flow_v_fixed
         INTEGER                         :: integrate_type
@@ -366,7 +367,13 @@
              CALL  control_set_cw_repul_type(ctrl,&
                   cw_repul_type,stat_info_sub)
              
-          ELSE IF (carg == 'P_ENERGY') THEN
+          ELSE IF (carg == 'STRESS_TENSOR') THEN
+             
+             READ(cvalue,'(L)',IOSTAT=ios,ERR=200) stress_tensor
+             CALL control_set_stress_tensor(ctrl,&
+                  stress_tensor,stat_info_sub)
+             
+      ELSE IF (carg == 'P_ENERGY') THEN
              
              READ(cvalue,'(L)',IOSTAT=ios,ERR=200) p_energy
              CALL control_set_p_energy(ctrl,&

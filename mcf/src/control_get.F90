@@ -267,6 +267,20 @@
       END FUNCTION control_get_cw_repul_type
       
       
+      LOGICAL FUNCTION control_get_stress_tensor(this,stat_info)
+        
+        TYPE(Control), INTENT(IN)                :: this
+        INTEGER, INTENT(out)                     :: stat_info
+        
+        stat_info = 0
+        
+        control_get_stress_tensor  = this%stress_tensor
+        
+        RETURN
+        
+      END FUNCTION control_get_stress_tensor
+
+      
       LOGICAL FUNCTION control_get_p_energy(this,stat_info)
         
         TYPE(Control), INTENT(IN)                :: this

@@ -1,20 +1,23 @@
       SUBROUTINE particles_map_ghost_put(this,&
            l_map_x,    l_map_v,    &
-           l_map_rho,  l_map_m,&
-           l_map_id,   l_map_f,    &
-           l_map_fp,   l_map_fv,   &
+           l_map_rho,  l_map_m,    &
+           l_map_id,               &
+           l_map_f,    l_map_fp,   &
+           l_map_fv,               &
+           l_map_s,    l_map_sp,   &
+           l_map_sv,               &
            l_map_vgt,  l_map_evgt, &
            l_map_eval, l_map_aeval,&
            l_map_evec, l_map_aevec,&
-           l_map_ct,   l_map_act,&
+           l_map_ct,   l_map_act,  &
            l_map_u,    l_map_au, stat_info)        
         !----------------------------------------------------
-        !  Program     :   particles_map_ghost_put
+        !  Program     :  particles_map_ghost_put
         !----------------------------------------------------
         !
-        !  Purpose     :   Swap the send and receive buffers,
-        !                  in order to send the contribution 
-        !                  back to their host processes.
+        !  Purpose     :  Swap the send and receive buffers,
+        !                 in order to send the contribution 
+        !                 back to their host processes.
         !                 
         !
         !  Routines    :
@@ -22,8 +25,12 @@
         !  References  :  Sbalzarini et al.
         !                 2006 Journal of Computational Physics.
         !
-        !  Remarks     : Positions are always used for ghost
-        !                layers.
+        !  Remarks     :  Positions are always used for ghost
+        !                 layers.
+        !                 (10.02.2012)
+        !                 However, it seems that this routines
+        !                 is allowed only once after 
+        !                 ppm_map_ghost_get()
         !
         !  Revisions   :  V0.2 30.07.2009, 
         !                 add vgt  evgt, eval, aeval, 
@@ -34,8 +41,8 @@
         !                 V0.1 16.06.2009, original.
         !
         !----------------------------------------------------
-        ! Author       : Xin Bian
-        ! Contact      : xin.bian@aer.mw.tum.de
+        ! Author       :  Xin Bian
+        ! Contact      :  xin.bian@aer.mw.tum.de
         !
         ! Dr. Marco Ellero's Emmy Noether Group,
         ! Prof. Dr. N. Adams' Chair of Aerodynamics,
@@ -62,6 +69,9 @@
         LOGICAL, INTENT(IN), OPTIONAL   :: l_map_f
         LOGICAL, INTENT(IN), OPTIONAL   :: l_map_fp
         LOGICAL, INTENT(IN), OPTIONAL   :: l_map_fv
+        LOGICAL, INTENT(IN), OPTIONAL   :: l_map_s
+        LOGICAL, INTENT(IN), OPTIONAL   :: l_map_sp
+        LOGICAL, INTENT(IN), OPTIONAL   :: l_map_sv   
         LOGICAL, INTENT(IN), OPTIONAL   :: l_map_vgt
         LOGICAL, INTENT(IN), OPTIONAL   :: l_map_evgt
         LOGICAL, INTENT(IN), OPTIONAL   :: l_map_eval
@@ -82,7 +92,7 @@
         LOGICAL                         :: symmetry
         INTEGER                         :: isymm
 
-        INTEGER                         :: num_dim
+        INTEGER                         :: num_dim, num_dim2
         REAL(MK)                        :: ghost_size
         
       	!----------------------------------------------------
@@ -99,6 +109,9 @@
         LOGICAL                         ::  map_f
         LOGICAL                         ::  map_fp
         LOGICAL                         ::  map_fv
+        LOGICAL                         ::  map_s
+        LOGICAL                         ::  map_sp
+        LOGICAL                         ::  map_sv    
         LOGICAL                         ::  map_vgt
         LOGICAL                         ::  map_evgt
         LOGICAL                         ::  map_eval
@@ -144,6 +157,9 @@
         map_f     = .FALSE.
         map_fp    = .FALSE.
         map_fv    = .FALSE.
+        map_s     = .FALSE.
+        map_sp    = .FALSE.
+        map_sv    = .FALSE.
         map_vgt   = .FALSE.
         map_evgt  = .FALSE.
         map_eval  = .FALSE.
@@ -179,6 +195,15 @@
         IF( PRESENT(l_map_fv) ) THEN
            map_fv = l_map_fv
         END IF
+        IF( PRESENT(l_map_s) ) THEN
+           map_s = l_map_s
+        END IF
+        IF( PRESENT(l_map_sp) ) THEN
+           map_sp = l_map_sp
+        END IF
+        IF( PRESENT(l_map_sv) ) THEN
+           map_sv = l_map_sv
+        END IF    
         IF( PRESENT(l_map_vgt) ) THEN
            map_vgt = l_map_vgt
         END IF
@@ -220,7 +245,7 @@
         END IF
         
         num_dim    = physics_get_num_dim(this%phys,stat_info_sub)
-        
+        num_dim2   = num_dim**2
         ghost_size = technique_get_ghost_size(this%tech,stat_info_sub)
         
         !--------------------------------
@@ -308,10 +333,34 @@
                 isymm,ghost_size,map_type,stat_info_sub)
            
         END IF
+
+        IF ( map_s ) THEN
+           
+           CALL  ppm_map_part_ghost(this%s,num_dim2,&
+                this%num_part_real,this%num_part_all,&
+                isymm,ghost_size,map_type,stat_info_sub)
+           
+        END IF
+
+        IF ( map_sp ) THEN
+           
+           CALL  ppm_map_part_ghost(this%sp,num_dim2,&
+                this%num_part_real,this%num_part_all,&
+                isymm,ghost_size,map_type,stat_info_sub)
+           
+        END IF
+
+        IF ( map_sv ) THEN
+           
+           CALL  ppm_map_part_ghost(this%sv,num_dim2,&
+                this%num_part_real,this%num_part_all,&
+                isymm,ghost_size,map_type,stat_info_sub)
+           
+        END IF
         
         IF ( map_vgt ) THEN
            
-           CALL  ppm_map_part_ghost(this%vgt,num_dim**2,&
+           CALL  ppm_map_part_ghost(this%vgt,num_dim2,&
                 this%num_part_real,this%num_part_all,&
                 isymm,ghost_size,map_type,stat_info_sub)
            
@@ -319,7 +368,7 @@
         
         IF ( map_evgt ) THEN
            
-           CALL  ppm_map_part_ghost(this%evgt,num_dim**2,&
+           CALL  ppm_map_part_ghost(this%evgt,num_dim2,&
                 this%num_part_real,this%num_part_all,&
                 isymm,ghost_size,map_type,stat_info_sub)
            
@@ -343,7 +392,7 @@
         
         IF ( map_evec ) THEN
            
-           CALL  ppm_map_part_ghost(this%evec,num_dim**2,&
+           CALL  ppm_map_part_ghost(this%evec,num_dim2,&
                 this%num_part_real,this%num_part_all,&
                 isymm,ghost_size,map_type,stat_info_sub)
            
@@ -351,7 +400,7 @@
         
         IF ( map_aevec ) THEN
            
-           CALL  ppm_map_part_ghost(this%aevec,num_dim**2,&
+           CALL  ppm_map_part_ghost(this%aevec,num_dim2,&
                 this%num_part_real,this%num_part_all,&
                 isymm,ghost_size,map_type,stat_info_sub)
            
@@ -359,7 +408,7 @@
         
         IF ( map_ct ) THEN
            
-           CALL  ppm_map_part_ghost(this%ct,num_dim**2,&
+           CALL  ppm_map_part_ghost(this%ct,num_dim2,&
                 this%num_part_real,this%num_part_all,&
                 isymm,ghost_size,map_type,stat_info_sub)
            
@@ -367,7 +416,7 @@
         
         IF ( map_act ) THEN
            
-           CALL  ppm_map_part_ghost(this%act,num_dim**2,&
+           CALL  ppm_map_part_ghost(this%act,num_dim2,&
                 this%num_part_real,this%num_part_all,&
                 isymm,ghost_size,map_type,stat_info_sub)
            
@@ -433,7 +482,7 @@
         
         IF ( map_act ) THEN
            
-           CALL ppm_map_part_ghost(this%act,num_dim**2,&
+           CALL ppm_map_part_ghost(this%act,num_dim2,&
                 this%num_part_real,this%num_part_ghost,&
                 isymm,ghost_size,map_type,stat_info_sub)
            
@@ -441,7 +490,7 @@
         
         IF ( map_ct ) THEN
            
-           CALL ppm_map_part_ghost(this%ct,num_dim**2,&
+           CALL ppm_map_part_ghost(this%ct,num_dim2,&
                 this%num_part_real,this%num_part_ghost,&
                 isymm,ghost_size,map_type,stat_info_sub)
            
@@ -449,7 +498,7 @@
         
         IF ( map_aevec ) THEN
            
-           CALL  ppm_map_part_ghost(this%aevec,num_dim**2,&
+           CALL  ppm_map_part_ghost(this%aevec,num_dim2,&
                 this%num_part_real,this%num_part_ghost,&
                 isymm,ghost_size,map_type,stat_info_sub)
            
@@ -457,7 +506,7 @@
         
         IF ( map_evec ) THEN
            
-           CALL  ppm_map_part_ghost(this%evec,num_dim**2,&
+           CALL  ppm_map_part_ghost(this%evec,num_dim2,&
                 this%num_part_real,this%num_part_ghost,&
                 isymm,ghost_size,map_type,stat_info_sub)
            
@@ -481,7 +530,7 @@
         
         IF ( map_evgt ) THEN
            
-           CALL  ppm_map_part_ghost(this%evgt,num_dim**2,&
+           CALL  ppm_map_part_ghost(this%evgt,num_dim2,&
                 this%num_part_real,this%num_part_ghost,&
                 isymm,ghost_size,map_type,stat_info_sub)
            
@@ -489,7 +538,31 @@
         
         IF ( map_vgt ) THEN
            
-           CALL ppm_map_part_ghost(this%vgt,num_dim**2,&
+           CALL ppm_map_part_ghost(this%vgt,num_dim2,&
+                this%num_part_real,this%num_part_ghost,&
+                isymm,ghost_size,map_type,stat_info_sub)
+           
+        END IF
+        
+        IF ( map_sv ) THEN
+           
+           CALL ppm_map_part_ghost(this%sv,num_dim2,&
+                this%num_part_real,this%num_part_ghost,&
+                isymm,ghost_size,map_type,stat_info_sub)
+           
+        END IF
+
+        IF ( map_sp ) THEN
+           
+           CALL ppm_map_part_ghost(this%sp,num_dim2,&
+                this%num_part_real,this%num_part_ghost,&
+                isymm,ghost_size,map_type,stat_info_sub)
+           
+        END IF
+
+        IF ( map_s ) THEN
+           
+           CALL ppm_map_part_ghost(this%s,num_dim2,&
                 this%num_part_real,this%num_part_ghost,&
                 isymm,ghost_size,map_type,stat_info_sub)
            

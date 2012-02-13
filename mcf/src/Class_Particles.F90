@@ -84,6 +84,11 @@
            !           
            ! s     : stress tensor
            !
+           !         s is calculated as rij*fij in the simulation,
+           !         therefore, the real stress tensor with
+           !         correct unit should be (m*rij*fij)/V,
+           !         where V is volume of total fluid.
+           !
            ! sp    : stress tensor from potential/pressure force
            ! sv    : stress tensor from viscous force
            ! sr    : stress tensor from random force.

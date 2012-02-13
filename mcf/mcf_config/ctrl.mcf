@@ -21,7 +21,7 @@
 
 job_name           = flow_around_cylinder
 
-job_submit_date    = 2010_03_09
+job_submit_date    = 2012_02_10
 
 #**********************************************************************
 #       File name for Physics configuration information.
@@ -128,6 +128,9 @@ mcf_io_config_file      = io_config.mcf
 #                        1 Hookean spring repulsive force.
 #                        2 DLVO type repulsive force.
 #
+#       stress_tensor:    calculation of stress tensor on each
+#                         particle. 
+#
 #       p_energy         : logical value indicating if potential
 #                          energy is calculated.
 #
@@ -193,6 +196,8 @@ cc_repul_type        = 0
 cw_lub_type          = 0
 
 cw_repul_type        = 0
+
+stress_tensor        = TRUE
 
 p_energy             = FALSE
 

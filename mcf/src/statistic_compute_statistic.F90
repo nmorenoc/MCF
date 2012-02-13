@@ -51,6 +51,7 @@
         
         INTEGER                                 :: stat_info_sub
         TYPE(Control), POINTER                  :: ctrl
+        LOGICAL                                 :: stress_tensor
         LOGICAL                                 :: p_energy
         INTEGER                                 :: dim, dim2
 
@@ -64,9 +65,7 @@
         REAL(MK), DIMENSION(:,:), POINTER       :: v
         REAL(MK), DIMENSION(:), POINTER         :: m
         INTEGER, DIMENSION(:), POINTER          :: sid
-#if __PARTICLES_STRESS
         REAL(MK), DIMENSION(:,:), POINTER       :: s
-#endif
         REAL(MK), DIMENSION(:), POINTER         :: u
         
         !----------------------------------------------------
@@ -84,9 +83,7 @@
         REAL(MK)                                :: k_energy_tot
         REAL(MK), DIMENSION(3)                  :: momentum_tot
         REAL(MK)                                :: v2
-#if __PARTICLES_STRESS
         REAL(MK), DIMENSION(:), ALLOCATABLE     :: stress_tot
-#endif
         REAL(MK)                                :: p_energy_tot
         
         !----------------------------------------------------
@@ -112,14 +109,11 @@
         NULLIFY(m)
         NULLIFY(sid)
 
-#if __PARTICLES_STRESS
         NULLIFY(s)
-#endif
-
+        
         NULLIFY(u)
         
         NULLIFY(tech)
-        
         
         this%k_energy    = 0.0_MK
         this%momentum(:) = 0.0_MK
@@ -129,12 +123,6 @@
         momentum_tot(:) = 0.0_MK
         p_energy_tot    = 0.0_MK
 
-#if __PARTICLES_STRESS
-        this%stress(:)  = 0.0_MK
-        ALLOCATE(stress_tot(dim2))
-        stress_tot(:)   = 0.0_MK        
-#endif
-        
         !----------------------------------------------------
         ! Check if dimension of additional momentum match.
         !----------------------------------------------------
@@ -152,8 +140,22 @@
         !----------------------------------------------------
    
         CALL particles_get_ctrl(d_particles,ctrl,stat_info_sub)
+        stress_tensor = &
+             control_get_stress_tensor(ctrl,stat_info_sub)
         p_energy = &
              control_get_p_energy(ctrl,stat_info_sub)
+        
+        !----------------------------------------------------
+        ! Initialization of variables.
+        !----------------------------------------------------
+        
+        IF ( stress_tensor ) THEN
+           
+           this%stress(:)  = 0.0_MK
+           ALLOCATE(stress_tot(dim2))
+           stress_tot(:)   = 0.0_MK 
+
+        END IF
         
         !----------------------------------------------------
         ! Get rank of this process.
@@ -177,10 +179,10 @@
         CALL particles_get_m(d_particles,m,num_part,stat_info_sub)
         CALL particles_get_sid(d_particles,sid,num_part,stat_info_sub)
 
-#ifdef __PARTICLES_STRESS
-        CALL particles_get_s(d_particles,s,num_part,stat_info_sub)
-#endif
-        
+        IF ( stress_tensor) THEN
+           CALL particles_get_s(d_particles,s,num_part,stat_info_sub)
+        END IF
+     
         !----------------------------------------------------
         ! Kinetic engergy : K = 0.5 * m * v**2; 
         ! Momentum        : M = m * v; 
@@ -212,15 +214,16 @@
               
            END IF ! sid(j) == 0
            
-#if __PARTICLES_STRESS
            !-------------------------------------------------
            ! Count all particles for total stress tensor
            !-------------------------------------------------
            
-           this%stress(1:dim2) = &
-                this%stress(1:dim2) + s(1:dim2,j)
-#endif
-
+           IF ( stress_tensor ) THEN
+              
+              this%stress(1:dim2) = &
+                   this%stress(1:dim2) + s(1:dim2,j)
+              
+           END IF
            
         END DO ! j = 1, num_part
         
@@ -246,6 +249,19 @@
            
         END IF
         
+        !----------------------------------------------------
+        ! As each pair particle is counted twice, 
+        ! we divide 2 here.
+        ! It is done before MPI summation to have consistency
+        ! for MPI and non-MPI runs.
+        !----------------------------------------------------
+        
+        IF ( stress_tensor ) THEN
+           
+           this%stress(1:dim2) = this%stress(1:dim2) / 2.0_MK
+           
+        END IF        
+
         !----------------------------------------------------
         ! Calculation in the context of MPI.
         !----------------------------------------------------
@@ -286,24 +302,26 @@
            GOTO 9999
         END IF
 
- 
-#ifdef __PARTICLES_STRESS
+        
         !----------------------------------------------------
         ! Sum up the stress tensor from all the processes,
         ! broadcast the result.
         !----------------------------------------------------
         
-        CALL MPI_ALLREDUCE (this%stress(1:dim2),  &
-             stress_tot(1:dim2),dim2,MPI_PREC, &
-             MPI_SUM,comm,stat_info_sub) 
-        
-        IF( stat_info_sub /= 0 ) THEN
-           PRINT *, "statistic_compute_statistic : ", &
-                "MPI_ALLREDUCE() for stress has problem !"
-           stat_info = -1
-           GOTO 9999
+        IF ( stress_tensor ) THEN
+           
+           CALL MPI_ALLREDUCE (this%stress(1:dim2),  &
+                stress_tot(1:dim2),dim2,MPI_PREC, &
+                MPI_SUM,comm,stat_info_sub) 
+           
+           IF( stat_info_sub /= 0 ) THEN
+              PRINT *, "statistic_compute_statistic : ", &
+                   "MPI_ALLREDUCE() for stress has problem !"
+              stat_info = -1
+              GOTO 9999
+           END IF
+           
         END IF
-#endif
         
         !----------------------------------------------------
         ! All processes get total kinetic energy, 
@@ -314,13 +332,15 @@
         this%momentum(1:dim) = momentum_tot(1:dim)
 
         
-#ifdef __PARTICLES_STRESS
         !----------------------------------------------------
         ! All processes get total stress tensor.
         !----------------------------------------------------
-   
-        this%stress(1:dim2)  = stress_tot(1:dim2)
-#endif
+        
+        IF ( stress_tensor ) THEN
+           
+           this%stress(1:dim2)  = stress_tot(1:dim2)
+           
+        END IF
         
         !----------------------------------------------------
         ! Sum up the potential energy from all processes,
@@ -386,11 +406,9 @@
            DEALLOCATE(sid)
         END IF
         
-#if __PARTICLES_STRESS        
         IF(ASSOCIATED(s)) THEN
            DEALLOCATE(s)
         END IF
-#endif
         
         IF(ASSOCIATED(u)) THEN
            DEALLOCATE(u)

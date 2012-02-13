@@ -56,6 +56,7 @@
            INTEGER                    :: cc_repul_type
            INTEGER                    :: cw_lub_type
            INTEGER                    :: cw_repul_type
+           LOGICAL                    :: stress_tensor
            LOGICAL                    :: p_energy
            LOGICAL                    :: flow_v_fixed
            INTEGER                    :: integrate_type
