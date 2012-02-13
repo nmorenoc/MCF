@@ -72,6 +72,7 @@
         REAL(MK), DIMENSION(:),   POINTER       :: m
         INTEGER,  DIMENSION(:,:), POINTER       :: id
         REAL(MK), DIMENSION(:,:), POINTER       :: f
+        REAL(MK), DIMENSION(:,:), POINTER       :: s
         REAL(MK), DIMENSION(:),   POINTER       :: u
         
         CHARACTER(LEN=MAX_CHAR)                 :: file_name
@@ -80,9 +81,9 @@
         INTEGER                                 :: num_x
         INTEGER                                 :: num_v
         INTEGER                                 :: num_id
-#if __IO_PARTICLES_FORCE        
         INTEGER                                 :: num_f
-#endif
+        INTEGER                                 :: num_s
+
         INTEGER                                 :: data_dim
         INTEGER                                 :: current_dim
         REAL(MK), DIMENSION(:,:), POINTER       :: output
@@ -108,6 +109,7 @@
         NULLIFY(m)
         NULLIFY(id)
         NULLIFY(f)
+        NULLIFY(s)
         NULLIFY(u)
         NULLIFY(output)
         
@@ -135,6 +137,9 @@
         
 #ifdef __IO_PARTICLES_FORCE
         CALL particles_get_f(d_particles,f,num_part,stat_info)
+#endif
+#ifdef __IO_PARTICLES_STRESS
+        CALL particles_get_s(d_particles,s,num_part,stat_info)
 #endif
         
         CALL particles_get_id(d_particles,id,num_part,stat_info)
@@ -189,7 +194,9 @@
         
         !----------------------------------------------------
         ! Allocate memory for output data.
-        ! x,y(,z), vx,vy(,vz), rho/d, m, pid,sid; f, u.
+        ! x,y(,z), vx,vy(,vz), rho/d, m, pid,sid; f, s, u.
+        ! For 2D stress tensor s:
+        ! only xy and yx component are considered for now.
         !----------------------------------------------------
         
         data_dim = num_x + num_v + 1 + 1 + num_id
@@ -197,6 +204,11 @@
 #ifdef __IO_PARTICLES_FORCE
         num_f = SIZE(f,1)
         data_dim = data_dim + num_f
+#endif
+
+#ifdef __IO_PARTICLES_STRESS
+        num_s = 2
+        data_dim = data_dim + num_s
 #endif
         
         IF (p_energy )  THEN
@@ -239,6 +251,14 @@
         output(current_dim+1:current_dim+num_f,1:num_part) = &
              f(1:num_f,1:num_part)
         current_dim = current_dim + num_f
+#endif
+
+#ifdef __IO_PARTICLES_STRESS
+        output(current_dim+1,1:num_part) = &
+             s(2,1:num_part)
+        output(current_dim+2,1:num_part) = &
+             s(3,1:num_part)      
+        current_dim = current_dim + num_s
 #endif
         
         IF( p_energy ) THEN
@@ -328,6 +348,10 @@
            DEALLOCATE(f)
         END IF
         
+        IF (ASSOCIATED(s)) THEN
+           DEALLOCATE(s)
+        END IF
+     
         IF (ASSOCIATED(u) ) THEN
            DEALLOCATE(u)
         END IF

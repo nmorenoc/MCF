@@ -209,7 +209,7 @@ calculation of force separately.
 -D__IO_PARTICLES_STRESS :
 #************************************************************
 
-stress will be written into output particle files for each particle.
+stress tensor will be written into output particle files for each particle.
 
 
 #************************************************************

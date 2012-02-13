@@ -215,13 +215,13 @@
            END IF ! sid(j) == 0
            
            !-------------------------------------------------
-           ! Count all particles for total stress tensor
+           ! Count solvent particles for total stress tensor
            !-------------------------------------------------
            
            IF ( stress_tensor ) THEN
-
-              IF ( sid(j) == 0 ) THEN
               
+              IF ( sid(j) == 0 ) THEN
+                 
                  this%stress(1:dim2) = &
                       this%stress(1:dim2) + s(1:dim2,j)
                  
@@ -264,8 +264,8 @@
            
            this%stress(1:dim2) = this%stress(1:dim2) / 2.0_MK
            
-        END IF        
-
+        END IF
+        
         !----------------------------------------------------
         ! Calculation in the context of MPI.
         !----------------------------------------------------

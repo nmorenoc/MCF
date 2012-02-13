@@ -64,7 +64,7 @@
           this%m(ip),this%m(jp),&
           w,gradw,fip,fjp,stat_info=stat_info_sub)
      
-  END IF
+  END IF ! Newtonian
   
   IF(stat_info_sub /=0) THEN
      PRINT *, "pp_interaction_ff : ", & 
@@ -73,3 +73,48 @@
      GOTO 9999
   END IF
   
+  !----------------------------------------------------------
+  ! Calculate stress tensor on each particle.
+  ! For mi=mj, rij=-rji,
+  ! sip(:) = sjp(:)
+  !----------------------------------------------------------
+  
+  
+  IF ( stress_tensor ) THEN
+     
+     DO sa = 1, num_dim
+        DO sb = 1, num_dim
+           
+           sip((sb-1)*num_dim+sa) = rij(sa) * fip(sb)
+           !sjp((sb-1)*num_dim+sa) = -rij(sa) * fjp(sb)
+           sjp((sb-1)*num_dim+sa) = sip((sb-1)*num_dim+sa)
+           
+        END DO
+     END DO
+     
+#ifdef __PARTICLES_STRESS_SEPARATE
+     DO sa = 1, num_dim
+        DO sb = 1, num_dim
+           
+           spip((sb-1)*num_dim+sa) = rij(sa) * fpip(sb)
+           !spjp((sb-1)*num_dim+sa) = -rij(sa) * fpjp(sb)
+           spjp((sb-1)*num_dim+sa) = spip((sb-1)*num_dim+sa)
+           
+           svip((sb-1)*num_dim+sa) = rij(sa) * fvip(sb)
+           !svjp((sb-1)*num_dim+sa) = -rij(sa) * fvjp(sb)
+           svjp((sb-1)*num_dim+sa) = svip((sb-1)*num_dim+sa)
+           
+           IF ( Brownian ) THEN
+              
+              srip((sb-1)*num_dim+sa) = rij(sa) * frip(sb)
+              !srjp((sb-1)*num_dim+sa) = -rij(sa) * frjp(sb)
+              srjp((sb-1)*num_dim+sa) = srip((sb-1)*num_dim+sa)
+              
+           END IF
+           
+        END DO
+     END DO
+#endif
+     
+  END IF
+
