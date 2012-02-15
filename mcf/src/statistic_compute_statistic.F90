@@ -51,6 +51,7 @@
         
         INTEGER                                 :: stat_info_sub
         TYPE(Control), POINTER                  :: ctrl
+        LOGICAL                                 :: Brownian
         LOGICAL                                 :: stress_tensor
         LOGICAL                                 :: p_energy
         INTEGER                                 :: dim, dim2
@@ -66,6 +67,9 @@
         REAL(MK), DIMENSION(:), POINTER         :: m
         INTEGER, DIMENSION(:), POINTER          :: sid
         REAL(MK), DIMENSION(:,:), POINTER       :: s
+        REAL(MK), DIMENSION(:,:), POINTER       :: sp
+        REAL(MK), DIMENSION(:,:), POINTER       :: sv
+        REAL(MK), DIMENSION(:,:), POINTER       :: sr
         REAL(MK), DIMENSION(:), POINTER         :: u
         
         !----------------------------------------------------
@@ -84,6 +88,9 @@
         REAL(MK), DIMENSION(3)                  :: momentum_tot
         REAL(MK)                                :: v2
         REAL(MK), DIMENSION(:), ALLOCATABLE     :: stress_tot
+        REAL(MK), DIMENSION(:), ALLOCATABLE     :: stress_tot_p
+        REAL(MK), DIMENSION(:), ALLOCATABLE     :: stress_tot_v
+        REAL(MK), DIMENSION(:), ALLOCATABLE     :: stress_tot_r
         REAL(MK)                                :: p_energy_tot
         
         !----------------------------------------------------
@@ -108,8 +115,13 @@
         NULLIFY(v)
         NULLIFY(m)
         NULLIFY(sid)
-
+        
         NULLIFY(s)
+#ifdef __PARTICLES_STRESS_SEPARATE
+        NULLIFY(sv)
+        NULLIFY(sp)
+        NULLIFY(sr)
+#endif
         
         NULLIFY(u)
         
@@ -140,6 +152,8 @@
         !----------------------------------------------------
    
         CALL particles_get_ctrl(d_particles,ctrl,stat_info_sub)
+        Brownian = &
+             control_get_Brownian(ctrl,stat_info_sub)     
         stress_tensor = &
              control_get_stress_tensor(ctrl,stat_info_sub)
         p_energy = &
@@ -154,6 +168,22 @@
            this%stress(:)  = 0.0_MK
            ALLOCATE(stress_tot(dim2))
            stress_tot(:)   = 0.0_MK 
+           
+#ifdef __PARTICLES_STRESS_SEPARATE
+           this%stress_p(:)  = 0.0_MK
+           ALLOCATE(stress_tot_p(dim2))
+           stress_tot_p(:)   = 0.0_MK 
+           this%stress_v(:)  = 0.0_MK
+           ALLOCATE(stress_tot_v(dim2))
+           stress_tot_v(:)   = 0.0_MK 
+           
+           IF ( Brownian ) THEN
+              this%stress_r(:)  = 0.0_MK
+              ALLOCATE(stress_tot_r(dim2))
+              stress_tot_r(:)   = 0.0_MK         
+           END IF
+#endif
+           
 
         END IF
         
@@ -180,7 +210,16 @@
         CALL particles_get_sid(d_particles,sid,num_part,stat_info_sub)
 
         IF ( stress_tensor) THEN
+           
            CALL particles_get_s(d_particles,s,num_part,stat_info_sub)
+#ifdef __PARTICLES_STRESS_SEPARATE
+           CALL particles_get_sp(d_particles,sp,num_part,stat_info_sub)
+           CALL particles_get_sv(d_particles,sv,num_part,stat_info_sub)
+           IF ( Brownian ) THEN
+              CALL particles_get_sr(d_particles,sr,num_part,stat_info_sub)
+           END IF
+#endif
+           
         END IF
      
         !----------------------------------------------------
@@ -225,6 +264,17 @@
                  this%stress(1:dim2) = &
                       this%stress(1:dim2) + s(1:dim2,j)
                  
+#ifdef __PARTICLES_STRESS_SEPARATE
+                 this%stress_p(1:dim2) = &
+                      this%stress_p(1:dim2) + sp(1:dim2,j)
+                 this%stress_v(1:dim2) = &
+                      this%stress_v(1:dim2) + sv(1:dim2,j)
+                 IF ( Brownian ) THEN
+                    this%stress_r(1:dim2) = &
+                         this%stress_r(1:dim2) + sr(1:dim2,j)
+                 END IF
+#endif
+                 
               END IF
               
            END IF
@@ -263,6 +313,14 @@
         IF ( stress_tensor ) THEN
            
            this%stress(1:dim2) = this%stress(1:dim2) / 2.0_MK
+           
+#ifdef __PARTICLES_STRESS_SEPARATE
+           this%stress_p(1:dim2) = this%stress_p(1:dim2) / 2.0_MK
+           this%stress_v(1:dim2) = this%stress_v(1:dim2) / 2.0_MK
+           IF ( Brownian ) THEN
+              this%stress_r(1:dim2) = this%stress_r(1:dim2) / 2.0_MK
+           END IF
+#endif
            
         END IF
         
@@ -317,6 +375,21 @@
            CALL MPI_ALLREDUCE (this%stress(1:dim2),  &
                 stress_tot(1:dim2),dim2,MPI_PREC, &
                 MPI_SUM,comm,stat_info_sub) 
+
+#ifdef __PARTICLES_STRESS_SEPARATE
+           CALL MPI_ALLREDUCE (this%stress_p(1:dim2),  &
+                stress_tot_p(1:dim2),dim2,MPI_PREC, &
+                MPI_SUM,comm,stat_info_sub) 
+           CALL MPI_ALLREDUCE (this%stress_v(1:dim2),  &
+                stress_tot_v(1:dim2),dim2,MPI_PREC, &
+                MPI_SUM,comm,stat_info_sub) 
+           IF ( Brownian ) THEN
+              CALL MPI_ALLREDUCE (this%stress_r(1:dim2),  &
+                   stress_tot_r(1:dim2),dim2,MPI_PREC, &
+                   MPI_SUM,comm,stat_info_sub) 
+           END IF
+           
+#endif
            
            IF( stat_info_sub /= 0 ) THEN
               PRINT *, "statistic_compute_statistic : ", &
@@ -334,7 +407,7 @@
         
         this%k_energy = k_energy_tot
         this%momentum(1:dim) = momentum_tot(1:dim)
-
+        
         
         !----------------------------------------------------
         ! All processes get total stress tensor.
@@ -343,6 +416,14 @@
         IF ( stress_tensor ) THEN
            
            this%stress(1:dim2)  = stress_tot(1:dim2)
+           
+#ifdef __PARTICLES_STRESS_SEPARATE
+           this%stress_p(1:dim2)  = stress_tot_p(1:dim2)
+           this%stress_v(1:dim2)  = stress_tot_v(1:dim2)
+           IF ( Brownian ) THEN
+              this%stress_r(1:dim2)  = stress_tot_r(1:dim2)
+           END IF
+#endif
            
         END IF
         
@@ -368,7 +449,7 @@
            
         END IF
         
-#endif
+#endif !__MPI
         
         !----------------------------------------------------
         ! Add extra kinetic energy and momentum.
@@ -413,6 +494,18 @@
         IF(ASSOCIATED(s)) THEN
            DEALLOCATE(s)
         END IF
+        
+#ifdef __PARTICLES_STRESS_SEPARATE
+        IF(ASSOCIATED(sp)) THEN
+           DEALLOCATE(sp)
+        END IF
+        IF(ASSOCIATED(sv)) THEN
+           DEALLOCATE(sv)
+        END IF
+        IF(ASSOCIATED(sr)) THEN
+           DEALLOCATE(sr)
+        END IF
+#endif
         
         IF(ASSOCIATED(u)) THEN
            DEALLOCATE(u)

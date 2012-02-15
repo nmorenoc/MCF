@@ -74,6 +74,7 @@
         LOGICAL                         :: dynamic_density_ref
         LOGICAL                         :: symmetry
         LOGICAL                         :: Newtonian
+        LOGICAL                         :: Brownian
         LOGICAL                         :: stress_tensor
         LOGICAL                         :: stress_tensor_p
         LOGICAL                         :: stress_tensor_v
@@ -280,12 +281,15 @@
              control_get_dynamic_density_ref(this%ctrl,stat_info_sub)
         Newtonian     = &
              control_get_Newtonian(this%ctrl,stat_info_sub)
+        Brownian      = &
+             control_get_Brownian(this%ctrl,stat_info_sub)    
         stress_tensor = &
              control_get_stress_tensor(this%ctrl,stat_info_sub)
+        
 #ifdef __PARTICLES_STRESS_SEPARATE
         stress_tensor_p = stress_tensor
-        stress_tensor_p = stress_tensor
-        stress_tensor_p = stress_tensor
+        stress_tensor_v = stress_tensor
+        stress_tensor_r = stress_tensor .AND. Brownian
 #else
         stress_tensor_p = .FALSE.
         stress_tensor_v = .FALSE.
@@ -803,11 +807,15 @@
            
 #ifdef __PARTICLES_FORCE_SEPARATE
            CALL particles_map_ghost_put(this%particles, &
-                l_map_x   = .TRUE., l_map_f  = .TRUE., &
-                l_map_fp  = .TRUE., l_map_fv = .TRUE., &
+                l_map_x   = .TRUE., &
+                l_map_f   = .TRUE.,  &
+                l_map_fp  = .TRUE., &
+                l_map_fv  = .TRUE.,  &
+                l_map_fr  = Brownian,  &
                 l_map_s   = stress_tensor,   &
                 l_map_sp  = stress_tensor_p, &
                 l_map_sv  = stress_tensor_v, &
+                l_map_sr  = stress_tensor_r, &
                 l_map_vgt = (.NOT. Newtonian),&
                 l_map_au  = p_energy, &
                 stat_info = stat_info_sub)

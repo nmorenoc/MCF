@@ -50,6 +50,9 @@
            REAL(MK)                           :: rho_min
            REAL(MK)                           :: rho_max
            REAL(MK), DIMENSION(9)             :: stress
+           REAL(MK), DIMENSION(9)             :: stress_p
+           REAL(MK), DIMENSION(9)             :: stress_v
+           REAL(MK), DIMENSION(9)             :: stress_r
            REAL(MK)                           :: p_energy
         END TYPE Statistic
         

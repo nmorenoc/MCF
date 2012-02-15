@@ -93,6 +93,9 @@ all pair forces, pressure, viscous, (and stachastic) forces,
 are calculated and used separately during the simulation.
 It is currently only implemented for Hu&Adams Physics of Fluids 2006
 angular momentum conserved formulation.
+note:
+flag such as -D__PARTICLES_FORCE is not need,
+as force is calculated anyway always.
 
 
 #************************************************************
@@ -188,35 +191,48 @@ to 2*num_dim, for example, lid driven cavity)
 #************************************************************
 #------------------------------------------------------------
 
+	
 #************************************************************
--D__IO_PARTICLES_FORCE :
+-D__IO_PARTICLES_FORCE_TOTAL :
 #************************************************************
 
-force will be written into output particle files for each particle.
+force will be written into output particle files
+for each particle.
 
 #************************************************************
 -D__IO_PARTICLES_FORCE_SEPARATE :
 #************************************************************
 
-different forces will be written into output particle files
-separately for each particle.
+different(pressure, viscous, random) forces will be written 
+into output particle files separately for each particle.
 
 note:
 1) -D__PARTICLES_FORCE_SEPARATE must be set to enable
 calculation of force separately.
 
 #************************************************************
--D__IO_PARTICLES_STRESS :
+-D__IO_PARTICLES_STRESS_TOTAL :
 #************************************************************
 
-stress tensor will be written into output particle files for each particle.
+stress tensor MAY be written into output particle files for 
+each particle.
 
+#************************************************************
+-D__IO_PARTICLES_STRESS_SEPARATE :
+#************************************************************
+
+individual stress tensor MAY be written into output 
+particle files for each particle.
+
+note:
+1) -D__PARTICLES_STRESS_SEPARATE must be set to enable
+calculation of stress separately
 
 #************************************************************
 -D__IO_WALL_FORCE_SEPARATE :
 #************************************************************
 		
-separate forces will be written into boundary files.
+separate forces WILL be written into boundary files.
 	 
 note:
 1) -D__WALL_FORCE_SEPARATE must be set to enable 
@@ -227,7 +243,7 @@ calculation of different forces on wall separately.
 -D__IO_STATISTIC_STRESS_SEPARATE:
 #************************************************************
 
-different parts of stress will be written in statistic files
+different parts of stress MAY be written in statistic files
 
 note:
 1) -D__PARTICLES_STRESS_SEPARATE must be set to enable

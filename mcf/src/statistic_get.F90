@@ -148,6 +148,84 @@
         
       END SUBROUTINE statistic_get_stress
       
+
+      SUBROUTINE statistic_get_stress_p(this, &
+           d_stress,stat_info)
+        
+        TYPE(Statistic), INTENT(IN)     :: this
+        REAL(MK), DIMENSION(:), POINTER :: d_stress
+        INTEGER, INTENT(OUT)            :: stat_info 
+        
+        INTEGER                         :: dim2
+
+        
+        stat_info = 0
+        dim2      = this%num_dim**2
+        
+        IF(ASSOCIATED(d_stress)) THEN
+           DEALLOCATE(d_stress)
+        END IF
+        
+        ALLOCATE(d_stress(dim2))
+        
+        d_stress(1:dim2) = this%stress_p(1:dim2)
+        
+        RETURN        
+        
+      END SUBROUTINE statistic_get_stress_p
+
+      
+      SUBROUTINE statistic_get_stress_v(this, &
+           d_stress,stat_info)
+        
+        TYPE(Statistic), INTENT(IN)     :: this
+        REAL(MK), DIMENSION(:), POINTER :: d_stress
+        INTEGER, INTENT(OUT)            :: stat_info 
+        
+        INTEGER                         :: dim2
+
+        
+        stat_info = 0
+        dim2      = this%num_dim**2
+        
+        IF(ASSOCIATED(d_stress)) THEN
+           DEALLOCATE(d_stress)
+        END IF
+        
+        ALLOCATE(d_stress(dim2))
+        
+        d_stress(1:dim2) = this%stress_v(1:dim2)
+        
+        RETURN        
+        
+      END SUBROUTINE statistic_get_stress_v
+      
+
+      SUBROUTINE statistic_get_stress_r(this, &
+           d_stress,stat_info)
+        
+        TYPE(Statistic), INTENT(IN)     :: this
+        REAL(MK), DIMENSION(:), POINTER :: d_stress
+        INTEGER, INTENT(OUT)            :: stat_info 
+        
+        INTEGER                         :: dim2
+
+        
+        stat_info = 0
+        dim2      = this%num_dim**2
+        
+        IF(ASSOCIATED(d_stress)) THEN
+           DEALLOCATE(d_stress)
+        END IF
+        
+        ALLOCATE(d_stress(dim2))
+        
+        d_stress(1:dim2) = this%stress_r(1:dim2)
+        
+        RETURN        
+        
+      END SUBROUTINE statistic_get_stress_r
+
       
       SUBROUTINE statistic_get_disorder(this,d_disorder,stat_info)
         

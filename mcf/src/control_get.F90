@@ -336,7 +336,7 @@
         
       END FUNCTION control_get_adaptive_dt
 
-
+      
       INTEGER FUNCTION control_get_write_output(this,stat_info)
         
         TYPE(Control), INTENT(IN)                :: this

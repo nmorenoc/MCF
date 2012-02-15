@@ -825,7 +825,7 @@
                                 
                                 this%s(1:num_dim2,ip) = &
                                      this%s(1:num_dim2,ip) + sip(1:num_dim2)
-#ifdef __PARTICELS_STRESS_SEPARATE
+#ifdef __PARTICLES_STRESS_SEPARATE
                                 this%sp(1:num_dim2,ip) = &
                                      this%sp(1:num_dim2,ip) + spip(1:num_dim2)
                                 this%sv(1:num_dim2,ip) = &
@@ -876,11 +876,14 @@
                                    this%s(1:num_dim2,jp) = &
                                         this%s(1:num_dim2,jp) + sjp(1:num_dim2)
                                    
-#ifdef __PARTICELS_STRESS_SEPARATE
+#ifdef __PARTICLES_STRESS_SEPARATE
                                    this%sp(1:num_dim2,jp) = &
-                                        this%sp(1:num_dim2,jp) + spjp(1:num_dim2)
+                                        this%sp(1:num_dim2,jp) + &
+                                        spjp(1:num_dim2)
                                    this%sv(1:num_dim2,jp) = &
-                                        this%sv(1:num_dim2,jp) + svjp(1:num_dim2)
+                                        this%sv(1:num_dim2,jp) + &
+                                        svjp(1:num_dim2)
+                                   
                                    IF ( Brownian ) THEN
                                       this%sr(1:num_dim2,jp) = &
                                            this%sr(1:num_dim2,jp) + &

@@ -66,7 +66,6 @@
         INTEGER                         :: adaptive_dt
         INTEGER                         :: write_output
         INTEGER                         :: write_restart
-
 #ifdef __DEBUG
         INTEGER                         :: debug_threshold
 #endif
@@ -373,7 +372,7 @@
              CALL control_set_stress_tensor(ctrl,&
                   stress_tensor,stat_info_sub)
              
-      ELSE IF (carg == 'P_ENERGY') THEN
+          ELSE IF (carg == 'P_ENERGY') THEN
              
              READ(cvalue,'(L)',IOSTAT=ios,ERR=200) p_energy
              CALL control_set_p_energy(ctrl,&
@@ -447,7 +446,7 @@
 	END IF
  
 #endif
-
-        RETURN        
  
+        RETURN        
+        
       END SUBROUTINE io_read_ctrl

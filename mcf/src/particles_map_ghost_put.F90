@@ -3,9 +3,9 @@
            l_map_rho,  l_map_m,    &
            l_map_id,               &
            l_map_f,    l_map_fp,   &
-           l_map_fv,               &
+           l_map_fv,   l_map_fr,   &
            l_map_s,    l_map_sp,   &
-           l_map_sv,               &
+           l_map_sv,   l_map_sr,   &
            l_map_vgt,  l_map_evgt, &
            l_map_eval, l_map_aeval,&
            l_map_evec, l_map_aevec,&
@@ -69,9 +69,11 @@
         LOGICAL, INTENT(IN), OPTIONAL   :: l_map_f
         LOGICAL, INTENT(IN), OPTIONAL   :: l_map_fp
         LOGICAL, INTENT(IN), OPTIONAL   :: l_map_fv
+        LOGICAL, INTENT(IN), OPTIONAL   :: l_map_fr
         LOGICAL, INTENT(IN), OPTIONAL   :: l_map_s
         LOGICAL, INTENT(IN), OPTIONAL   :: l_map_sp
-        LOGICAL, INTENT(IN), OPTIONAL   :: l_map_sv   
+        LOGICAL, INTENT(IN), OPTIONAL   :: l_map_sv
+        LOGICAL, INTENT(IN), OPTIONAL   :: l_map_sr   
         LOGICAL, INTENT(IN), OPTIONAL   :: l_map_vgt
         LOGICAL, INTENT(IN), OPTIONAL   :: l_map_evgt
         LOGICAL, INTENT(IN), OPTIONAL   :: l_map_eval
@@ -109,9 +111,11 @@
         LOGICAL                         ::  map_f
         LOGICAL                         ::  map_fp
         LOGICAL                         ::  map_fv
+        LOGICAL                         ::  map_fr
         LOGICAL                         ::  map_s
         LOGICAL                         ::  map_sp
-        LOGICAL                         ::  map_sv    
+        LOGICAL                         ::  map_sv
+        LOGICAL                         ::  map_sr
         LOGICAL                         ::  map_vgt
         LOGICAL                         ::  map_evgt
         LOGICAL                         ::  map_eval
@@ -157,9 +161,11 @@
         map_f     = .FALSE.
         map_fp    = .FALSE.
         map_fv    = .FALSE.
+        map_fr    = .FALSE.
         map_s     = .FALSE.
         map_sp    = .FALSE.
         map_sv    = .FALSE.
+        map_sr    = .FALSE.
         map_vgt   = .FALSE.
         map_evgt  = .FALSE.
         map_eval  = .FALSE.
@@ -195,6 +201,9 @@
         IF( PRESENT(l_map_fv) ) THEN
            map_fv = l_map_fv
         END IF
+        IF( PRESENT(l_map_fr) ) THEN
+           map_fr = l_map_fr
+        END IF
         IF( PRESENT(l_map_s) ) THEN
            map_s = l_map_s
         END IF
@@ -203,7 +212,10 @@
         END IF
         IF( PRESENT(l_map_sv) ) THEN
            map_sv = l_map_sv
-        END IF    
+        END IF 
+        IF( PRESENT(l_map_sr) ) THEN
+           map_sr = l_map_sr
+        END IF
         IF( PRESENT(l_map_vgt) ) THEN
            map_vgt = l_map_vgt
         END IF
@@ -334,6 +346,14 @@
            
         END IF
 
+        IF ( map_fr ) THEN
+           
+           CALL  ppm_map_part_ghost(this%fr,num_dim,&
+                this%num_part_real,this%num_part_all,&
+                isymm,ghost_size,map_type,stat_info_sub)
+           
+        END IF
+        
         IF ( map_s ) THEN
            
            CALL  ppm_map_part_ghost(this%s,num_dim2,&
@@ -353,6 +373,14 @@
         IF ( map_sv ) THEN
            
            CALL  ppm_map_part_ghost(this%sv,num_dim2,&
+                this%num_part_real,this%num_part_all,&
+                isymm,ghost_size,map_type,stat_info_sub)
+           
+        END IF
+
+        IF ( map_sr ) THEN
+           
+           CALL  ppm_map_part_ghost(this%sr,num_dim2,&
                 this%num_part_real,this%num_part_all,&
                 isymm,ghost_size,map_type,stat_info_sub)
            
@@ -544,6 +572,14 @@
            
         END IF
         
+        IF ( map_sr ) THEN
+           
+           CALL ppm_map_part_ghost(this%sr,num_dim2,&
+                this%num_part_real,this%num_part_ghost,&
+                isymm,ghost_size,map_type,stat_info_sub)
+           
+        END IF
+
         IF ( map_sv ) THEN
            
            CALL ppm_map_part_ghost(this%sv,num_dim2,&
@@ -563,6 +599,14 @@
         IF ( map_s ) THEN
            
            CALL ppm_map_part_ghost(this%s,num_dim2,&
+                this%num_part_real,this%num_part_ghost,&
+                isymm,ghost_size,map_type,stat_info_sub)
+           
+        END IF
+        
+        IF ( map_fr ) THEN
+           
+           CALL ppm_map_part_ghost(this%fr,num_dim,&
                 this%num_part_real,this%num_part_ghost,&
                 isymm,ghost_size,map_type,stat_info_sub)
            

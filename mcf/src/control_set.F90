@@ -397,7 +397,7 @@
         
       END SUBROUTINE control_set_adaptive_dt
       
-
+      
       SUBROUTINE control_set_write_output(this,d_write,stat_info)
         
         TYPE(Control), INTENT(INOUT)             :: this

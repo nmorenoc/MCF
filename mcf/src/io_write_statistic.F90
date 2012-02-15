@@ -44,6 +44,7 @@
         !----------------------------------------------------
         
         INTEGER                         :: stat_info_sub
+        LOGICAL                         :: Brownian
         LOGICAL                         :: dynamic_density_ref
         LOGICAL                         :: flow_v_fixed
         LOGICAL                         :: l_stress_tensor
@@ -53,9 +54,12 @@
         REAL(MK), DIMENSION(:), POINTER :: momentum
         REAL(MK), DIMENSION(:), POINTER :: v_aver
         REAL(MK), DIMENSION(:), POINTER :: stress
+        REAL(MK), DIMENSION(:), POINTER :: stress_p
+        REAL(MK), DIMENSION(:), POINTER :: stress_v
+        REAL(MK), DIMENSION(:), POINTER :: stress_r
         REAL(MK)                        :: p_energy
         INTEGER                         :: num_data
-        REAL(MK), DIMENSION(8)          :: data
+        REAL(MK), DIMENSION(20)         :: data
         CHARACTER(len=MAX_CHAR)	        :: form
         INTEGER                         :: iform
         CHARACTER(len=MAX_CHAR)	        :: cbuf
@@ -70,6 +74,12 @@
         NULLIFY(momentum)
         NULLIFY(v_aver)
         NULLIFY(stress)
+
+#ifdef __IO_STATISTIC_STRESS_SEPARATE
+        NULLIFY(stress_p)
+        NULLIFY(stress_v)
+        NULLIFY(stress_r)
+#endif
         
         IF ( rank /= 0 ) THEN
            PRINT *, "io_write_statistic : ", &
@@ -77,7 +87,8 @@
            stat_info = -1
            GOTO 9999
         END IF
-        
+        Brownian = &
+             control_get_Brownian(this%ctrl,stat_info_sub)     
         dynamic_density_ref = &
              control_get_dynamic_density_ref(this%ctrl,stat_info_sub)
         flow_v_fixed = &
@@ -93,7 +104,17 @@
              k_energy, momentum,stat_info_sub)
         
         IF ( l_stress_tensor ) THEN
-           CALL statistic_get_stress(d_statistic, & stress, stat_info_sub)
+           
+           CALL statistic_get_stress(d_statistic, stress, stat_info_sub)
+           
+#ifdef __IO_STATISTIC_STRESS_SEPARATE
+           CALL statistic_get_stress_p(d_statistic, stress_p, stat_info_sub)
+           CALL statistic_get_stress_v(d_statistic, stress_v, stat_info_sub)
+           IF ( Brownian ) THEN
+              CALL statistic_get_stress_r(d_statistic, stress_r, stat_info_sub)
+           END IF
+#endif
+           
         END IF
         
         !----------------------------------------------------
@@ -139,6 +160,24 @@
            data(num_data+1) = stress(3)
            num_data = num_data + 1
            
+#ifdef __IO_STATISTIC_STRESS_SEPARATE           
+           data(num_data+1) = stress_p(2)
+           num_data = num_data + 1
+           data(num_data+1) = stress_p(3)
+           num_data = num_data + 1
+           data(num_data+1) = stress_v(2)
+           num_data = num_data + 1
+           data(num_data+1) = stress_v(3)
+           num_data = num_data + 1
+           
+           IF ( Brownian ) THEN
+              data(num_data+1) = stress_r(2)
+              num_data = num_data + 1
+              data(num_data+1) = stress_r(3)
+              num_data = num_data + 1
+           END IF           
+#endif
+           
         END IF
         
         IF( l_p_energy ) THEN
@@ -151,7 +190,15 @@
            
         END IF
         
-        WRITE(form, '(A4,I1,A6)') '(I9,', num_data+1, 'E16.8)'
+        !----------------------------------------------------
+        ! For the format, it depends on number of columns.
+        !----------------------------------------------------
+        IF ( num_data + 1 < 10 ) THEN
+           WRITE(form, '(A4,I1,A6)') '(I9,', num_data+1, 'E16.8)'
+        ELSE
+           WRITE(form, '(A4,I2,A6)') '(I9,', num_data+1, 'E16.8)'
+        END IF
+        
         iform = LEN_TRIM(form)
         
         WRITE(cbuf,form(1:iform)), step, time, data(1:num_data)
@@ -178,11 +225,23 @@
            DEALLOCATE(v_aver)
         END IF
         
-#ifdef __IO_STATISTIC_STRESS
         IF(ASSOCIATED(stress)) THEN
            DEALLOCATE(stress)
         END IF
+
+#ifdef __IO_STATISTIC_STRESS_SEPARATE
+        IF(ASSOCIATED(stress_p)) THEN
+           DEALLOCATE(stress_p)
+        END IF
+        IF(ASSOCIATED(stress_v)) THEN
+           DEALLOCATE(stress_v)
+        END IF
+        IF(ASSOCIATED(stress_r)) THEN
+           DEALLOCATE(stress_r)
+        END IF        
 #endif
+
+
         
         RETURN
         

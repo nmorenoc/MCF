@@ -582,6 +582,144 @@
       END FUNCTION particles_get_fa_max
       
       
+      SUBROUTINE particles_get_fp(this,f,num,stat_info)
+        !----------------------------------------------------
+        ! Return pressure force per unit mass of each particle
+        !----------------------------------------------------
+     
+        TYPE(Particles),INTENT(IN)              :: this
+        REAL(MK),DIMENSION(:,:),POINTER         :: f
+        INTEGER, INTENT(IN)                     :: num
+        INTEGER,INTENT(OUT)                     :: stat_info
+        
+        !-----------------------
+        ! Local variables
+        !------------------------
+        
+        INTEGER                         :: dim
+
+        stat_info = 0
+        
+        IF( num > this%num_part_all) THEN
+           PRINT *, "particles_get_fp :  ",&
+                "Required particles is more than existed !"
+           stat_info = -1
+           GOTO 9999
+        END IF
+        
+        IF(ASSOCIATED(f)) THEN 
+           DEALLOCATE(f)
+        END IF
+        
+        IF( num > 0 ) THEN
+           
+           dim = SIZE(this%fp,1)
+           
+           ALLOCATE(f(dim,num))
+           
+           f(1:dim,1:num) = this%fp(1:dim,1:num)
+           
+        END IF
+        
+9999    CONTINUE
+        
+        RETURN
+        
+      END SUBROUTINE particles_get_fp
+
+
+      SUBROUTINE particles_get_fv(this,f,num,stat_info)
+        !----------------------------------------------------
+        ! Return viscous force per unit mass of each particle
+        !----------------------------------------------------
+     
+        TYPE(Particles),INTENT(IN)              :: this
+        REAL(MK),DIMENSION(:,:),POINTER         :: f
+        INTEGER, INTENT(IN)                     :: num
+        INTEGER,INTENT(OUT)                     :: stat_info
+        
+        !-----------------------
+        ! Local variables
+        !------------------------
+        
+        INTEGER                         :: dim
+
+        stat_info = 0
+        
+        IF( num > this%num_part_all) THEN
+           PRINT *, "particles_get_fv :  ",&
+                "Required particles is more than existed !"
+           stat_info = -1
+           GOTO 9999
+        END IF
+        
+        IF(ASSOCIATED(f)) THEN 
+           DEALLOCATE(f)
+        END IF
+        
+        IF( num > 0 ) THEN
+           
+           dim = SIZE(this%fv,1)
+           
+           ALLOCATE(f(dim,num))
+           
+           f(1:dim,1:num) = this%fv(1:dim,1:num)
+           
+        END IF
+        
+9999    CONTINUE
+        
+        RETURN
+        
+      END SUBROUTINE particles_get_fv
+
+      
+      SUBROUTINE particles_get_fr(this,f,num,stat_info)
+        !----------------------------------------------------
+        ! Return random force per unit mass of each particle
+        !----------------------------------------------------
+     
+        TYPE(Particles),INTENT(IN)              :: this
+        REAL(MK),DIMENSION(:,:),POINTER         :: f
+        INTEGER, INTENT(IN)                     :: num
+        INTEGER,INTENT(OUT)                     :: stat_info
+        
+        !-----------------------
+        ! Local variables
+        !------------------------
+        
+        INTEGER                         :: dim
+
+        stat_info = 0
+        
+        IF( num > this%num_part_all) THEN
+           PRINT *, "particles_get_fr :  ",&
+                "Required particles is more than existed !"
+           stat_info = -1
+           GOTO 9999
+        END IF
+        
+        IF(ASSOCIATED(f)) THEN 
+           DEALLOCATE(f)
+        END IF
+        
+        IF( num > 0 ) THEN
+           
+           dim = SIZE(this%fr,1)
+           
+           ALLOCATE(f(dim,num))
+           
+           f(1:dim,1:num) = this%fr(1:dim,1:num)
+           
+        END IF
+        
+9999    CONTINUE
+        
+        RETURN
+        
+      END SUBROUTINE particles_get_fr
+
+
       REAL(MK) FUNCTION particles_get_dt_f(this,stat_info)
         
         TYPE(Particles),INTENT(IN)              :: this
@@ -640,6 +778,144 @@
         RETURN
         
       END SUBROUTINE particles_get_s
+
+
+      SUBROUTINE particles_get_sp(this,s,num,stat_info)
+        !----------------------------------------------------
+        ! Return pressure stress tensor of each particle
+        !----------------------------------------------------
+        
+        TYPE(Particles),INTENT(IN)              :: this
+        REAL(MK),DIMENSION(:,:),POINTER         :: s
+        INTEGER, INTENT(IN)                     :: num
+        INTEGER,INTENT(OUT)                     :: stat_info
+        
+        !-----------------------
+        ! Local variables
+        !------------------------
+        
+        INTEGER                         :: dim
+
+        stat_info = 0
+        
+        IF( num > this%num_part_all) THEN
+           PRINT *, "particles_get_sp :  ",&
+                "Required particles is more than existed !"
+           stat_info = -1
+           GOTO 9999
+        END IF
+        
+        IF(ASSOCIATED(s)) THEN 
+           DEALLOCATE(s)
+        END IF
+        
+        IF( num > 0 ) THEN
+           
+           dim = SIZE(this%sp,1)
+           
+           ALLOCATE(s(dim,num))
+           
+           s(1:dim,1:num) = this%sp(1:dim,1:num)
+           
+        END IF
+        
+9999    CONTINUE
+        
+        RETURN
+        
+      END SUBROUTINE particles_get_sp
+
+      
+      SUBROUTINE particles_get_sv(this,s,num,stat_info)
+        !----------------------------------------------------
+        ! Return viscous stress tensor of each particle
+        !----------------------------------------------------
+        
+        TYPE(Particles),INTENT(IN)              :: this
+        REAL(MK),DIMENSION(:,:),POINTER         :: s
+        INTEGER, INTENT(IN)                     :: num
+        INTEGER,INTENT(OUT)                     :: stat_info
+        
+        !-----------------------
+        ! Local variables
+        !------------------------
+        
+        INTEGER                         :: dim
+
+        stat_info = 0
+        
+        IF( num > this%num_part_all) THEN
+           PRINT *, "particles_get_sv :  ",&
+                "Required particles is more than existed !"
+           stat_info = -1
+           GOTO 9999
+        END IF
+        
+        IF(ASSOCIATED(s)) THEN 
+           DEALLOCATE(s)
+        END IF
+        
+        IF( num > 0 ) THEN
+           
+           dim = SIZE(this%s,1)
+           
+           ALLOCATE(s(dim,num))
+           
+           s(1:dim,1:num) = this%sv(1:dim,1:num)
+           
+        END IF
+        
+9999    CONTINUE
+        
+        RETURN
+        
+      END SUBROUTINE particles_get_sv
+
+
+      SUBROUTINE particles_get_sr(this,s,num,stat_info)
+        !----------------------------------------------------
+        ! Return random stress tensor of each particle
+        !----------------------------------------------------
+        
+        TYPE(Particles),INTENT(IN)              :: this
+        REAL(MK),DIMENSION(:,:),POINTER         :: s
+        INTEGER, INTENT(IN)                     :: num
+        INTEGER,INTENT(OUT)                     :: stat_info
+        
+        !-----------------------
+        ! Local variables
+        !------------------------
+        
+        INTEGER                         :: dim
+
+        stat_info = 0
+        
+        IF( num > this%num_part_all) THEN
+           PRINT *, "particles_get_sr :  ",&
+                "Required particles is more than existed !"
+           stat_info = -1
+           GOTO 9999
+        END IF
+        
+        IF(ASSOCIATED(s)) THEN 
+           DEALLOCATE(s)
+        END IF
+        
+        IF( num > 0 ) THEN
+           
+           dim = SIZE(this%s,1)
+           
+           ALLOCATE(s(dim,num))
+           
+           s(1:dim,1:num) = this%sr(1:dim,1:num)
+           
+        END IF
+        
+9999    CONTINUE
+        
+        RETURN
+        
+      END SUBROUTINE particles_get_sr
 
 
       SUBROUTINE particles_get_vgt(this,vgt,num,stat_info)

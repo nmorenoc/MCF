@@ -64,6 +64,8 @@
         
         INTEGER                                 :: stat_info_sub
         LOGICAL                                 :: read_external
+        LOGICAL                                 :: Brownian
+        LOGICAL                                 :: stress_tensor
         LOGICAL                                 :: p_energy
         
         REAL(MK), DIMENSION(:,:), POINTER       :: x
@@ -72,7 +74,13 @@
         REAL(MK), DIMENSION(:),   POINTER       :: m
         INTEGER,  DIMENSION(:,:), POINTER       :: id
         REAL(MK), DIMENSION(:,:), POINTER       :: f
+        REAL(MK), DIMENSION(:,:), POINTER       :: fp
+        REAL(MK), DIMENSION(:,:), POINTER       :: fv
+        REAL(MK), DIMENSION(:,:), POINTER       :: fr
         REAL(MK), DIMENSION(:,:), POINTER       :: s
+        REAL(MK), DIMENSION(:,:), POINTER       :: sp
+        REAL(MK), DIMENSION(:,:), POINTER       :: sv
+        REAL(MK), DIMENSION(:,:), POINTER       :: sr
         REAL(MK), DIMENSION(:),   POINTER       :: u
         
         CHARACTER(LEN=MAX_CHAR)                 :: file_name
@@ -108,8 +116,22 @@
         NULLIFY(rho)
         NULLIFY(m)
         NULLIFY(id)
+#ifdef __IO_PARTICLES_FORCE_TOTAL
         NULLIFY(f)
+#endif
+#ifdef __IO_PARTICLES_FORCE_SEPARATE
+        NULLIFY(fp)
+        NULLIFY(fv)
+        NULLIFY(fr)
+#endif
+#ifdef __IO_PARTICLES_STRESS_TOTAL
         NULLIFY(s)
+#endif
+#ifdef __IO_PARTICLES_STRESS_SEPARATE
+        NULLIFY(sp)
+        NULLIFY(sv)
+        NULLIFY(sr)
+#endif
         NULLIFY(u)
         NULLIFY(output)
         
@@ -127,6 +149,10 @@
         
         read_external   = &
              control_get_read_external(this%ctrl,stat_info_sub)
+        Brownian        = &
+             control_get_Brownian(this%ctrl,stat_info_sub)
+        stress_tensor   = &
+             control_get_stress_tensor(this%ctrl,stat_info_sub) 
         p_energy        = &
              control_get_p_energy(this%ctrl,stat_info_sub)
         
@@ -135,12 +161,33 @@
         CALL particles_get_rho(d_particles,rho,num_part,stat_info)
         CALL particles_get_m(d_particles,m,num_part,stat_info)
         
-#ifdef __IO_PARTICLES_FORCE
+#ifdef __IO_PARTICLES_FORCE_TOTAL
         CALL particles_get_f(d_particles,f,num_part,stat_info)
 #endif
-#ifdef __IO_PARTICLES_STRESS
-        CALL particles_get_s(d_particles,s,num_part,stat_info)
+#ifdef __IO_PARTICLES_FORCE_SEPARATE
+        CALL particles_get_fp(d_particles,fp,num_part,stat_info)
+        CALL particles_get_fv(d_particles,fv,num_part,stat_info)
+        IF ( Brownian ) THEN
+           CALL particles_get_fr(d_particles,fr,num_part,stat_info)
+        END IF
 #endif
+
+
+        IF ( stress_tensor ) THEN
+           
+#ifdef __IO_PARTICLES_STRESS_TOTAL
+           
+           CALL particles_get_s(d_particles,s,num_part,stat_info)
+#endif
+           
+#ifdef __IO_PARTICLES_STRESS_SEPARATE
+           CALL particles_get_sp(d_particles,sp,num_part,stat_info)
+           CALL particles_get_sv(d_particles,sv,num_part,stat_info)
+           IF ( Brownian ) THEN
+              CALL particles_get_sr(d_particles,sr,num_part,stat_info)
+           END IF
+#endif
+        END IF ! stress tensor
         
         CALL particles_get_id(d_particles,id,num_part,stat_info)
         
@@ -201,15 +248,35 @@
         
         data_dim = num_x + num_v + 1 + 1 + num_id
         
-#ifdef __IO_PARTICLES_FORCE
+#ifdef __IO_PARTICLES_FORCE_TOTAL
         num_f = SIZE(f,1)
         data_dim = data_dim + num_f
 #endif
-
-#ifdef __IO_PARTICLES_STRESS
-        num_s = 2
-        data_dim = data_dim + num_s
+#ifdef __IO_PARTICLES_FORCE_SEPARATE
+        num_f = SIZE(fp,1)
+        data_dim = data_dim + num_f
+        num_f = SIZE(fv,1)
+        data_dim = data_dim + num_f
+        IF ( Brownian ) THEN
+           num_f = SIZE(fr,1)
+           data_dim = data_dim + num_f
+        END IF
 #endif
+        
+        IF ( stress_tensor ) THEN
+           
+#ifdef __IO_PARTICLES_STRESS_TOTAL
+           num_s = 2
+           data_dim = data_dim + num_s
+#endif
+#ifdef __IO_PARTICLES_STRESS_SEPARATE
+           data_dim = data_dim + 2
+           data_dim = data_dim + 2
+           IF ( Brownian ) THEN
+              data_dim = data_dim + 2
+           END IF
+#endif
+        END IF ! stress_tensor
         
         IF (p_energy )  THEN
            data_dim = data_dim + 1
@@ -225,7 +292,7 @@
         END IF
         
         !----------------------------------------------------
-        ! Copy the data into output.
+        ! Copy the data into output data structure.
         !----------------------------------------------------
         
         output(1:num_x,1:num_part) = x(1:num_x,1:num_part)
@@ -247,19 +314,54 @@
         
         current_dim = current_dim + num_id
         
-#ifdef __IO_PARTICLES_FORCE
+#ifdef __IO_PARTICLES_FORCE_TOTAL
         output(current_dim+1:current_dim+num_f,1:num_part) = &
              f(1:num_f,1:num_part)
         current_dim = current_dim + num_f
 #endif
-
-#ifdef __IO_PARTICLES_STRESS
-        output(current_dim+1,1:num_part) = &
-             s(2,1:num_part)
-        output(current_dim+2,1:num_part) = &
-             s(3,1:num_part)      
-        current_dim = current_dim + num_s
+#ifdef __IO_PARTICLES_FORCE_SEPARATE
+        output(current_dim+1:current_dim+num_f,1:num_part) = &
+             fp(1:num_f,1:num_part)
+        current_dim = current_dim + num_f
+        output(current_dim+1:current_dim+num_f,1:num_part) = &
+             fv(1:num_f,1:num_part)
+        current_dim = current_dim + num_f
+        IF ( Brownian ) THEN
+           output(current_dim+1:current_dim+num_f,1:num_part) = &
+                fr(1:num_f,1:num_part)
+           current_dim = current_dim + num_f
+        END IF
 #endif
+
+        IF ( stress_tensor ) THEN
+           
+#ifdef __IO_PARTICLES_STRESS_TOTAL
+           output(current_dim+1,1:num_part) = &
+                s(2,1:num_part)
+           output(current_dim+2,1:num_part) = &
+                s(3,1:num_part)      
+           current_dim = current_dim + num_s
+#endif
+#ifdef __IO_PARTICLES_STRESS_SEPARATE
+           output(current_dim+1,1:num_part) = &
+                sp(2,1:num_part)
+           output(current_dim+2,1:num_part) = &
+             sp(3,1:num_part)      
+        current_dim = current_dim + 2
+        output(current_dim+1,1:num_part) = &
+             sv(2,1:num_part)
+        output(current_dim+2,1:num_part) = &
+             sv(3,1:num_part)      
+        current_dim = current_dim + 2
+        IF ( Brownian ) THEN
+           output(current_dim+1,1:num_part) = &
+                sr(2,1:num_part)
+           output(current_dim+2,1:num_part) = &
+                sr(3,1:num_part)      
+           current_dim = current_dim + 2
+        END IF
+#endif
+     END IF ! stress_tensor
         
         IF( p_energy ) THEN
            
@@ -344,14 +446,44 @@
            DEALLOCATE(id)
         END IF
         
+#ifdef __IO_PARTICLES_FORCE_TOTAL
         IF (ASSOCIATED(f)) THEN
            DEALLOCATE(f)
         END IF
+#endif
+
+#ifdef __IO_PARTICLES_FORCE_SEPARATE
+        IF (ASSOCIATED(fp)) THEN
+           DEALLOCATE(fp)
+        END IF
+        IF (ASSOCIATED(fv)) THEN
+           DEALLOCATE(fv)
+        END IF
+        IF (ASSOCIATED(fr)) THEN
+           DEALLOCATE(fr)
+        END IF
+#endif
         
+#ifdef __IO_PARTICLES_STRESS_TOTAL
         IF (ASSOCIATED(s)) THEN
            DEALLOCATE(s)
         END IF
-     
+#endif
+
+#ifdef __IO_PARTICLES_STRESS_SEPARATE
+        IF (ASSOCIATED(sp)) THEN
+           DEALLOCATE(sp)
+        END IF
+        
+        IF (ASSOCIATED(sv)) THEN
+           DEALLOCATE(sv)
+        END IF
+        
+        IF (ASSOCIATED(sr)) THEN
+           DEALLOCATE(sr)
+        END IF
+#endif
+        
         IF (ASSOCIATED(u) ) THEN
            DEALLOCATE(u)
         END IF
