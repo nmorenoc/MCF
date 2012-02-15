@@ -138,9 +138,13 @@
         
         !----------------------------------------------------
         ! Boundary parameters :
-        ! wall_drag_p : drag from particles
+        ! wall_drag_p : drag from SDPD/SPH particles
         !               (solvent, colloidal boundary particles)
         ! wall_drag_c : drag from colloidal particles.
+        !
+        ! wall_drag_pp: pressure force from SDPD/SPH particles.
+        ! wall_drag_pv: viscous force from SDPD/SPH particles.
+        ! wall_drag_pr: random force from SDPD/SPH particles.
      	!----------------------------------------------------
         
         INTEGER, DIMENSION(:), POINTER  :: bcdef
@@ -155,7 +159,7 @@
 #ifdef __WALL_FORCE_SEPARATE
         REAL(MK),DIMENSION(3,6)         :: wall_drag_pp
         REAL(MK),DIMENSION(3,6)         :: wall_drag_pv
-        REAL(MK),DIMENSION(3,6)         :: wall_drag_pr        
+        REAL(MK),DIMENSION(3,6)         :: wall_drag_pr
 #endif
 
         !----------------------------------------------------

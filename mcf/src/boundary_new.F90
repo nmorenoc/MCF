@@ -51,14 +51,18 @@
         NULLIFY(this%drag)
         ALLOCATE(this%drag(2,4))
         this%drag(:,:) = 0.0_MK
-#ifdef __WALL_FORCE_SEPARATE
+
         NULLIFY(this%drag_p)
+        NULLIFY(this%drag_v)
+        NULLIFY(this%drag_r)
+        
+#ifdef __WALL_FORCE_SEPARATE
         ALLOCATE(this%drag_p(2,4))
         this%drag_p(:,:) = 0.0_MK
-        NULLIFY(this%drag_v)
+        
         ALLOCATE(this%drag_v(2,4))
         this%drag_v(:,:) = 0.0_MK
-        NULLIFY(this%drag_r)
+
         ALLOCATE(this%drag_r(2,4))
         this%drag_r(:,:) = 0.0_MK
 #endif
@@ -85,9 +89,9 @@
       
       SUBROUTINE boundary_init(this,d_num_dim,stat_info)
 
-        TYPE(Boundary), INTENT(INOUT)   :: this
-        INTEGER, INTENT(IN)             :: d_num_dim
-        INTEGER, INTENT(OUT)            :: stat_info
+        TYPE(Boundary), INTENT(INOUT)    :: this
+        INTEGER, INTENT(IN)              :: d_num_dim
+        INTEGER, INTENT(OUT)             :: stat_info
         
         stat_info = 0
         
@@ -130,14 +134,18 @@
         NULLIFY(this%drag)
         ALLOCATE(this%drag(d_num_dim,2*d_num_dim))
         this%drag(:,:) = 0.0_MK
-#ifdef __WALL_FORCE_SEPARATE
+
         NULLIFY(this%drag_p)
+        NULLIFY(this%drag_v)
+        NULLIFY(this%drag_r)
+        
+#ifdef __WALL_FORCE_SEPARATE
         ALLOCATE(this%drag_p(d_num_dim,2*d_num_dim))
         this%drag_p(:,:) = 0.0_MK
-        NULLIFY(this%drag_v)
+
         ALLOCATE(this%drag_v(d_num_dim,2*d_num_dim))
         this%drag_v(:,:) = 0.0_MK
-        NULLIFY(this%drag_r)
+        
         ALLOCATE(this%drag_r(d_num_dim,2*d_num_dim))
         this%drag_r(:,:) = 0.0_MK
 #endif

@@ -89,11 +89,11 @@
            INTEGER                              :: noslip_type
            REAL(MK)                             :: dout
            REAL(MK), DIMENSION(:,:),POINTER     :: drag
-#ifdef __WALL_FORCE_SEPARATE
+
            REAL(MK), DIMENSION(:,:),POINTER     :: drag_p
            REAL(MK), DIMENSION(:,:),POINTER     :: drag_v
            REAL(MK), DIMENSION(:,:),POINTER     :: drag_r
-#endif
+
            REAL(MK), DIMENSION(3)               :: min_phys
            REAL(MK), DIMENSION(3)               :: max_phys
            REAL(MK), DIMENSION(3)               :: min_phys_t
@@ -107,10 +107,8 @@
            INTEGER                              :: num_le
            INTEGER                              :: num_shear
 
-
            INTEGER                              :: num_part_wall_solid
-           
-           
+          
         END TYPE Boundary
         
         INTERFACE boundary_new

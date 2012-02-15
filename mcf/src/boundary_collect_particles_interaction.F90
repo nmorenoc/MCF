@@ -47,11 +47,9 @@
         INTEGER                                 :: dim
         INTEGER                                 :: num
         REAL(MK), DIMENSION(:,:), POINTER       :: t_drag
-#ifdef __WALL_FORCE_SEPARATE
         REAL(MK), DIMENSION(:,:), POINTER       :: t_drag_p
         REAL(MK), DIMENSION(:,:), POINTER       :: t_drag_v
         REAL(MK), DIMENSION(:,:), POINTER       :: t_drag_r
-#endif
         
         !----------------------------------------------------
         ! Initialization of variables.
@@ -79,14 +77,15 @@
         
         this%drag(:,:) = 0.0_MK        
         NULLIFY(t_drag)
-
-#ifdef __WALL_FORCE_SEPARATE
-        this%drag_p(:,:) = 0.0_MK        
+        
         NULLIFY(t_drag_p)
-        this%drag_v(:,:) = 0.0_MK        
         NULLIFY(t_drag_v)
-        this%drag_r(:,:) = 0.0_MK        
         NULLIFY(t_drag_r)
+        
+#ifdef __WALL_FORCE_SEPARATE
+        this%drag_p(:,:) = 0.0_MK
+        this%drag_v(:,:) = 0.0_MK
+        this%drag_r(:,:) = 0.0_MK
 #endif
         
 #ifdef __MPI

@@ -23,9 +23,9 @@
         ! Technische Universitaet Muenchen, Germany.
         !----------------------------------------------------
         
-        !--------------------------------
+        !----------------------------------------------------
 	! Arguments
-	!--------------------------------
+	!----------------------------------------------------
         TYPE(IO), INTENT(IN)            :: this
         INTEGER, INTENT(IN)             :: rank
         INTEGER,  INTENT(IN)	        :: step
@@ -33,10 +33,11 @@
         TYPE(Boundary), INTENT(IN)      :: d_boundary
         INTEGER,  INTENT(OUT)	        :: stat_info
         
-        !--------------------------------
+        !----------------------------------------------------
         !  Local Variables
-        !--------------------------------
+        !----------------------------------------------------
         INTEGER                         :: stat_info_sub
+        LOGICAL                         :: Brownian
         INTEGER                         :: num_dim
         INTEGER                         :: num_shear
         INTEGER                         :: num_wall_solid
@@ -44,11 +45,9 @@
         INTEGER,DIMENSION(:), POINTER   :: bcdef
         REAL(MK),DIMENSION(:,:),POINTER :: drag
 
-#ifdef __IO_WALL_FORCE_SEPARATE
         REAL(MK),DIMENSION(:,:),POINTER :: drag_p
         REAL(MK),DIMENSION(:,:),POINTER :: drag_v
         REAL(MK),DIMENSION(:,:),POINTER :: drag_r
-#endif
         
         REAL(MK),DIMENSION(:), POINTER  :: output
         INTEGER                         :: num
@@ -56,17 +55,23 @@
         CHARACTER(len=MAX_CHAR)	        :: cbuf,fbuf
         INTEGER			        :: i
 
+        !----------------------------------------------------
+        ! Initialization.
+        !----------------------------------------------------
+        
         stat_info     = 0
         stat_info_sub = 0
+        
+        Brownian = &
+             control_get_Brownian(this%ctrl,stat_info_sub)
         
         NULLIFY(bcdef)
         NULLIFY(drag)        
         
-#ifdef __IO_WALL_FORCE_SEPARATE
         NULLIFY(drag_p)
         NULLIFY(drag_v)
         NULLIFY(drag_r)
-#endif
+
         NULLIFY(output)
         
         IF ( rank /= 0 ) THEN
@@ -111,6 +116,12 @@
            num = num + &
                 2*num_dim*num_wall_solid + &
                 2*num_dim*num_wall_sym
+           IF ( Brownian ) THEN
+              CALL boundary_get_drag_r(d_boundary,drag_r,stat_info_sub)
+              num = num + &
+                   num_dim*num_wall_solid + &
+                   num_dim*num_wall_sym
+           END IF
 #endif 
            !-------------------------------------------------
            ! Allocate memory for output data.
@@ -168,6 +179,17 @@
                  
                  output(j_start:j_end) = &
                       drag_v(1:num_dim,i)
+
+                 IF ( Brownian ) THEN
+                    
+                    j_start = j_end + 1
+                    j_end   = j_start + num_dim -1
+                    
+                    output(j_start:j_end) = &
+                         drag_r(1:num_dim,i)
+                    
+                 END IF
+
                  
               END IF ! bcdef
               
@@ -216,6 +238,7 @@
            DEALLOCATE(drag_r)
         END IF
 #endif
+        
         RETURN 
         
       END SUBROUTINE io_write_boundary

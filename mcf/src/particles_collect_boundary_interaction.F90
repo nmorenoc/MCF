@@ -44,6 +44,7 @@
         
         INTEGER                         :: stat_info_sub
         LOGICAL                         :: symmetry
+        LOGICAL                         :: Brownian
         INTEGER                         :: num_dim, j
         TYPE(Boundary), POINTER         :: tboundary
         INTEGER                         :: num_wall_sym
@@ -65,7 +66,9 @@
 
         symmetry = &
              control_get_symmetry(this%ctrl,stat_info_sub)
-        
+        Brownian = &
+             control_get_Brownian(this%ctrl,stat_info_sub)
+      
         !----------------------------------------------------
         ! Physics parameters :
         !----------------------------------------------------
@@ -87,6 +90,7 @@
         END IF
         
         drag(:,:) = 0.0_MK
+        
 #ifdef __WALL_FORCE_SEPARATE
         drag_p(:,:) = 0.0_MK
         drag_v(:,:) = 0.0_MK
@@ -126,13 +130,15 @@
 #ifdef __WALL_FORCE_SEPARATE
                  drag_p(1:num_dim,sid) = &
                       drag_p(1:num_dim,sid) + &
-                      this%fp(1:num_dim,ip) * this%m(ip)   
+                      this%fp(1:num_dim,ip) * this%m(ip)
                  drag_v(1:num_dim,sid) = &
                       drag_v(1:num_dim,sid) + &
-                      this%fv(1:num_dim,ip) * this%m(ip)   
-                 drag_r(1:num_dim,sid) = &
-                      drag_r(1:num_dim,sid) + &
-                      this%fr(1:num_dim,ip) * this%m(ip) 
+                      this%fv(1:num_dim,ip) * this%m(ip)
+                 IF ( Brownian ) THEN
+                    drag_r(1:num_dim,sid) = &
+                         drag_r(1:num_dim,sid) + &
+                         this%fr(1:num_dim,ip) * this%m(ip)
+                 END IF
 #endif
                  
               END DO ! j = 1, num_part_wall_sym
@@ -156,13 +162,15 @@
 #ifdef __WALL_FORCE_SEPARATE
               drag_p(1:num_dim,sid) = &
                    drag_p(1:num_dim,sid) + &
-                   this%fp(1:num_dim,ip) * this%m(ip)   
+                   this%fp(1:num_dim,ip) * this%m(ip)
               drag_v(1:num_dim,sid) = &
                    drag_v(1:num_dim,sid) + &
-                   this%fv(1:num_dim,ip) * this%m(ip)   
-              drag_r(1:num_dim,sid) = &
-                   drag_r(1:num_dim,sid) + &
-                   this%fr(1:num_dim,ip) * this%m(ip)   
+                   this%fv(1:num_dim,ip) * this%m(ip)
+              IF ( Brownian ) THEN
+                 drag_r(1:num_dim,sid) = &
+                      drag_r(1:num_dim,sid) + &
+                      this%fr(1:num_dim,ip) * this%m(ip)
+              END IF
 #endif
 
            END DO ! j = 1, num_part_wall_solid_real

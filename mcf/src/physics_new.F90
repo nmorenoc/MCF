@@ -150,13 +150,15 @@
         NULLIFY(this%bcdef)
         ALLOCATE(this%bcdef(4))
         this%bcdef(1:4)       = ppm_param_bcdef_periodic
+        
         NULLIFY(this%boundary)
+
         
         RETURN
           
       END SUBROUTINE physics_init
      
-
+      
       SUBROUTINE physics_display_parameters(this,stat_info)
         !----------------------------------------------------
         ! Subroutine  : physics_display parameters

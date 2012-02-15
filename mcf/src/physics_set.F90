@@ -41,7 +41,10 @@
         INTEGER, INTENT(IN)             :: d_num_dim
         INTEGER, INTENT(OUT)            :: stat_info
         
-        stat_info = 0
+        INTEGER                         :: stat_info_sub
+        
+        stat_info      = 0
+        stat_info_sub = 0
         
         IF( d_num_dim < 2 .OR. d_num_dim > 3 ) THEN
            PRINT *, "physics_set_num_dim : ", &
@@ -113,6 +116,7 @@
               DEALLOCATE(this%evec)
            END IF
            ALLOCATE(this%evec(d_num_dim,d_num_dim))
+           
            
         END IF
         

@@ -4,7 +4,7 @@
 \usepackage{hyperref}
 % Title Page
 
-\title{User Guide of Multiscale Complex Fluids simulation~(MCF) code}
+\title{User Guide of multiscale complex fluids simulation~(MCF) code}
 \author{Xin Bian}
 
 
@@ -1037,6 +1037,53 @@ For more details,
 please
 check
 \url{http://www.lrz.de/services/compute/hlrb/}
+\subsection{SupMUC Supercomputer on LRZ}
+
+\subsubsection{IBM MPI (default)}
+\begin{verbatim}
+ #!/bin/bash
+#
+#@ job_type = parallel
+#@ class = general
+#@ node  = 4
+#@ total_tasks=128
+#@ wall_clock_limit = 48:00:00
+#@ job_name = 20_20_20_x0k4_ellipsoid
+#@ network.MPI = sn_all,not_shared,us
+#@ initialdir = /work/pr32ma/lu64yuz3/shear_free_ellipsoid/lattice/20_20_20_x0k4/
+#@ error = job$(jobid).err
+#@ notification=always
+#@ notify_user=xin.bian@aer.mw.tum.de
+#@ queue
+. /etc/profile
+. /etc/profile.d/modules.sh
+mpiexec -n 128 ./mcf | tee mcf_std.out
+\end{verbatim}
+
+\subsubsection{Intel MPI }
+\begin{verbatim}
+ #!/bin/bash
+#
+#@ job_type = MPICH
+#@ class = general
+#@ node  = 4
+#@ total_tasks=128
+#@ wall_clock_limit = 48:00:00
+#@ job_name = 20_20_20_x0k4_ellipsoid
+#@ network.MPI = sn_all,not_shared,us
+#@ initialdir = /work/pr32ma/lu64yuz3/shear_free_ellipsoid/lattice/20_20_20_x0k4/
+#@ error = job$(jobid).err
+#@ notification=always
+#@ notify_user=xin.bian@aer.mw.tum.de
+#@ queue
+. /etc/profile
+. /etc/profile.d/modules.sh
+module unload mpi.ibm
+module load mpi.intel
+mpiexec -n 128 ./mcf | tee mcf_std.out
+\end{verbatim}
+
+
 \section{Output data files}
 
 \subsection{\textbf{output\_particles\_relax\_file}\\
@@ -1064,20 +1111,36 @@ denpending on which wall it belongs to.
 \textit{NNN} represent the number of steps in the simulation for this output file.
 This file contains the fundamental quantities of each particle
 at the end of step \textit{NNN}.
-\textbf{$[x, y(, z), v_x, v_y(, v_z), rho, m, p_{id}, s_{id}]$}.
-Note that \textbf{$rho$} can be number density or mass density,
+\textbf{$[x, y(, z), v_x, v_y(, v_z), \rho, m, {id}_p, {id}_s]$}.
+Note that \textbf{$\rho$} can be number density or mass density,
 depending on the \textbf{rhs\_density\_type}.
-Both \textbf{$p_{id}$} and \textbf{$s_{id}$} are integer numbers.
-\textbf{$p_{id}$} is particle ID and
+Both \textbf{${id}_p$} and \textbf{${id}_s$} are integer numbers.
+\textbf{${id}_p$} is particle ID and
 unique for each particle.
-\textbf{$s_{id}$} is species ID.
+\textbf{${id}_s$} is species ID.
 
-For solvent particle \textbf{$s_{id}$}=\textit{0}.
-For colloidal boundary particle \textbf{$s_{id}$}=\textit{1...\textit{MM}}.
+For solvent particle \textbf{${id}_p$}=\textit{0}.
+For colloidal boundary particle \textbf{${id}_s$}=\textit{1...\textit{MM}}.
 \textit{MM} is the total number of colloids
 in the simulation.
-For wall boundary particle \textbf{$s_{id}$}=\textit{-1, -2, -3, -4,( -5, -6)},
+For wall boundary particle \textbf{${id}_s$}=\textit{-1, -2, -3, -4,( -5, -6)},
 denpending on which wall it belongs to.
+
+If the force per unit mass is set to output,
+there are more columns
+\textbf{[$f_x, f_y(, f_z)$]}.
+If the individual forces per unit mass are set to output,
+there are more columns
+\textbf{[$f^p_x, f^p_y(, f^p_z),f^v_x, f^v_y(, f^v_z)(,f^r_x, f^r_y(, f^r_z))$]}.
+
+
+If the stress tensor for each particle is set to output,
+there are more columns
+\textbf{[$\sigma_{xy}, \sigma_{yx}$]}.
+If the individual stress tensors for each particle are set to output,
+there are more columns
+\textbf{[$\sigma^p_{xy}, \sigma^p_{yx}, \sigma^v_{xy}, \sigma^v_{yx}(,\sigma^r_{xy}, \sigma^r_{yx})$]}.
+
 
 \subsection{\textbf{output\_conformation\_file}\\
 (\textit{mcf\_conformationNNN.out})}
@@ -1099,6 +1162,7 @@ in the simulation.
 For wall boundary particle \textbf{$s_{id}$}=\textit{-1, -2, -3, -4,( -5, -6)},
 denpending on which wall it belongs to.
 
+
 \subsection{\textbf{statistic\_relax\_file}\\
 (\textit{mcf\_init\_statistic.dat})}
 For relax run/ pre-run statistics.
@@ -1113,9 +1177,33 @@ Statistics file of simulation.
 
 \subsection{\textbf{boundary\_file}\\
 (\textit{mcf\_boundary.dat})}
-Boundary~(wall) file of simulation.
+Boundary~(wall) output file:
 
-\textbf{[step, time, kinetic energy]}.
+Most of the simulations, we have at maximum two walls.
+
+
+2D: \textbf{[step, time, force on walls:  $F^1_x, F^1_y, F^2_x, F^2_y$]}.
+
+3D: \textbf{[step, time, force on walls:  $F^1_x, F^1_y, F^1_z, F^2_x, F^2_y, F^2_z$]}.
+
+If the code is compiled to output individual forces (pressure, viscous, random),
+then there are more columns in the output:
+
+2D: \textbf{[$F^{1p}_x, F^{1p}_y, 
+F^{1v}_x, F^{1v}_y
+(,F^{1r}_x, F^{1r}_y),
+F^{2p}_x, F^{2p}_y, 
+F^{2v}_x, F^{2v}_y
+(,F^{2r}_x, F^{2r}_y)$]}.
+
+3D: \textbf{[$F^{1p}_x, F^{1p}_y, F^{1p}_z, 
+F^{1v}_x, F^{1v}_y, F^{1v}_z
+(,F^{1r}_x, F^{1r}_y, F^{1r}_z),\\
+F^{2p}_x, F^{2p}_y, F^{2p}_z, 
+F^{2v}_x, F^{2v}_y, F^{2v}_z
+(,F^{2r}_x, F^{2r}_y, F^{2r}_z)$]}.
+
+For non-Brownian simulation, the random force component is absent.
 
 \subsection{\textbf{colloid\_file}\\
 (\textit{mcf\_colloidM.dat})}
