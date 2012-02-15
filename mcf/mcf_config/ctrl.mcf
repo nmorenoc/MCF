@@ -146,6 +146,7 @@ mcf_io_config_file      = io_config.mcf
 #                          1: maximum accleration of particles,colloids.
 #                          2: non-overlap of colloids.
 #
+#
 #       write_output     : write information during simulatin,
 #                          0: no writing.
 #                          1: according to simulation step
@@ -161,55 +162,55 @@ mcf_io_config_file      = io_config.mcf
 #                          3: according to wall time.
 #----------------------------------------------------------------------
 
-debug_flag           = 1
+debug_flag             = 1
 
-relax_run            = FALSE
+relax_run              = FALSE
 
-read_external        = FALSE
+read_external          = FALSE
 
-kernel_type          = 1
+kernel_type            = 1
 
-symmetry             = TRUE
+symmetry               = TRUE
 
-rhs_density_type     = 2
+rhs_density_type       = 2
 
-dynamic_density_ref  = FALSE
+dynamic_density_ref    = FALSE
 
-stateEquation_type   = 2
+stateEquation_type     = 2
 
-Newtonian            = TRUE
+Newtonian              = TRUE
 
-Brownian             = FALSE
+Brownian               = FALSE
 
-random_seed          = -1
+random_seed            = -1
 
-rhs_force_type       = 3
+rhs_force_type         = 3
 
-pp_interact_cc       = FALSE
+pp_interact_cc         = FALSE
 
-pp_interact_cw       = FALSE
+pp_interact_cw         = FALSE
 
-cc_lub_type          = 0
+cc_lub_type            = 0
 
-cc_repul_type        = 0
+cc_repul_type          = 0
 
-cw_lub_type          = 0
+cw_lub_type            = 0
 
-cw_repul_type        = 0
+cw_repul_type          = 0
 
-stress_tensor        = TRUE
+stress_tensor          = TRUE
 
-p_energy             = FALSE
+p_energy               = FALSE
 
-flow_v_fixed         = FALSE
+flow_v_fixed           = FALSE
 
-integrate_type       = 2
+integrate_type         = 2
 
-adaptive_dt          = 0
+adaptive_dt            = 0
 
-write_output         = 1
+write_output           = 1
 
-write_restart        = 0
+write_restart          = 0
 
 #**********************************************************************
 #    Control information for mcf simulation ends here

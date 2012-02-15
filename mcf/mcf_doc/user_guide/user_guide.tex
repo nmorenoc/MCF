@@ -1171,9 +1171,32 @@ For relax run/ pre-run statistics.
 
 \subsection{\textbf{statistic\_file}\\
 (\textit{mcf\_statistic.dat})}
-Statistics file of simulation.
+Statistics output file,
+which contains overall quantities of all particles
+or particles in certain region.
 
-\textbf{[step, time, kinetic energy]}.
+\textbf{[step, time, kinetic energy, momentum: $mom_x, mom_y(, mom_z)$]}.
+
+If flow average velocity in certain region is required, 
+there are more colums:
+
+\textbf{[velocity: $v_x, v_y(, v_z)$]}.
+
+If reference density if calculated dynamically,
+there are more colums:
+
+\textbf{[density: $\rho_{min}, \rho_{max}$]}.
+
+If stress tensor is set to output:
+
+\textbf{[stress tensor: $\sigma_{xy}, \sigma_{yx}$]}.
+
+If individual stress tensors are set to output:
+
+\textbf{[stress tensor: 
+$\sigma^p_{xy}, \sigma^p_{yx},
+\sigma^v_{xy}, \sigma^v_{yx}
+(,\sigma^r_{xy}, \sigma^r_{yx})$]}.
 
 \subsection{\textbf{boundary\_file}\\
 (\textit{mcf\_boundary.dat})}
