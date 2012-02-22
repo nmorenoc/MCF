@@ -269,15 +269,16 @@
                       this%stress_p(1:dim2) + sp(1:dim2,j)
                  this%stress_v(1:dim2) = &
                       this%stress_v(1:dim2) + sv(1:dim2,j)
+                 
                  IF ( Brownian ) THEN
                     this%stress_r(1:dim2) = &
                          this%stress_r(1:dim2) + sr(1:dim2,j)
                  END IF
 #endif
                  
-              END IF
+              END IF ! sid
               
-           END IF
+           END IF ! stress_tensor
            
         END DO ! j = 1, num_part
         
@@ -302,7 +303,12 @@
            END DO
            
         END IF
-        
+
+#if 0        
+        !----------------------------------------------------
+        ! Commented out this area, as stress on each particle
+        ! has been divided by 2 already.
+        !----------------------------------------------------
         !----------------------------------------------------
         ! As each pair particle is counted twice, 
         ! we divide 2 here.
@@ -323,6 +329,7 @@
 #endif
            
         END IF
+#endif  
         
         !----------------------------------------------------
         ! Calculation in the context of MPI.

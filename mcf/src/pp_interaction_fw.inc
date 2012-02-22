@@ -138,8 +138,8 @@
      DO sa = 1, num_dim
         DO sb = 1, num_dim
            
-           sip((sb-1)*num_dim+sa) = rij(sa) * fip(sb)
-           !sjp((sb-1)*num_dim+sa) = -rij(sa) * fjp(sb)
+           sip((sb-1)*num_dim+sa) = rij(sa) * fip(sb) / 2.0_MK
+           !sjp((sb-1)*num_dim+sa) = -rij(sa) * fjp(sb) / 2.0_MK
            sjp((sb-1)*num_dim+sa) = sip((sb-1)*num_dim+sa)
            
         END DO
@@ -149,18 +149,18 @@
      DO sa = 1, num_dim
         DO sb = 1, num_dim
            
-           spip((sb-1)*num_dim+sa) = rij(sa) * fpip(sb)
-           !spjp((sb-1)*num_dim+sa) = -rij(sa) * fpjp(sb)
+           spip((sb-1)*num_dim+sa) = rij(sa) * fpip(sb) / 2.0_MK
+           !spjp((sb-1)*num_dim+sa) = -rij(sa) * fpjp(sb) / 2.0_MK
            spjp((sb-1)*num_dim+sa) = spip((sb-1)*num_dim+sa)
            
-           svip((sb-1)*num_dim+sa) = rij(sa) * fvip(sb)
-           !svjp((sb-1)*num_dim+sa) = -rij(sa) * fvjp(sb)
+           svip((sb-1)*num_dim+sa) = rij(sa) * fvip(sb) / 2.0_MK
+           !svjp((sb-1)*num_dim+sa) = -rij(sa) * fvjp(sb)  / 2.0_MK
            svjp((sb-1)*num_dim+sa) = svip((sb-1)*num_dim+sa)
            
            IF ( Brownian ) THEN
               
-              srip((sb-1)*num_dim+sa) = rij(sa) * frip(sb)
-              !srjp((sb-1)*num_dim+sa) = -rij(sa) * frjp(sb)
+              srip((sb-1)*num_dim+sa) = rij(sa) * frip(sb) / 2.0_MK
+              !srjp((sb-1)*num_dim+sa) = -rij(sa) * frjp(sb) / 2.0_MK
               srjp((sb-1)*num_dim+sa) = srip((sb-1)*num_dim+sa)
               
            END IF

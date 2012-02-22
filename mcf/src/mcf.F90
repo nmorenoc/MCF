@@ -346,10 +346,11 @@
         !
         ! all parameters need to be read from 
         ! configuration files. 
-        ! (Control file e.g., ctrl.mcf(default), which contains
-        ! the  names of physics and io configuration files, 
-        ! by default they are named as physics_config.mcf 
-        ! and io_config.mcf.)
+        ! (Control file e.g., ctrl.mcf(default), 
+        ! which contains the names of 
+        ! physics and io configuration files, 
+        ! by default they are named as 
+        ! physics_config.mcf and io_config.mcf.)
         !
         ! Initialize IO object, 
         ! which will read parameters into control and 

@@ -73,7 +73,7 @@
       	!----------------------------------------------------
         
         TYPE(Particles), INTENT(INOUT)  :: this
-        INTEGER, INTENT(OUT)		:: stat_info	
+        INTEGER, INTENT(OUT)		:: stat_info
         
       	!----------------------------------------------------
       	! Local variables start here :
