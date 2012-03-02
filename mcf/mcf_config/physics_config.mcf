@@ -93,7 +93,7 @@ dt           = -1.0
 step_start   = -1
 step_end     = -1
 time_start   = 0.0
-time_end     = 500.0
+time_end     = 1000.0
 
 #----------------------------------------------------------------------
 #  < Input parameters for fluid properties >

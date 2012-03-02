@@ -259,7 +259,7 @@
            
            IF ( stress_tensor ) THEN
               
-              IF ( sid(j) == 0 ) THEN
+              IF ( sid(j) >= 0 ) THEN
                  
                  this%stress(1:dim2) = &
                       this%stress(1:dim2) + s(1:dim2,j)

@@ -76,7 +76,7 @@
         END IF
         
         
-#ifdef __COLLOID_SEPARATE_FILE
+#ifdef __IO_COLLOID_SEPARATE
         
         !----------------------------------------------------
         ! Open colloid file for writting individual files.

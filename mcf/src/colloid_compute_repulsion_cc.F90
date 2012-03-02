@@ -15,10 +15,10 @@
         !
         ! References  : 1) Ball and Melrose, 
         !               Adv. Colloid Interface Sci.
-        !               59 (1995) 19 -30.
+        !               59 19-30, 1995.
         !               2) Dratler and Schowalter,
         !               J. Fluid Mech.
-        !               vol. 325, pp 53-77.
+        !               vol. 325, pp 53-77. 1996.
         !              
         !
         ! Remarks     : V0.2 16.11.2010, one pair version.

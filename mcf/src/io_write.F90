@@ -107,7 +107,7 @@
               CALL physics_get_colloid(this%phys,&
                    colloids,stat_info_sub)
               
-#ifdef __COLLOID_SEPARATE_FILE
+#ifdef __IO_COLLOID_SEPARATE
 
            
               CALL io_write_colloid_separate(this,rank,&

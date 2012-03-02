@@ -60,7 +60,7 @@
            
         END IF
 
-#ifdef __COLLOID_SEPARATE_FILE
+#ifdef __IO_COLLOID_SEPARATE
 
         num_colloid = &
              physics_get_num_colloid(this%phys,stat_info_sub)
