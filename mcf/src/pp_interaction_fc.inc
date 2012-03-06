@@ -48,9 +48,10 @@
   !----------------------------------------------------------
 
   IF ( Newtonian ) THEN
-     
+
+     !this%rho(jp) = this%rho(ip)     
      this%p(jp)   = this%p(ip)
-     this%rho(jp) = this%rho(ip)
+    
      
 #ifdef __PARTICLES_FORCE_SEPARATE
 
