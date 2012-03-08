@@ -20,14 +20,13 @@
         ! Technische Universitaet Muenchen, Germany.
         !----------------------------------------------------
    
-        
-	!----------------------------------------------------
-      	! Incude files
-        !----------------------------------------------------
-        
         IMPLICIT NONE
         SAVE
         
+        !----------------------------------------------------
+      	! Incude files
+        !----------------------------------------------------
+     
         INCLUDE 'ppm_param.inc'
 
         
@@ -44,9 +43,9 @@
         
         INTEGER, PARAMETER      ::  MAX_CHAR   = 256
         
-        !------------------------------------------
-        ! Pi defined here explicitly.
-	!------------------------------------------
+        !----------------------------------------------------
+        ! Constant Pi is defined here explicitly.
+	!----------------------------------------------------
         
         REAL(MK), PARAMETER     :: mcf_pi = 3.141592653589793238_MK
         
@@ -87,7 +86,7 @@
         ! amount of before.
         !
         ! mcf_kinetics_reduce_factor : indicated factor needs
-        ! to be reduced.
+        ! to be reduced for kinetic energy.
         !----------------------------------------------------
         
         REAL(MK), PARAMETER     :: mcf_kinetics_reduce_factor = 100.0_MK
@@ -169,12 +168,12 @@
         !
         !----------------------------------------------------
 
-        INTEGER, PARAMETER      :: mcf_colloid_shape_disk      = 1
-        INTEGER, PARAMETER      :: mcf_colloid_shape_sphere    = 1
-        INTEGER, PARAMETER      :: mcf_colloid_shape_ellipse   = 2
-        INTEGER, PARAMETER      :: mcf_colloid_shape_ellipsoid = 2
-        INTEGER, PARAMETER      :: mcf_colloid_shape_star      = 3
+        INTEGER, PARAMETER      :: mcf_colloid_shape_cylinder  = 1
+        INTEGER, PARAMETER      :: mcf_colloid_shape_sphere    = 2
+        INTEGER, PARAMETER      :: mcf_colloid_shape_ellipsoid = 3
         INTEGER, PARAMETER      :: mcf_colloid_shape_dicolloid = 4
+        INTEGER, PARAMETER      :: mcf_colloid_shape_star      = 5
+
 
         !----------------------------------------------------
         ! Define how to place particles for 

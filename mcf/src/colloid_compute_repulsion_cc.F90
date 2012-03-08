@@ -13,15 +13,25 @@
         !
         ! Routines    :
         !
-        ! References  : 1) Ball and Melrose, 
-        !               Adv. Colloid Interface Sci.
-        !               59 19-30, 1995.
-        !               2) Dratler and Schowalter,
-        !               J. Fluid Mech.
-        !               vol. 325, pp 53-77. 1996.
+        ! References  : 1) Brady and Bossis,
+        !                  J. Fluid Mech. vol. 155,
+        !                  pp. 105-129.1985
+        !               2) Ball and Melrose, 
+        !                  Adv. Colloid Interface Sci.
+        !                  59 19-30, 1995.
+        !               3) Dratler and Schowalter,
+        !                  J. Fluid Mech.
+        !                  vol. 325, pp 53-77. 1996.
+        !               4) Sierou and Brady,
+        !                  J. Rheol. 46(5), 1031-1056, 2002.
+        !                
         !              
         !
-        ! Remarks     : V0.2 16.11.2010, one pair version.
+        ! Remarks     : V0.3 6.3.2012, change the second
+        !               repulive force,assuming radius
+        !               of colloid is universally one.
+        !             
+        !               V0.2 16.11.2010, one pair version.
         !
         !               V0.1 15.10 2010, original version,
         !               loop over all pairs
@@ -136,7 +146,7 @@
                  
               END IF
               
-              F = F0 * EXP(-h/hn) /(1.0_MK-EXP(-h/hn))
+              F = F0 / hn * EXP(-h/hn) /(1.0_MK-EXP(-h/hn))
               
            END SELECT
            

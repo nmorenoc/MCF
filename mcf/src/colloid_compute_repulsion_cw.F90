@@ -13,15 +13,24 @@
         !
         ! Routines    :
         !
-        ! References  : 1) Ball and Melrose, 
-        !               Adv. Colloid Interface Sci.
-        !               59, 1995 19 -30.
-        !               2) Dratler and Schowalter,
-        !               J. Fluid Mech., 1996
-        !               vol. 325, pp 53-77.
+        ! References  : 1) Brady and Bossis,
+        !                  J. Fluid Mech. vol. 155,
+        !                  pp. 105-129.1985
+        !               2) Ball and Melrose, 
+        !                  Adv. Colloid Interface Sci.
+        !                  59 19-30, 1995.
+        !               3) Dratler and Schowalter,
+        !                  J. Fluid Mech.
+        !                  vol. 325, pp 53-77. 1996.
+        !               4) Sierou and Brady,
+        !                  J. Rheol. 46(5), 1031-1056, 2002.
         !              
         !
-        ! Remarks     : V0.2 19.11.2010, one pair version.
+        ! Remarks     : V0.3 6.3.2012, change the second
+        !               repulsive force, assuming radius
+        !               of colloid is universally one.
+        !
+        !               V0.2 19.11.2010, one pair version.
         !
         !               V0.1 5.11 2010, original version,
         !               for all pairs.
@@ -173,7 +182,7 @@
                        
                     END IF
                     
-                    Ft = F0 * EXP(-h1/hn) /(1.0_MK-EXP(-h1/hn))
+                    Ft = F0 /hn * EXP(-h1/hn) /(1.0_MK-EXP(-h1/hn))
                     
                  END SELECT ! cw_repul_type
                  
@@ -234,7 +243,7 @@
                        
                     END IF
                     
-                    Ft = F0 * EXP(-h2/hn) /(1.0_MK-EXP(-h2/hn))
+                    Ft = F0 / hn * EXP(-h2/hn) /(1.0_MK-EXP(-h2/hn))
                     
                  END SELECT
                  

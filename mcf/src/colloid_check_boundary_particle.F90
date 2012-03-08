@@ -9,23 +9,24 @@
         !               surrounding a colloid surface;
         !               
         !
-        ! Reference   : ellipse in Wikipedia.
+        ! Reference   : ellipse/ellipsoid in Wikipedia.
         !
         ! Remark      : 1 :
         !               In case of periodic or Lees-Edwards
         !               boundaries, the images of colloid's
-        !               center has to be taken into account
-        !               to decide if a potential boundary
+        !               center have to be taken into account
+        !               to decide if a potential SDPD boundary
         !               particle is inside the geometry of
         !               a colloid.
         !               For 2D, maximum 3**2=9->8 images;
         !               For 3D, maximum 3**3=27->26 images.
         !              
         !               2 :
-        !               In order to prevent the fluid 
+        !               In order to prevent the fluid
         !               particle being too close to surface
-        !               of a colloid, 'dout' restricts distance
-        !               for the fluid particle from surface.    
+        !               of a colloid initialy,
+        !               'dout' restricts distance
+        !               for the fluid particle from surface.
         !
         !
         ! Revisions   : V0.1 10.12 2009, original version.
@@ -55,7 +56,7 @@
         ! l_in      : particle is inside inner ring, which
         !             is(probaly more than) cut off far 
         !             from surface.
-        ! c_sid      : colloid's ID.
+        ! c_sid     : colloid's ID.
         !
         ! stat_info : status of this routine.
         !----------------------------------------------------
@@ -119,7 +120,7 @@
            !-------------------------------------------------
            ! Consider the relative positions of nearest 
            ! image centers, including box(cell) itself.
-           ! Get relative displacement of potential boundary 
+           ! Get relative displacement of potential boundary
            ! particle to the center of nearest image.
            !-------------------------------------------------
            
@@ -141,10 +142,34 @@
            
            SELECT CASE ( this%shape(i) )
               
+           CASE ( mcf_colloid_shape_cylinder )
+                 
+              !----------------------------------------------
+              ! cylinder 2D/3D
+              !----------------------------------------------
+              
+              IF ( d_pc <= this%radius(1,i) + this%dout ) THEN
+                 
+                 l_out = .TRUE.
+                 
+                 IF ( d_pc <= this%radius(1,i) ) THEN
+                    
+                    l_sur = .TRUE.
+                    
+                    IF ( d_pc <= this%radius(1,i) - this%din ) THEN
+                       
+                       l_in = .TRUE.
+                       
+                    END IF ! d_pc <= ra - din
+                    
+                 END IF ! d_pc <= ra
+                 
+              END IF ! d_pc <= ra - dout
+
            CASE ( mcf_colloid_shape_sphere )
                  
               !----------------------------------------------
-              ! 2D disk/ 3D sphere.
+              ! disk 2D/sphere 3D
               !----------------------------------------------
               
               IF ( d_pc <= this%radius(1,i) + this%dout ) THEN
@@ -168,14 +193,15 @@
               
            CASE ( mcf_colloid_shape_ellipsoid )
               
+              !----------------------------------------------
+              ! ellipse 2D/ellipsoid 3D
+              !----------------------------------------------
+             
               IF ( dim == 2 ) THEN
-                 
+                    
                  !-------------------------------------------
-                 ! 2D ellipse.
-                 !-------------------------------------------
-                 
-                 !-------------------------------------------
-                 ! Get angle in polar coordinate of 
+                 ! 2D ellipse:
+                 ! get angle in polar coordinate of 
                  ! the potential particle.
                  !-------------------------------------------
                  
@@ -186,7 +212,7 @@
                  ! on the surface to the center.
                  !----------------------------------------------
                  
-                 d_sc = polar_ellipse_r(this%radius(1,i),&
+                 d_sc = colloid_polar_ellipse_r(this%radius(1,i),&
                       this%radius(2,i),theta,this%acc_vector(4,i))
                
                  !----------------------------------------------
@@ -203,8 +229,9 @@
                     ! on the inner ring surface to the center.
                     !----------------------------------------
                  
-                    CALL cartesian_ellipse_shortestD(this%radius(1,i),&
-                         this%radius(2,i),this%acc_vector(4,i), &
+                    CALL colloid_cartesian_ellipse_shortestD(&
+                         this%radius(1,i),this%radius(2,i),&
+                         this%acc_vector(4,i), &
                          rp_x(1),rp_x(2),s_x(1),s_x(2),d_ps)
                  
                     !-------------------------------------------
@@ -250,65 +277,6 @@
                  END IF
                  
               END IF ! dim
-              
-           CASE ( mcf_colloid_shape_star )
-              
-              !----------------------------------------------
-              ! 2D Star with different frequency.
-              !
-              ! At angel theta, caculate the point on the
-              ! surface to the center.
-              !
-              ! 3D Assuming rotating 2D shape wiht x-axis for
-              ! 2pi.
-              !----------------------------------------------
-
-              theta = polar_angle(rp_x(1),rp_x(2))
-              
-              d_sc = polar_star_r(this%radius(1,i),&
-                   this%radius(2,i), &
-                   REAL(this%freq(i),MK),theta,this%acc_vector(4,i))
-           
-              !----------------------------------------------
-              ! IF the particle is closer than the point on 
-              ! the surface at same angel theta, it is inside.
-              !----------------------------------------------
-              
-              IF ( d_pc <= d_sc ) THEN
-                 
-                 l_sur = .TRUE.
-                 
-                 !-------------------------------------------
-                 ! At angel theta, caculate the point on the
-                 ! inner ring surface to the center.
-                 !-------------------------------------------
-                 
-                 CALL  polar_star_shortestD(this%radius(1,i), &
-                      this%radius(2,i),REAL(this%freq(i),MK),&
-                      this%acc_vector(4,i),rp_x(1),rp_x(2),&
-                      s_x(1),s_x(2),d_ps,stat_info_sub )
-               
-                 IF ( stat_info_sub /= 0 ) THEN
-                    PRINT *, "colloid_check_boundary_particle : ", &
-                         "Finding star shortest D wrong !"
-                    stat_info = -1
-                    GOTO 9999                    
-                 END IF
-                 
-                 !-------------------------------------------
-                 ! particle closer than the inner ring
-                 ! (din far away from surface)
-                 ! surface point is considered 
-                 ! compuationally useless.
-                 !-------------------------------------------
-                 
-                 IF ( d_ps >= this%din ) THEN
-                    
-                    l_in = .TRUE.
-                    
-                 END IF
-                 
-              END IF  ! l_sur
               
            CASE ( mcf_colloid_shape_dicolloid )
               
@@ -373,6 +341,72 @@
                  
               END IF ! d_pc <= ra - dout
               
+           CASE ( mcf_colloid_shape_star )
+              
+              !----------------------------------------------
+              ! 2D star with different frequency.
+              !
+              ! At angel theta, caculate the point on the
+              ! surface to the center.
+              !
+              ! 3D assuming rotating 2D shape wiht x-axis for
+              ! 2pi.
+              !----------------------------------------------
+
+              theta = polar_angle(rp_x(1),rp_x(2))
+              
+              d_sc = polar_star_r(this%radius(1,i),&
+                   this%radius(2,i), &
+                   REAL(this%freq(i),MK),theta,this%acc_vector(4,i))
+              
+              !----------------------------------------------
+              ! If the particle is closer than the point on 
+              ! the surface at same angel theta, it is inside.
+              !----------------------------------------------
+              
+              IF ( d_pc <= d_sc ) THEN
+                 
+                 l_sur = .TRUE.
+                 
+                 !-------------------------------------------
+                 ! At angel theta, caculate the point on the
+                 ! inner ring surface to the center.
+                 !-------------------------------------------
+                 
+                 CALL  polar_star_shortestD(this%radius(1,i), &
+                      this%radius(2,i),REAL(this%freq(i),MK),&
+                      this%acc_vector(4,i),rp_x(1),rp_x(2),&
+                      s_x(1),s_x(2),d_ps,stat_info_sub )
+               
+                 IF ( stat_info_sub /= 0 ) THEN
+                    PRINT *, "colloid_check_boundary_particle : ", &
+                         "Finding star shortest D wrong !"
+                    stat_info = -1
+                    GOTO 9999                    
+                 END IF
+                 
+                 !-------------------------------------------
+                 ! particle closer than the inner ring
+                 ! (din far away from surface)
+                 ! surface point is considered 
+                 ! compuationally useless.
+                 !-------------------------------------------
+                 
+                 IF ( d_ps >= this%din ) THEN
+                    
+                    l_in = .TRUE.
+                    
+                 END IF
+                 
+              END IF  ! l_sur
+
+           CASE DEFAULT
+              
+              PRINT *, "colloid_check_boundary_particle: ", &
+                   "No shape available !"
+              stat_info = -1
+              GOTO 9999
+              
            END SELECT ! shape
 
            !-------------------------------------------------
@@ -396,5 +430,3 @@
         RETURN
         
       END SUBROUTINE  colloid_check_boundary_particle
-      
-      

@@ -71,27 +71,27 @@
            !  translate  : free to translate or not
            !  rotate     : free to rotate or not
            !  place      : how to place boundary particles
-           ! noslip_type : how to model no slip condition
-           ! body_force_type : type of body force.
-           ! body_force  : body force per unit mass
-           ! cc_lub_cut_off : cut off surface distance of 
-           !                  direct lubrication interaction 
-           !                  between colloid and colloid.
-           ! cc_lub_cut_on  : cut on surface distance of 
-           !                  direct lubrication interaction 
-           !                  between colloid and colloid.
-           !                  i.e., minimal gap.
-           ! cc_repul_cut_off : cut off for repulsive force
-           !                    which prevent overlap.
-           ! cc_repul_F_max   : maximum repulsive force.
-           ! cw_lub_cut_off : cut off surface distance of 
-           !                  direct lubrication interaction 
-           !                  between colloid and wall.
-      
-           ! h            : smoothing length for caculating
-           !                time step.
-           ! dt_f         : time step constranit due to
-           !                maximum acceleration.
+           !  noslip_type      : how to model no slip condition
+           !  body_force_type  : type of body force.
+           !  body_force       : body force per unit mass
+           !  cc_lub_cut_off   : cut off surface distance of 
+           !                     direct lubrication interaction 
+           !                     between colloid and colloid.
+           !  cc_lub_cut_on    : cut on surface distance of 
+           !                     direct lubrication interaction 
+           !                     between colloid and colloid.
+           !                     i.e., minimal gap.
+           !  cc_repul_cut_off : cut off for repulsive force
+           !                     which prevent overlap.
+           !  cc_repul_F_max   : maximum repulsive force.
+           !  cw_lub_cut_off   : cut off surface distance of 
+           !                     direct lubrication interaction 
+           !                     between colloid and wall.
+           !
+           !  h                : smoothing length for caculating
+           !                     time step.
+           !  dt_f             : time step constranit due to
+           !                     maximum acceleration.
            !-------------------------------------------------
 
            INTEGER                            :: num_dim
@@ -146,8 +146,8 @@
            !  omega      : rotating velocity, 
            !               pseudovector always 3D
            !  torque     : torque, pseudovector always 3D
-           ! num_numerical_part : 
-           !              number of particles one colloid consist of
+           !  num_numerical_part : 
+           !               number of particles one colloid consist of
            !  m          : mass
            !  mm         : mass momentum inertia
            !-------------------------------------------------
@@ -240,7 +240,7 @@
                 
       CONTAINS       
         
-        REAL(MK) FUNCTION polar_angle(x,y)
+        REAL(MK) FUNCTION colloid_polar_angle(x,y)
           !--------------------------------------------------
           ! Get angle[0:2pi) between point (x,y) and 
           ! x+ direction.
@@ -258,19 +258,20 @@
           IF ( ABS(x) <=mcf_machine_zero .AND. &
                ABS(y) <=mcf_machine_zero ) THEN
              
-             polar_angle = 0.0_MK
+             colloid_polar_angle = 0.0_MK
              
           ELSE
              
-             polar_angle = ACOS(x/SQRT(x**2+y**2))
+             colloid_polar_angle = ACOS(x/SQRT(x**2+y**2))
              
              IF ( y < 0.0_MK ) THEN
-                polar_angle = 2.0_MK*mcf_pi - polar_angle
+                colloid_polar_angle = &
+                     2.0_MK*mcf_pi - colloid_polar_angle
              END IF
              
           END IF
           
-        END FUNCTION polar_angle
+        END FUNCTION colloid_polar_angle
         
 #include "colloid_new.F90"
 #include "colloid_finalize.F90"
@@ -301,7 +302,7 @@
 #include "colloid_compute_statistic.F90"
 #include "colloid_polar_ellipse.F90"
 #include "colloid_polar_star.F90"
-#include "colloid_cartesian.F90"
+#include "colloid_cartesian_ellipse.F90"
 #include "colloid_spherical_ellipsoid.F90"
 #include "colloid_initialize_image.F90"
 #include "colloid_compute_image.F90"

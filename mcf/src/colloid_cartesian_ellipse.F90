@@ -4,7 +4,7 @@
 ! David Eberly 2008.
 !----------------------------------------------------
 
-      REAL(MK) FUNCTION cartesian_ellipse_F(a,b,u,v,t)
+      REAL(MK) FUNCTION colloid_cartesian_ellipse_F(a,b,u,v,t)
         !----------------------------------------------------
         ! F(t) = (a*u/(t+a**2))**2 + (b*v/(t+b**2))**2 - 1
         !----------------------------------------------------
@@ -15,14 +15,14 @@
         REAL(MK), INTENT(IN)            :: v
         REAL(MK), INTENT(IN)            :: t
         
-        cartesian_ellipse_F = &
+        colloid_cartesian_ellipse_F = &
              (a*u/(t+a**2))**2 + &
              (b*v/(t+b**2))**2 - 1
         
-      END FUNCTION cartesian_ellipse_F
+      END FUNCTION colloid_cartesian_ellipse_F
       
       
-      REAL(MK) FUNCTION cartesian_ellipse_F1(a,b,u,v,t)
+      REAL(MK) FUNCTION colloid_cartesian_ellipse_F1(a,b,u,v,t)
         !----------------------------------------------------
         ! First derivative of F(t)
         ! F1 = -2*a**2*u**2/(t+a**2)**3-2*b**2*v**2/(t+b**2)**3
@@ -35,15 +35,15 @@
         REAL(MK), INTENT(IN)            :: t
         
         
-        cartesian_ellipse_F1 = &
+        colloid_cartesian_ellipse_F1 = &
              -2.0_MK*a**2*u**2 / (t+a**2)**3 - &
              2.0_MK*b**2*v**2 / (t+b**2)**3
         
         
-      END FUNCTION cartesian_ellipse_F1
+      END FUNCTION colloid_cartesian_ellipse_F1
       
       
-      REAL(MK) FUNCTION cartesian_ellipse_F2(a,b,u,v,t)
+      REAL(MK) FUNCTION colloid_cartesian_ellipse_F2(a,b,u,v,t)
         !----------------------------------------------------
         ! Second derivative of F(t)
         ! F2 = 6*a**2*u**2/(t+a**2)**4+6*b**2*v**2/(t+b**2)**4
@@ -56,15 +56,15 @@
         REAL(MK), INTENT(IN)            :: t
         
         
-        cartesian_ellipse_F2 = &
+        colloid_cartesian_ellipse_F2 = &
              6.0_MK*a**2*u**2 / (t+a**2)**4 + &
              6.0_MK*b**2*v**2 / (t+b**2)**4 
         
         
-      END FUNCTION cartesian_ellipse_F2
+      END FUNCTION colloid_cartesian_ellipse_F2
       
       
-      SUBROUTINE cartesian_ellipse_shortestD(a,b,phi,p,q,x,y,d)
+      SUBROUTINE colloid_cartesian_ellipse_shortestD(a,b,phi,p,q,x,y,d)
         !----------------------------------------------------
         ! Find the short distance from point A(p,q) to
         ! the surface of a ellipse.
@@ -130,8 +130,8 @@
         ! Rotate A(p,q) to A(u,v) by phi radian clockwise
         !----------------------------------------------------
         
-        theta = polar_angle(p,q)
-        len = SQRT(p**2+q**2)
+        theta = colloid_polar_angle(p,q)
+        len   = SQRT(p**2+q**2)
         
         u = len*COS(theta-phi)
         v = len*SIN(theta-phi)
@@ -204,18 +204,18 @@
            !-------------------------------------------------
            
            t0 = b*v-b**2
-           f = cartesian_ellipse_F(a,b,u,v,t0)
+           f = colloid_cartesian_ellipse_F(a,b,u,v,t0)
            
            iter = 0
            
            DO WHILE( ABS(f) > mcf_machine_zero .AND. &
                 iter < 20 )
               
-              f1 = cartesian_ellipse_F1(a,b,u,v,t0)
+              f1 = colloid_cartesian_ellipse_F1(a,b,u,v,t0)
               
               t1 = t0 - f/f1
               
-              f = cartesian_ellipse_F(a,b,u,v,t1)
+              f = colloid_cartesian_ellipse_F(a,b,u,v,t1)
               
               t0 = t1
               iter = iter + 1
@@ -245,11 +245,11 @@
         ! Rotate counter-closewise (x,y) by phi radian.
         !----------------------------------------------------
         
-        theta = polar_angle(x,y)
-        len = SQRT(x**2+y**2)
-        x   = len*COS(theta+phi)
-        y   = len*SIN(theta+phi)
+        theta = colloid_polar_angle(x,y)
+        len   = SQRT(x**2+y**2)
+        x     = len*COS(theta+phi)
+        y     = len*SIN(theta+phi)
         
         RETURN
         
-      END SUBROUTINE  cartesian_ellipse_shortestD
+      END SUBROUTINE  colloid_cartesian_ellipse_shortestD

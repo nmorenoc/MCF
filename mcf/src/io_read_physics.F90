@@ -1,10 +1,10 @@
       SUBROUTINE io_read_physics_config(this,phys,stat_info)
         !----------------------------------------------------
-        ! Subroutine : io_read_physics_config
+        ! Subroutine  : io_read_physics_config
         !----------------------------------------------------
         !  Purpose    : Reading all physics parameters, 
-        !                including colloid parameters,
-        !                from physics config file.
+        !               including colloid parameters,
+        !               from physics config file.
         !
         !  Reference  : Ellis T.M.R. et al. 
         !               Fortran 90 Programming.

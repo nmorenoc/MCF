@@ -731,6 +731,8 @@
               
               CALL particles_init_global_inter(mcf_particles,&
                    rank,stat_info_sub)
+              CALL particles_init_global_assign_id(mcf_particles,&
+                   rank,stat_info_sub)
               
            END IF ! read_external
            
@@ -785,9 +787,9 @@
            CALL particles_decompose_global(mcf_particles,&
                 l_map_x   = .TRUE., l_map_v = .TRUE., &
                 l_map_rho = .TRUE., l_map_m = .TRUE., &
-                l_map_id = .TRUE.,  &
-                l_map_ct = (.NOT. Newtonian), &
-                stat_info=stat_info_sub)
+                l_map_id  = .TRUE.,  &
+                l_map_ct  = (.NOT. Newtonian), &
+                stat_info = stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN
               PRINT *,  "mcf : ", &

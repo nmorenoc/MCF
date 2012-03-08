@@ -140,7 +140,7 @@
         
         theta = polar_angle(r_xf(1),r_xf(2))
         
-        d_scoll = polar_ellipse_r(this%radius(1,sid_c), &
+        d_scoll = colloid_polar_ellipse_r(this%radius(1,sid_c), &
              this%radius(2,sid_c),theta,this%theta(3,sid_c))
         
         !----------------------------------------------------
@@ -174,9 +174,9 @@
         ! angle what is the distance from the surface.
         !----------------------------------------------------
         
-        theta = polar_angle(r_xc(1),r_xc(2))
+        theta   = colloid_polar_angle(r_xc(1),r_xc(2))
         
-        d_scoll = polar_ellipse_r(this%radius(1,sid_c), &
+        d_scoll = colloid_polar_ellipse_r(this%radius(1,sid_c), &
              this%radius(2,sid_c),theta,this%theta(3,sid_c) )
         
         !----------------------------------------------------
@@ -207,8 +207,9 @@
         ! s_x(:) contains the surface point.
         !----------------------------------------------------
         
-        CALL cartesian_ellipse_shortestD(this%radius(1,sid_c), &
-             this%radius(2,sid_c),this%theta(3,sid_c), &
+        CALL colloid_cartesian_ellipse_shortestD(&
+             this%radius(1,sid_c), this%radius(2,sid_c),&
+             this%theta(3,sid_c), &
              r_xf(1),r_xf(2),xs(1),xs(2),d_fs)
         
         !----------------------------------------------------

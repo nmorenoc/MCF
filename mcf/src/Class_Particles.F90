@@ -324,6 +324,7 @@
 #include "particles_reset.F90"
 #include "particles_init_global_inter.F90"
 #include "particles_init_global_exter.F90"
+#include "particles_init_global_assign_id.F90"
 #include "particles_init_partial_inter.F90"
 #include "particles_init_partial_exter.F90"
 #include "particles_set_colloid_on_lattice.F90"

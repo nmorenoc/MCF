@@ -1,5 +1,25 @@
       MODULE Class_Tool
-      
+        !----------------------------------------------------
+      	!       Class_Tool
+      	!----------------------------------------------------
+        !
+      	!  Purpos     : auxiliary functions for global usage.
+      	!
+      	!  Remarks    :
+      	!
+      	!  References :
+      	!
+      	!  Version    : V 0.1. 03.03.2009, original version.
+      	!----------------------------------------------------
+        ! Author      : Xin Bian
+        ! Contact     : xin.bian@aer.mw.tum.de
+        !
+        ! Dr. Marco Ellero's Emmy Noether Group,
+        ! Prof. Dr. N. Adams' Chair of Aerodynamics,
+        ! Faculty of Mechanical Engineering,
+        ! Technische Universitaet Muenchen, Germany.
+        !----------------------------------------------------
+   
         USE mcf_header
         
         IMPLICIT NONE

@@ -1,6 +1,6 @@
-      SUBROUTINE particles_init_global_inter(this,d_rank,stat_info)
+      SUBROUTINE particles_init_global_assign_id(this,d_rank,stat_info)
         !----------------------------------------------------
-        ! Subroutine  : particles_init_global_inter
+        ! Subroutine  : particles_init_global_assign_id
         !----------------------------------------------------
         !
         ! Purpose     : Create particles on certain lattice 
@@ -8,20 +8,10 @@
         !               x, y,(z), vx,vy,(vz), p_id,s_id.
         !
         ! 
-        ! Routines    : particles_init_global_inter_square()
-        !               particles_init_global_inter_staggered()
-        !               particles_init_global_inter_hexagonal()
-        !               particles_init_global_inter_cubic()
+        ! Routines    : 
         !
         !
-        ! Remarks     : Velocity are set zero initially.
-        !
-        !               Currently this routine is only used 
-        !               by root process to creat essenstial 
-        !               quntities of particles globally on
-        !               root process and then distribute 
-        !               to all processes(broadcast).
-        !
+        ! Remarks     : 
         !               We generate particles using different
         !               lattice.
         !               However, for colloid, a little bit 
@@ -41,9 +31,9 @@
         !
         ! References  :
         !
-        ! Revisions   : V0.2  30.11 2011.
-        !
-        !               V0.1  22.07 2009, original version.
+        ! Revisions   : 
+        !               V0.1  08.03 2012, original version.
+        !               (separated from particles_init_global_inter.F90)
         !
         !----------------------------------------------------
         ! Author      : Xin Bian
@@ -73,7 +63,6 @@
         ! Local variables start here :
         !
         ! num_dim      : number of dimension.
-        ! lattice_type : lattice type.
         ! dx           : initial distance between two particles;        
         ! tboundary    : pointer to a boundary object.
         ! num_wall_solid : number of solid wall boundaries.
@@ -81,7 +70,6 @@
         
         INTEGER                                 :: stat_info_sub
         INTEGER                                 :: num_dim,i,j
-        INTEGER                                 :: lattice_type
         REAL(MK), DIMENSION(:), POINTER         :: dx
         TYPE(Boundary), POINTER                 :: tboundary
         INTEGER                                 :: num_wall_solid
@@ -161,7 +149,7 @@
 
         IF ( d_rank /= 0 ) THEN
            PRINT *,&
-                "particles_init_global_inter : ", &
+                "particles_init_global_assign_id : ", &
                 "can only be called by root process !"
            stat_info = -1
            GOTO 9999
@@ -198,127 +186,13 @@
         ! number of colloids.
         !----------------------------------------------------
         
-        num_dim      = this%num_dim
-        lattice_type = &
-             physics_get_lattice_type(this%phys,stat_info_sub)
+        num_dim        = this%num_dim
         CALL physics_get_dx(this%phys,dx,stat_info_sub)
         CALL physics_get_boundary(this%phys,tboundary,stat_info_sub)
         num_wall_solid = &
              boundary_get_num_wall_solid(tboundary,stat_info_sub)
-        num_colloid = &
+        num_colloid    = &
              physics_get_num_colloid(this%phys,stat_info_sub)
-    
-        !----------------------------------------------------
-        ! Check number of dimension and lattice type
-        ! then choose particles generator accordingly to
-        ! create particles filling the whole domain.
-        !----------------------------------------------------
-        
-        IF ( num_dim == 2 ) THEN
-           
-           !----------------------------------------------
-           ! 2D lattice :
-           !
-           ! 1 square; 2 staggered; 3 hexagonal.
-           !----------------------------------------------
-
-           SELECT CASE( lattice_type )
-              
-           CASE ( mcf_lattice_type_square )
-              
-              CALL particles_init_global_inter_square(this,&
-                   stat_info_sub)
-              
-              IF ( stat_info_sub /= 0 ) THEN
-                 PRINT *, "particles_init_global_inter : ", &
-                      "Calling *_square failed !"
-                 stat_info = -1
-                 GOTO 9999
-              END IF
-              
-           CASE ( mcf_lattice_type_staggered )
-              
-              CALL particles_init_global_inter_staggered(this,&
-                   stat_info_sub)
-              
-              IF ( stat_info_sub /= 0 ) THEN
-                 PRINT *, "particles_init_global_inter : ", &
-                      "Calling *_staggerd failed !"
-                 stat_info = -1
-                 GOTO 9999
-              END IF
-              
-           CASE ( mcf_lattice_type_hexagonal )
-              
-              CALL particles_init_global_inter_hexagonal(this,&
-                   stat_info_sub)
-              
-              IF ( stat_info_sub /= 0 ) THEN
-                 PRINT *, "particles_init_global_inter : ", &
-                      "Calling *_hexagonal failed !"
-                 stat_info = -1
-                 GOTO 9999
-              END IF
-              
-           CASE DEFAULT
-              
-              PRINT * , "particles_init_global_inter : ",&
-                   "lattcie type ", lattice_type, " not available !"
-              stat_info = -1
-              GOTO 9999
-              
-           END SELECT ! lattice_type
-           
-           !-------------------------------------------------
-           ! 3D lattice, 
-           ! 1 Simple Cubic; 2 Body centered;
-           ! 3 Face centered lattice.
-           !-------------------------------------------------
-           
-        ELSE IF( num_dim == 3 ) THEN
-           
-           SELECT CASE ( lattice_type )
-              
-           CASE ( mcf_lattice_type_cubic )
-              
-              CALL particles_init_global_inter_cubic(this,&
-                   stat_info_sub)
-              
-              IF ( stat_info_sub /= 0 ) THEN
-                 PRINT *, "particles_init_global_inter : ", &
-                      "Calling _cubic failed !"
-                 stat_info = -1
-                 GOTO 9999
-              END IF
-              
-           CASE ( mcf_lattice_type_body )
-              
-              PRINT * , "particles_init_global_inter : ",&
-                   "3D body center lattice not available yet !"
-              stat_info = -1
-              GOTO 9999
-              !CALL particles_init_global_inter_body_center(this,&
-              !stat_info_sub)
-              
-           CASE ( mcf_lattice_type_face )
-              
-              PRINT * , "particles_init_global_inter : ",&
-                   "3D face center lattice not available yet !"
-              stat_info = -1
-              GOTO 9999                
-              !CALL particles_init_global_inter_face_center(this,&
-              !stat_info_sub)
-              
-           CASE DEFAULT
-              
-              PRINT * , "particles_init_global_inter : ",&
-                   "lattcie type ", lattice_type, " not available yet !"
-              stat_info = -1
-              GOTO 9999
-              
-           END SELECT ! lattice_type
-           
-        END IF ! num_dim
         
 #ifdef __DEBUG
 
@@ -341,8 +215,6 @@
 #endif
         
 #endif
-
-#if 0
         !----------------------------------------------------
         ! If there is colloid
         !----------------------------------------------------
@@ -361,7 +233,7 @@
            
            IF ( stat_info_sub /=0 ) THEN
               
-              PRINT * , "particles_init_global_inter : ", &
+              PRINT * , "particles_init_global_assign_id : ", &
                    "calling particles_set_colloid_on_lattice failed !"
               stat_info = -1
               GOTO 9999
@@ -403,7 +275,7 @@
         
         IF( stat_info_sub /= 0 ) THEN
            PRINT *, &
-                "particles_init_global_inter : ", &
+                "particles_init_global_assign_id : ", &
                 "Allocating memory for variables has problem !"
            stat_info = -1
            GOTO 9999
@@ -614,7 +486,7 @@
 
            IF ( stat_info_sub /= 0 ) THEN
 
-              PRINT *, "particles_init_global_inter: ", &
+              PRINT *, "particles_init_global_assign_id: ", &
                    "colloid_create_boundary_particle has problem !"
               stat_info = -1
               GOTO 9999
@@ -650,7 +522,7 @@
            
            IF( stat_info_sub /= 0 ) THEN
               PRINT *, &
-                   "particles_init_global_inter : ", &
+                   "particles_init_global_assig_id: ", &
                    "Allocating memory for variables has problem !"
               stat_info = -1
               GOTO 9999
@@ -787,7 +659,7 @@
         ppp(num_dim+1,1:num) = this%id(2,1:num)
         
         CALL debug_write_output(global_debug,d_rank,&
-             "particles_init_global_inter ", &
+             "particles_init_global_assign_id: ", &
              "ppp_real",1,ppp,1,this%num_part_real,stat_info_sub)
 
 #endif
@@ -805,7 +677,7 @@
         
         IF ( stat_info_sub /= 0 ) THEN
            PRINT *, &
-                "particles_init_global_inter : ", &
+                "particles_init_global_assign_id : ", &
                 "Error by checking duiplicates !"
            stat_info = -1
            GOTO 9999
@@ -813,13 +685,12 @@
         
         IF ( nid /= 0) THEN
            PRINT *, &
-                "particles_init_global_inter : ", &
+                "particles_init_global_assign_id : ", &
                 "Found collocating particles !"
            stat_info = -1
            GOTO 9999
         END IF
         
-#endif
         
 9999    CONTINUE
         
@@ -841,9 +712,5 @@
         
         RETURN
         
-      END SUBROUTINE particles_init_global_inter
-      
-#include "particles_init_global_inter_square.F90"
-#include "particles_init_global_inter_staggered.F90"
-#include "particles_init_global_inter_cubic.F90"
-#include "particles_init_global_inter_hexagonal.F90"
+      END SUBROUTINE particles_init_global_assign_id
+  
