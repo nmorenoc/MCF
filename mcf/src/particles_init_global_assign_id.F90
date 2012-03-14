@@ -69,7 +69,7 @@
         !----------------------------------------------------
         
         INTEGER                                 :: stat_info_sub
-        INTEGER                                 :: num_dim,i,j
+        INTEGER                                 :: num_dim,j
         REAL(MK), DIMENSION(:), POINTER         :: dx
         TYPE(Boundary), POINTER                 :: tboundary
         INTEGER                                 :: num_wall_solid

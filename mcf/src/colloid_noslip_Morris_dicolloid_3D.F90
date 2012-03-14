@@ -1,16 +1,21 @@
-      SUBROUTINE colloid_noslip_Morris_ellipse(this, &
+      SUBROUTINE colloid_noslip_Morris_dicolloid_3D(this, &
            xf,xc,vf,vc,sid_c,stat_info)
         !----------------------------------------------------
-        ! Subroutine  : colloid_noslip_Morris_ellipse
+        ! Subroutine  : colloid_noslip_Morris_dicolloid_3D
         !----------------------------------------------------
-        ! Purpose     : For 2D ellipse.
+        ! Purpose     : For 3D dicolloid
         !
-        ! Revision    : V0.2 14.03.2012, make sure that
-        !               the extrapolated velocity of the
-        !               boundary particle makes the surface
-        !               point velocity with noslip condition.
-        !               
-        !               V0.1 16.03.2009, orignal version.
+        ! Remark      : As the dicolloid can rotate,
+        !               quantities, such as, position,
+        !               translational/rotational velocity
+        !               have to be transfered to 
+        !               the body-attached coordinate A.
+        !               After the extrapolated velocity
+        !               is calculated in A, it has to be
+        !               transfered back to the 
+        !               fixed coordinate.
+        !
+        ! Revision    : V0.1 14.03.2012, orignal version.
         !
         !----------------------------------------------------
         ! Author      : Xin Bian
@@ -52,7 +57,6 @@
         !----------------------------------------------------
         ! Local variables start here :
         ! 
-        ! i       : index.
         ! dim     : number of dimension.
         ! xcoll   : position of the center of the colloid.
         ! vcoll   : velocity of the center of the colloid.
@@ -83,22 +87,24 @@
         INTEGER                                 :: dim
         REAL(MK), DIMENSION(3)                  :: xcoll
         REAL(MK), DIMENSION(3)                  :: vcoll
+        REAL(MK), DIMENSION(3)                  :: ocoll
         REAL(MK), DIMENSION(3)                  :: r_xf
+        REAL(MK), DIMENSION(3)                  :: r_xf1,r_xf2
         REAL(MK), DIMENSION(3)                  :: r_xc
         REAL(MK), DIMENSION(3)                  :: r_vc
         REAL(MK), DIMENSION(3)                  :: r_xs
-        REAL(MK), DIMENSION(3)                  :: r_vs
-#if 0
+        REAL(MK), DIMENSION(3)                  :: r_vs        
         REAL(MK)                                :: theta
         REAL(MK)                                :: d_scoll
         REAL(MK)                                :: d_fcoll
+        REAL(MK)                                :: d_fcoll1, d_fcoll2
         REAL(MK)                                :: d_ccoll
-#endif
         REAL(MK)                                :: d_fs
         REAL(MK), DIMENSION(3)                  :: nvector
         REAL(MK)                                :: d_cs
         REAL(MK)                                :: corr
-        
+        REAL(MK)                                :: a,b,d
+        LOGICAL                                 :: left
         
         !----------------------------------------------------
         ! Initialization of variables.
@@ -109,7 +115,18 @@
         
         dim     = this%num_dim
         r_xc(:) = 0.0_MK
-        r_vc(:) = 0.0_MK     
+        r_vc(:) = 0.0_MK
+
+        !----------------------------------------------------
+        ! a: semi-major axis
+        ! b: semi-minor axis
+        ! d: distance of each sphere center to 
+        !    the dicolloid center.
+        !----------------------------------------------------
+        
+        a = this%radius(1,sid_c)
+        b = this%radius(2,sid_c)
+        d = a - b
         
         !----------------------------------------------------
         ! Get the nearest image colloid center's to the
@@ -119,138 +136,84 @@
         CALL colloid_in_nearest_image(this,xc(1:dim),sid_c,&
              xcoll(1:dim),r_xc(1:dim),vcoll(1:dim),&
              stat_info_sub)
-      
+        
         !----------------------------------------------------
-        ! Get relative position of fluid particle to the center.
+        ! Get relative position of the fluid particle to the
+        ! dicolloid center.
         !----------------------------------------------------
         
         r_xf(1:dim) = xf(1:dim) - xcoll(1:dim)
         
+        !----------------------------------------------------
+        ! Translate the relative positions
+        ! from fixed coordinate to body-attached coordinate.
+        !----------------------------------------------------
+        
+        r_xf(1:dim) = MATMUL(&
+             TRANSPOSE(this%acc_matrix(1:dim,1:dim,sid_c)),&
+             r_xf(1:dim) )
+        
+        r_xc(1:dim) = MATMUL(&
+             TRANSPOSE(this%acc_matrix(1:dim,1:dim,sid_c)),&
+             r_xc(1:dim) )
+    
 
-#if 0
         !----------------------------------------------------
-        ! Check if the fluid particle is inside of 
-        ! the geometry.
-        !----------------------------------------------------
-        
-        !----------------------------------------------------
-        ! Angle between r_xf and x+ direction. Get at this 
-        ! angle, what is the distance from origin to 
-        ! the surface.
-        ! The distance d_scoll is used for penetration check.
+        ! Relative to which sphere the boundary particle 
+        ! belong.
+        ! transfer the relative position according to 
+        ! the sphere center.
         !----------------------------------------------------
         
-        theta   = colloid_polar_angle(r_xf(1),r_xf(2))
-        d_scoll = colloid_polar_ellipse_r(this%radius(1,sid_c), &
-             this%radius(2,sid_c),theta,this%theta(3,sid_c))
+        IF ( r_xc(1) < 0.0_MK ) THEN
+           
+           left    = .TRUE.
+           r_xf(1) = r_xf(1) + d
+           r_xc(1) = r_xc(1) + d
+           
+        ELSE
+           
+           left    = .FALSE.
+           r_xf(1) = r_xf(1) - d
+           r_xc(1) = r_xc(1) - d
+           
+        END IF
         
         !----------------------------------------------------
-        ! Distance between a fluid particle and the center.
+        ! Distance between f and the sphere center.
         !----------------------------------------------------
         
         d_fcoll = SQRT(DOT_PRODUCT(r_xf(1:dim),r_xf(1:dim)))
         
         !----------------------------------------------------
-        ! Check if penetration happens, i.e., a fluid 
-        ! particle goes inside a colloid object. 
-        ! If yes,
-        ! simply assign the same velocity as the colloid.
+        ! Normalize r_xf and get nvector.
         !----------------------------------------------------
         
-        IF( d_fcoll <= d_scoll ) THEN
-           
-           !-------------------------------------------------
-           ! Assign traslational velocity.
-           !-------------------------------------------------
-           
-           vc(1:dim) = vcoll(1:dim)
-           
-           !-------------------------------------------------
-           ! If rotating, add relative velocity of the 
-           ! boundary particle to its center of geometry.
-           ! i.e., equavilent translational 
-           ! velcoity from angular velocity.
-           !-------------------------------------------------
-           
-           IF ( this%rotate ) THEN
-           
-              r_vc(:) = 0.0_MK
-              
-              CALL tool_cross_product(this%tool,&
-                   this%omega(1:3,sid_c), r_xc(1:3),&
-                   r_vc(1:3),stat_info_sub)
-           
-              vc(1:dim) = vc(1:dim) + r_vc(1:dim)
-              
-           END IF
-           
-           !PRINT *, "Fluid particle inside the geometry!"
-           !stat_info = -1
-           GOTO 9999
-           
-        END IF
+        nvector(1:dim) = r_xf(1:dim) / d_fcoll1
         
         !----------------------------------------------------
-        ! Check if the boundary particle is outside of
-        ! the geometry.
-        !----------------------------------------------------
-      
-        !----------------------------------------------------
-        ! Angle between r_xc and x+ direction. Get at this 
-        ! angle what is the distance from origin to 
-        ! the surface.
-        ! The distance d_scoll is used for consistent moving
-        ! check.        
+        ! Map r_xc on nvector and caculate the length.
         !----------------------------------------------------
         
-        theta   = colloid_polar_angle(r_xc(1),r_xc(2))
-        d_scoll = colloid_polar_ellipse_r(this%radius(1,sid_c), &
-             this%radius(2,sid_c),theta,this%theta(3,sid_c) )
+        d_cn = DOT_PRODUCT(r_xc(1:dim),nvector(1:dim))
         
         !----------------------------------------------------
-        ! Distance between colloid boundary particle 
-        ! and the center of a colloid.
+        ! Distance from the boundary particle to 
+        ! the tangent surface of the colloid.
         !----------------------------------------------------
         
-        d_ccoll = SQRT(DOT_PRODUCT(r_xc(1:dim),r_xc(1:dim)))
+        d_cs = b - d_cn
         
         !----------------------------------------------------
-        ! Inconsistent movement happens, if the boundary 
-        ! particle goes out of the geometry.
+        ! Distance from the fluid particle to the 
+        ! tangent surface of the colloid.
+        ! Calculate also r_xs vector.
         !----------------------------------------------------
         
-        IF( d_ccoll > d_scoll + this%dout ) THEN
-           PRINT *, __FILE__, ":", __LINE__, &
-                "boundary particle goes out of geometry !"
-           PRINT *, "dist,xc,xcolloid,xcoll,theta :", &
-                d_ccoll,xc(1:dim),&
-                this%x(1:dim,sid_c),xcoll(1:dim), &
-                this%theta(3,sid_c)
-           
-           stat_info = -1
-           GOTO 9999
-        END IF
+        d_fs        = d_fcoll - b        
+        r_xs(1:dim) = b/d_fcoll*r_xf(1:dim)
         
-#endif
         
-        !----------------------------------------------------
-        ! Find the shortest distance from the fluid particle
-        ! to the surface of the ellipse.
-        ! r_xs(:) contains the surface point.
-        !----------------------------------------------------
-        
-        CALL colloid_cartesian_ellipse_shortestD(&
-             this%radius(1,sid_c),this%radius(2,sid_c),&
-             this%theta(3,sid_c),&
-             r_xf(1),r_xf(2),r_xs(1),r_xs(2),&
-             d_fs,stat_info_sub)
-        
-        IF ( stat_info_sub /=0 ) THEN
-           PRINT *, __FILE__, ":", __LINE__
-           stat_info = -1
-           GOTO 9999
-        END IF
-
         !----------------------------------------------------
         ! If the fuild particle lies exactly on
         ! the surface, assign the maximum ratio.
@@ -261,21 +224,6 @@
            corr = mcf_colloid_dist_ratio_max
            
         ELSE
-           
-           !-------------------------------------------------
-           ! Normal vector pointing from r_xs to r_xf.
-           !-------------------------------------------------
-           
-           nvector(1:dim) = &
-                ( r_xf(1:dim)- r_xs(1:dim) ) /  d_fs
-           
-           !-------------------------------------------------
-           ! Map (r_xs-r_xc) onto nvector and 
-           ! calculate it length.
-           !-------------------------------------------------
-        
-           d_cs = DOT_PRODUCT((r_xs(1:dim)-r_xc(1:dim)), nvector(1:dim))
-           
            
            !-------------------------------------------------
            ! Ratio of the distances, used for extrapolation.
@@ -296,24 +244,59 @@
         END IF ! d_fs == 0
         
         !----------------------------------------------------
-        ! Extrapolate velocity for the colloid boundary 
+        ! Calculate the translational/rotational velcoity
+        ! of the colloid in body-attached coordinate.
+        !----------------------------------------------------
+        
+        vcoll(1:dim) = MATMUL(&
+             TRANSPOSE(this%acc_matrix(1:dim,1:dim,sid_c)),&
+             vcoll(1:dim) )
+        ocoll(1:dim) = MATMUL(&
+             TRANSPOSE(this%acc_matrix(1:dim,1:dim,sid_c)),&
+             this%omega(1:3,sid_c) )
+     
+        !----------------------------------------------------
+        ! Get surface position in body-attached coordinate,
+        ! of which origin is dicolloid center.
+        !----------------------------------------------------
+        
+        IF ( left ) THEN
+           
+           r_xs(1) = r_xs(1) - d
+
+        ELSE
+           
+           r_xs(1) = r_xs(1) + d
+           
+        END IF
+        
+        !----------------------------------------------------
+        ! Extrapolate velocity for the boundary 
         ! particle, considering the movment of colloid.
         !----------------------------------------------------
         
         r_vs(:) = 0.0_MK
         
         CALL tool_cross_product(this%tool,&
-             this%omega(1:3,sid_c), r_xs(1:3),&
+             ocoll(1:3), r_xs(1:3),&
              r_vs(1:3),stat_info_sub)
         
         vc(1:dim) = -corr *&
              (vf(1:dim)-vcoll(1:dim)-r_vs(1:dim)) + &
              vcoll(1:dim) + r_vs(1:dim)
         
+        !----------------------------------------------------
+        ! Transfer the result back to the fixed coordinate.
+        !----------------------------------------------------
+        
+        vc(1:dim) = &
+             MATMUL(this%acc_matrix(1:dim,1:dim,sid_c),&
+             vc(1:dim) )
+        
         
 9999    CONTINUE
         
         RETURN
         
-      END SUBROUTINE colloid_noslip_Morris_ellipse
+      END SUBROUTINE colloid_noslip_Morris_dicolloid_3D
       

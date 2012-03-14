@@ -65,12 +65,11 @@
         REAL(MK)                                :: d_phi, d_theta
         INTEGER                                 :: num_phi, num_theta
         REAL(MK)                                :: phi, theta
-        INTEGER                                 :: num_sur
         INTEGER                                 :: num_max
         INTEGER                                 :: num
         
         INTEGER                                 :: i,k,m
-        LOGICAL                                 :: counted_boundary
+
         
         REAL(MK), DIMENSION(:,:), ALLOCATABLE   :: t_x
         

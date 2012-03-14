@@ -74,7 +74,7 @@
         !----------------------------------------------------
         
         INTEGER                                  :: dim,num
-        INTEGER                                  :: i,j
+        INTEGER                                  :: j
         REAL(MK)                                 :: hn,hm,h1,h2
         REAL(MK)                                 :: F0,Ft
         

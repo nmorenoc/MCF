@@ -58,8 +58,6 @@
         INTEGER                         :: num_wall_solid
         INTEGER                         :: num_le
         INTEGER                         :: i, j, k
-        INTEGER                         :: ip, sid
-        
         INTEGER                         :: stat_info_sub
         
         !----------------------------------------------------

@@ -128,9 +128,9 @@
         REAL(MK)                        :: cut_off2
         REAL(MK), DIMENSION(:),POINTER  :: dx
         REAL(MK)                        :: eta
+#if 0
         REAL(MK), DIMENSION(3)          :: uij
-        REAL(MK)                        :: h
-
+#endif
         !----------------------------------------------------
         ! Boundary parameters :
         !
@@ -354,6 +354,7 @@
         CALL physics_get_dx(this%phys,dx,stat_info_sub)
         eta         = &
              physics_get_eta(this%phys,stat_info_sub)
+        
         !----------------------------------------------------
         ! Boundary parameters :
         !

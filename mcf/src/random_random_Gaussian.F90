@@ -87,7 +87,7 @@
         ! Remark      :
         !               The algorithm was found on internet
         !               and can not be found the source again.
-        !               Howver, it proves to work well 
+        !               However, it proves to work well 
         !               practically.
         !
         ! Revisions   : 0.1 06.10. 2010, original version.
@@ -122,7 +122,8 @@
         !----------------------------------------------------
         ! Initialization
         !----------------------------------------------------
-        
+
+        stat_info = this%random_Gaussian_type        
         stat_info = 0
         
         DO

@@ -33,10 +33,12 @@
         
         REAL(MK)                        :: time
 
+        stat_info = this%flag
         stat_info = 0
         
         CALL ppm_time(time,stat_info)
         
+
         debug_get_time = time
         
         RETURN

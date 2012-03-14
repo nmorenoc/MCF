@@ -398,10 +398,10 @@
         read_external  = &
              control_get_read_external(this%ctrl,stat_info_sub)
         
-        IF( rank > 2) THEN
+        IF( rank /= 0 ) THEN
            
            PRINT *,"io_open_colloid : "
-           PRINT *,"colloid file can only be opened by rank 0,1,or 2 !"
+           PRINT *,"colloid file can only be opened by rank 0 !"
            stat_info = -1
            GOTO 9999
            

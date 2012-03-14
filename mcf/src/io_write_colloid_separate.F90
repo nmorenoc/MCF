@@ -56,7 +56,6 @@
         REAL(MK),DIMENSION(:,:),POINTER :: omega
         REAL(MK),DIMENSION(:,:),POINTER :: torque
         
-        CHARACTER(LEN=MAX_CHAR)         :: file_name
         INTEGER                         :: data_dim
         REAL(MK),DIMENSION(:,:),POINTER :: output
         INTEGER                         :: j_start,j_end

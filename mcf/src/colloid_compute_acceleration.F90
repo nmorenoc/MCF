@@ -1,4 +1,4 @@
-      SUBROUTINE colloid_compute_acceleration(this,time,stat_info)
+      SUBROUTINE colloid_compute_acceleration(this,stat_info)
         !----------------------------------------------------
         ! Subroutine  : colloid_compute_acceleration
         !----------------------------------------------------
@@ -33,7 +33,6 @@
         !----------------------------------------------------
         
         TYPE(Colloid), INTENT(OUT)              :: this
-        REAL(MK), INTENT(IN)                    :: time
         INTEGER, INTENT(OUT)                    :: stat_info
         
         !----------------------------------------------------
@@ -90,14 +89,7 @@
            
         END IF
         
-        !----------------------------------------------------
-        ! No movement in y-direction.
-        !----------------------------------------------------
         
-        !IF ( time < 30 ) THEN
-        !   this%f(2,1:num) = 0.0_MK
-        !END IF
-     
         !----------------------------------------------------
         ! Calculate rotating accelerations.
         ! Note that torque and its accleration are 3D.

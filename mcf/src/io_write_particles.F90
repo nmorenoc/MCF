@@ -73,14 +73,22 @@
         REAL(MK), DIMENSION(:),   POINTER       :: rho
         REAL(MK), DIMENSION(:),   POINTER       :: m
         INTEGER,  DIMENSION(:,:), POINTER       :: id
+#ifdef __IO_PARTICLES_FORCE_TOTAL
         REAL(MK), DIMENSION(:,:), POINTER       :: f
+#endif
+#ifdef __IO_PARTICLES_FORCE_SEPARATE
         REAL(MK), DIMENSION(:,:), POINTER       :: fp
         REAL(MK), DIMENSION(:,:), POINTER       :: fv
         REAL(MK), DIMENSION(:,:), POINTER       :: fr
+#endif
+#ifdef __IO_PARTICLES_STRESS_TOTAL
         REAL(MK), DIMENSION(:,:), POINTER       :: s
+#endif
+#ifdef __IO_PARTICLES_STRESS_SEPARATE
         REAL(MK), DIMENSION(:,:), POINTER       :: sp
         REAL(MK), DIMENSION(:,:), POINTER       :: sv
         REAL(MK), DIMENSION(:,:), POINTER       :: sr
+#endif
         REAL(MK), DIMENSION(:),   POINTER       :: u
         
         CHARACTER(LEN=MAX_CHAR)                 :: file_name
@@ -89,8 +97,15 @@
         INTEGER                                 :: num_x
         INTEGER                                 :: num_v
         INTEGER                                 :: num_id
+#ifdef __IO_PARTICLES_FORCE_TOTAL
         INTEGER                                 :: num_f
-        INTEGER                                 :: num_s
+#endif
+#ifdef __IO_PARTICLES_FORCE_SEPARATE
+        INTEGER                                 :: num_fp
+        INTEGER                                 :: num_fv
+        INTEGER                                 :: num_fr
+#endif
+
 
         INTEGER                                 :: data_dim
         INTEGER                                 :: current_dim
@@ -253,21 +268,20 @@
         data_dim = data_dim + num_f
 #endif
 #ifdef __IO_PARTICLES_FORCE_SEPARATE
-        num_f = SIZE(fp,1)
-        data_dim = data_dim + num_f
-        num_f = SIZE(fv,1)
-        data_dim = data_dim + num_f
+        num_fp = SIZE(fp,1)
+        data_dim = data_dim + num_fp
+        num_fv = SIZE(fv,1)
+        data_dim = data_dim + num_fv
         IF ( Brownian ) THEN
-           num_f = SIZE(fr,1)
-           data_dim = data_dim + num_f
+           num_fr = SIZE(fr,1)
+           data_dim = data_dim + num_fr
         END IF
 #endif
         
         IF ( stress_tensor ) THEN
            
 #ifdef __IO_PARTICLES_STRESS_TOTAL
-           num_s = 2
-           data_dim = data_dim + num_s
+           data_dim = data_dim + 2
 #endif
 #ifdef __IO_PARTICLES_STRESS_SEPARATE
            data_dim = data_dim + 2
@@ -320,16 +334,16 @@
         current_dim = current_dim + num_f
 #endif
 #ifdef __IO_PARTICLES_FORCE_SEPARATE
-        output(current_dim+1:current_dim+num_f,1:num_part) = &
-             fp(1:num_f,1:num_part)
-        current_dim = current_dim + num_f
-        output(current_dim+1:current_dim+num_f,1:num_part) = &
-             fv(1:num_f,1:num_part)
-        current_dim = current_dim + num_f
+        output(current_dim+1:current_dim+num_fp,1:num_part) = &
+             fp(1:num_fp,1:num_part)
+        current_dim = current_dim + num_fp
+        output(current_dim+1:current_dim+num_fv,1:num_part) = &
+             fv(1:num_fv,1:num_part)
+        current_dim = current_dim + num_fv
         IF ( Brownian ) THEN
-           output(current_dim+1:current_dim+num_f,1:num_part) = &
-                fr(1:num_f,1:num_part)
-           current_dim = current_dim + num_f
+           output(current_dim+1:current_dim+num_fr,1:num_part) = &
+                fr(1:num_fr,1:num_part)
+           current_dim = current_dim + num_fr
         END IF
 #endif
 
@@ -340,7 +354,7 @@
                 s(2,1:num_part)
            output(current_dim+2,1:num_part) = &
                 s(3,1:num_part)      
-           current_dim = current_dim + num_s
+           current_dim = current_dim + 2
 #endif
 #ifdef __IO_PARTICLES_STRESS_SEPARATE
            output(current_dim+1,1:num_part) = &

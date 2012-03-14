@@ -89,7 +89,7 @@
         REAL(MK)                                :: d_theta
         REAL(MK)                                :: theta
         REAL(MK)                                :: r
-        REAL(MK)                                :: a, b, c, h, v_cap
+        REAL(MK)                                :: a, b, c, v_cap
         REAL(MK)                                :: ami
         
         !----------------------------------------------------

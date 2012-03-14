@@ -39,8 +39,6 @@
         INTEGER                                 :: stat_info_sub
         INTEGER                                 :: dim, i, num
         REAL(MK), DIMENSION(:), POINTER         :: fa
-        REAL(MK)                                :: fa_min
-        REAL(MK)                                :: fa_max
         
         !----------------------------------------------------
         ! Initialization of variables.

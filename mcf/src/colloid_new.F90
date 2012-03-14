@@ -486,7 +486,7 @@
         INTEGER,INTENT(OUT)             :: stat_info
         
         INTEGER                         :: dim
-        INTEGER                         :: i, j
+        INTEGER                         :: i
         
         stat_info = 0
         dim = this%num_dim

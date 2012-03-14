@@ -1,7 +1,7 @@
-      SUBROUTINE colloid_noslip_Morris_star_star(this, &
+      SUBROUTINE colloid_noslip_Morris_star_2D(this, &
            xf,xc,vf,vc,sid_c,stat_info)
         !----------------------------------------------------
-        ! Subroutine  : colloid_noslip_Morris_star
+        ! Subroutine  : colloid_noslip_Morris_star_2D
         !----------------------------------------------------
         ! Purpose     : For 2D star velocity no-slip
         !               boundary condition.
@@ -79,7 +79,6 @@
         !----------------------------------------------------
         
         INTEGER                                 :: stat_info_sub
-        INTEGER                                 :: i
         INTEGER                                 :: dim
         REAL(MK), DIMENSION(3)                  :: xcoll
         REAL(MK), DIMENSION(3)                  :: vcoll
@@ -96,7 +95,9 @@
         REAL(MK)                                :: d_fs
         REAL(MK)                                :: corr
         
+#if 0
         REAL(MK), DIMENSION(3)                  :: r_xp
+#endif
         LOGICAL                                 :: convex
 
         !----------------------------------------------------
@@ -322,5 +323,5 @@
         
         RETURN
         
-      END SUBROUTINE colloid_noslip_Morris_star_star
+      END SUBROUTINE colloid_noslip_Morris_star_2D
       

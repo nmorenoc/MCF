@@ -66,9 +66,7 @@
         REAL(MK)                        :: hn,hm, F0
         REAL(MK)                        :: aa, r, h
         REAL(MK)                        :: F
-        REAL(MK), DIMENSION(3)          :: x1,x2, v2
         REAL(MK), DIMENSION(3)          :: R12
-        INTEGER                         :: i,j
         
         !----------------------------------------------------
         ! Initialization of variables.

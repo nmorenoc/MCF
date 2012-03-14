@@ -156,7 +156,7 @@
         LOGICAL                         :: lexist
         CHARACTER(len=MAX_CHAR)	        :: file_name
         CHARACTER(len=2*MAX_CHAR)	:: cbuf
-        INTEGER			        :: i,j,k
+        INTEGER			        :: i,j
 
         !----------------------------------------------------
         ! Initialization.

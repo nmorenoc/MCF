@@ -550,7 +550,7 @@
         ! Density doesn't need to commmunicate, since
         ! it is anyway calculated again.
         ! The same for force, vgt (velocity gradient tensor)
-        ! and potential energy accelearation which will
+        ! and potential energy acceleration which will
         ! be allocated and calculated again every step.
         !
         ! Potential energy whether comumincate depends
@@ -1084,7 +1084,7 @@
            ! translation and rotation.
            !-------------------------------------------------
            
-           CALL colloid_compute_acceleration(colloids,time,stat_info_sub)
+           CALL colloid_compute_acceleration(colloids,stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN
               PRINT *, "marching_integrate_Euler : ",&

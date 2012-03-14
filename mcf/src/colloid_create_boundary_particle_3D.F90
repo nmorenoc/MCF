@@ -77,16 +77,14 @@
         REAL(MK), DIMENSION(3)                  :: length
         INTEGER                                 :: num_colloid
         INTEGER                                 :: num_layer
-        REAL(MK)                                :: rad,rad_max
+        REAL(MK)                                :: rad_max
         REAL(MK)                                :: d_phi, d_theta
         INTEGER                                 :: num_phi, num_theta
-        REAL(MK)                                :: phi, theta
-        INTEGER                                 :: num_sur
         INTEGER                                 :: num_max
         INTEGER                                 :: num_one
         INTEGER                                 :: num_total
 
-        INTEGER                                 :: i,j,k,m
+        INTEGER                                 :: i,j,k
         LOGICAL                                 :: counted_boundary
         
         REAL(MK), DIMENSION(:,:), POINTER       :: t_x

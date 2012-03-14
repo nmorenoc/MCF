@@ -77,7 +77,6 @@
         REAL(MK)                        :: F_t1, F_t2
         REAL(MK)                        :: T1, T2
 
-        INTEGER                         :: i,j
         
         !----------------------------------------------------
         ! Initialization of variables.

@@ -959,7 +959,9 @@
         CALL particles_finalize(mcf_particles,stat_info_sub)
         CALL control_finalize(mcf_ctrl,stat_info_sub)
         CALL physics_finalize(mcf_phys,stat_info_sub)
-        CALL io_finalize(mcf_io,num_colloid,stat_info_sub)
+        IF ( rank == 0 ) THEN
+           CALL io_finalize(mcf_io,rank,num_colloid,stat_info_sub)
+        END IF
         CALL rhs_finalize(mcf_rhs,stat_info_sub)
         CALL stateEquation_finalize(mcf_stateEquation,stat_info_sub)
         CALL kernel_finalize(mcf_kern,stat_info_sub)

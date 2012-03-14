@@ -27,7 +27,6 @@
         INTEGER, INTENT(OUT)            :: stat_info
         
         INTEGER                         :: stat_info_sub
-        INTEGER                         :: dim,i
         
         !----------------------------------------------------
         ! Initialization of variables.
@@ -35,7 +34,6 @@
         
         stat_info     = 0
         stat_info_sub = 0
-        dim           = this%num_dim
 
 #ifdef __PARTICLES_POSITION_FIXED
 #else

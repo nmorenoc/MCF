@@ -1,5 +1,5 @@
       SUBROUTINE rhs_force_ff_non_Newtonian_HuAdams_angular(this,&
-           xi,xj,dij,vi,vj,numi,numj, pi,pj,&
+           xi,xj,dij,vi,vj,numi,numj,pi,pj,&
            mi,mj,w,gradw,fi,fj,stat_info)
         !----------------------------------------------------
         ! Subroutine : rhs_force_ff_non_Newtonian_HuAdams_angular
@@ -67,10 +67,6 @@
         REAL(MK)                        :: ev
         REAL(MK), DIMENSION(3)          :: f_c
         REAL(MK)                        :: f_d
-        REAL(MK)                        :: f_r
-        REAL(MK), DIMENSION(3,3)        :: dW
-        REAL(MK)                        :: trace
-        REAL(MK), DIMENSION(3)          :: We    
         INTEGER                         :: i,j
         
         !----------------------------------------------------

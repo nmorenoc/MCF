@@ -862,7 +862,7 @@
            ! translation and rotation.
            !-------------------------------------------------
            
-           CALL colloid_compute_acceleration(colloids,0.0_MK,stat_info_sub)
+           CALL colloid_compute_acceleration(colloids,stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN
               PRINT *, "marching_relax: ",&

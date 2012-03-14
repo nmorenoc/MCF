@@ -108,16 +108,15 @@
                    colloids,stat_info_sub)
               
 #ifdef __IO_COLLOID_SEPARATE
-
-           
+              
               CALL io_write_colloid_separate(this,rank,&
                    step,time,colloids,stat_info_sub)
- 
               
 #else
               
               CALL io_write_colloid(this,rank,&
-                   step,time,colloids,stat_info_sub)
+                   step,colloids,stat_info_sub)
+              
               
 #endif         
               
@@ -137,7 +136,6 @@
 
            IF ( this%write_statistic ) THEN
               
-
               CALL io_write_statistic(this,rank,&
                    step,time,statis,stat_info_sub)
               

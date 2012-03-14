@@ -232,6 +232,7 @@
       END SUBROUTINE colloid_noslip_Morris
 
 #include "colloid_noslip_Morris_cylinder_2D.F90"
+#include "colloid_noslip_Morris_cylinder_3D.F90"
 #include "colloid_noslip_Morris_disk.F90"
 #include "colloid_noslip_Morris_sphere.F90"
 #include "colloid_noslip_Morris_ellipse.F90"

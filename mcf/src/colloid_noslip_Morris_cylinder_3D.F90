@@ -1,22 +1,17 @@
-      SUBROUTINE colloid_noslip_Morris_cylinder_2D(this, &
+      SUBROUTINE colloid_noslip_Morris_cylinder_3D(this, &
            xf,xc,vf,vc,sid_c,stat_info)
         !----------------------------------------------------
-        ! Subroutine  : colloid_noslip_Morris_cylinder
+        ! Subroutine  : colloid_noslip_Morris_cylinder_3D
         !----------------------------------------------------
-        ! Purpose     : For 2D cylinder velocity
+        ! Purpose     : For 3D cylinder velocity
         !               no-slip boundary condition.
         !
-        ! Revision    : V0.3 4.3.2010, small bug is fixed
-        !               according to Bian et al. 2011
-        !               paper.
-        !               The bug was irrelevant for 
-        !               irrotational colloid.
-        !               
-        !               V0.2 27.11.2009, including
-        !               Lees-Edwards boundary.
+        ! Remark      :
         !
-        !               V0.1 01.03.2009, orignal version,
-        !               with periodic boundary.
+        ! Revision    : 
+        !               V0.1 14.03.2012, orignal version,
+        !               it is not translating or rotating.
+        !               Axis is along z-direction.
         !
         !----------------------------------------------------
         ! Author      : Xin Bian
@@ -42,8 +37,8 @@
         !
         ! Output
         !
-        ! vc    : extrapolated velocity for the colloid
-        !         boundary particle.
+        ! vc        : extrapolated velocity for the colloid
+        !             boundary particle.
         ! stat_info : status of the routine.
         !----------------------------------------------------
         
@@ -126,12 +121,12 @@
         ! boundary particle.
         !----------------------------------------------------
         
-        CALL colloid_in_nearest_image(this,xc(1:dim),sid_c, &
-             xcoll(1:dim),r_xc(1:dim),vcoll(1:dim),stat_info_sub)
+        CALL colloid_in_nearest_image(this,xc(1:dim),sid_c,&
+             xcoll(1:dim),r_xc(1:dim),vcoll(1:dim),&
+             stat_info_sub)
         
         IF ( stat_info_sub /= 0 ) THEN
-           PRINT *, "colloid_noslip_Morris_cylinder: ",&
-                "colloid in_nearst_image failed !"
+           PRINT *, __FILE__, ":", __LINE__
            stat_info = -1
            GOTO 9999
         END IF
@@ -144,23 +139,10 @@
         r_xf(1:2) = xf(1:2) - xcoll(1:2)
         
         !----------------------------------------------------
-        ! Get equavilent translational velocity of the
-        ! angular velocity, if it is rotating.
-        !----------------------------------------------------
-        
-        IF ( this%rotate ) THEN
-           
-           CALL tool_cross_product(this%tool,&
-                this%omega(1:3,sid_c), r_xc(1:3),&
-                r_vc(1:3),stat_info_sub)
-           
-        END IF
-        
-        !----------------------------------------------------
         ! Distance between f and the image center.
         !----------------------------------------------------
         
-        d_fcoll = SQRT(DOT_PRODUCT(r_xf(1:dim),r_xf(1:dim)))
+        d_fcoll = SQRT(DOT_PRODUCT(r_xf(1:2),r_xf(1:2)))
         
         !----------------------------------------------------
         ! Check if penetration happens, i.e., a fluid 
@@ -170,7 +152,8 @@
         
         IF( d_fcoll <= this%radius(1,sid_c) ) THEN
            
-           vc(1:dim) = vcoll(1:dim) + r_vc(1:dim)
+           vc(1:dim) = vcoll(1:dim)
+           
            !PRINT *, "Penetration of f is not neccessary an error!" 
            !PRINT *, "dist,radius,xf,xcolloid,xcoll :", &
            !     d_fcoll,this%radius(1,sid_c),xf(1:dim),&
@@ -223,12 +206,10 @@
         !----------------------------------------------------
         ! Distance from the fluid particle to the 
         ! tangent surface of the colloid.
-        ! Calculate also r_xs vector.
         !----------------------------------------------------
         
         d_fs = d_fcoll - this%radius(1,sid_c)
         
-        r_xs(1:dim) =this%radius(1,sid_c)/d_fcoll*r_xf(1:dim)
         
         !----------------------------------------------------
         ! If the fuild particle lies exactly on or in
@@ -237,47 +218,34 @@
         ! f inside surface should not ever happen(d_fs<0).
         !----------------------------------------------------
         
-        IF( d_fs >= 0.0_MK .AND. d_fs <  mcf_machine_zero ) THEN
+        IF( ABS(d_fs) <  mcf_machine_zero ) THEN
            
            d_fs = mcf_machine_zero
            
-        ELSE IF ( d_fs < 0.0_MK .AND. d_fs > -mcf_machine_zero ) THEN
+           corr = mcf_colloid_dist_ratio_max
            
-           d_fs = -mcf_machine_zero
+        ELSE
            
-        END IF
-        
-        !----------------------------------------------------
-        ! Ratio of the distances, used for extrapolation.
-        !----------------------------------------------------
-        
-        corr = d_cs / d_fs
-        
-        !----------------------------------------------------
-        ! Set the maximum ratio for the extrapolation.
-        !----------------------------------------------------
-        
-        IF ( corr > mcf_colloid_dist_ratio ) THEN
+           !-------------------------------------------------
+           ! Ratio of the distances, used for extrapolation.
+           !-------------------------------------------------
            
-           corr = mcf_colloid_dist_ratio
+           corr = d_cs / d_fs
            
-        ELSE IF ( corr < -mcf_colloid_dist_ratio ) THEN
+           !----------------------------------------------------
+           ! Set the maximum ratio for the extrapolation.
+           !----------------------------------------------------
            
-           corr = -mcf_colloid_dist_ratio
-           
-        END IF
-        
-        !----------------------------------------------------
-        ! Get equavilent translational velocity of the
-        ! surface point s, if it is rotating.
-        !----------------------------------------------------
-        
-        IF ( this%rotate ) THEN
-           
-           CALL tool_cross_product(this%tool,&
-                this%omega(1:3,sid_c), r_xs(1:3),&
-                r_vs(1:3),stat_info_sub)
-           
+           IF ( corr > mcf_colloid_dist_ratio_max ) THEN
+              
+              corr = mcf_colloid_dist_ratio_max
+              
+           ELSE IF ( corr < -mcf_colloid_dist_ratio_max ) THEN
+              
+              corr = -mcf_colloid_dist_ratio_max
+              
+           END IF
+
         END IF
         
         !----------------------------------------------------
@@ -285,13 +253,11 @@
         ! particle, considering the movment of colloid.
         !----------------------------------------------------
         
-        vc(1:dim) = -corr *&
-             (vf(1:dim)-vcoll(1:dim)-r_vs(1:dim)) + &
-             vcoll(1:dim) + r_vs(1:dim)
+        vc(1:dim) = -corr * vf(1:dim)
         
         
 9999    CONTINUE
         
         RETURN
         
-      END SUBROUTINE colloid_noslip_Morris_cylinder_2D
+      END SUBROUTINE colloid_noslip_Morris_cylinder_3D

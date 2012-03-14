@@ -54,9 +54,11 @@
         REAL(MK), DIMENSION(:), POINTER :: momentum
         REAL(MK), DIMENSION(:), POINTER :: v_aver
         REAL(MK), DIMENSION(:), POINTER :: stress
+#ifdef __IO_STATISTIC_STRESS_SEPARATE
         REAL(MK), DIMENSION(:), POINTER :: stress_p
         REAL(MK), DIMENSION(:), POINTER :: stress_v
         REAL(MK), DIMENSION(:), POINTER :: stress_r
+#endif
         REAL(MK)                        :: p_energy
         INTEGER                         :: num_data
         REAL(MK), DIMENSION(20)         :: data

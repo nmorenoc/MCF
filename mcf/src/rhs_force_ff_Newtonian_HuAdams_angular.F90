@@ -7,10 +7,10 @@
 !----------------------------------------------------------------
 #ifdef __PARTICLES_FORCE_SEPARATE
       SUBROUTINE rhs_force_ff_Newtonian_HuAdams_angular(this,&
-           xi,xj,dij,vi,vj,numi,numj, pi,pj,&
+           xi,xj,dij,vi,vj,numi,numj,pi,pj,&
            mi,mj,w,gradw,fi,fj,fpi,fpj,fvi,fvj,fri,frj,auij,stat_info)
 #else
-  SUBROUTINE rhs_force_ff_Newtonian_HuAdams_angular(this,&
+      SUBROUTINE rhs_force_ff_Newtonian_HuAdams_angular(this,&
            xi,xj,dij,vi,vj,numi,numj, pi,pj,&
            mi,mj,w,gradw,fi,fj,auij,stat_info)
 #endif
@@ -228,8 +228,7 @@
            fj(1:num_dim)  = fj(1:num_dim) - &
                 f_r * eij(1:num_dim) / mj 
            
-#ifdef __PARTICLES_FORCE_SEPARATE
-           
+#ifdef __PARTICLES_FORCE_SEPARATE           
            IF ( PRESENT(fri) .AND. PRESENT (frj) ) THEN
               
               fri(1:num_dim) =  f_r*eij(1:num_dim)/ mi

@@ -1,5 +1,5 @@
       SUBROUTINE io_write_colloid(this,&
-           rank,step,time,d_colloid,stat_info)
+           rank,step,d_colloid,stat_info)
         !----------------------------------------------------
         ! Subroutine  :  io_write_colloid
         !----------------------------------------------------
@@ -32,7 +32,6 @@
         TYPE(IO), INTENT(IN)            :: this
         INTEGER, INTENT(IN)             :: rank
         INTEGER,  INTENT(IN)	        :: step
-        REAL(MK), INTENT(IN)	        :: time
         TYPE(Colloid), INTENT(IN)       :: d_colloid
         INTEGER,  INTENT(OUT)	        :: stat_info
         

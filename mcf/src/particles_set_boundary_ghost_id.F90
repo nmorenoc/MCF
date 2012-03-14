@@ -77,7 +77,6 @@
         TYPE(Boundary), POINTER         :: tboundary
         INTEGER                         :: num_sym
         INTEGER                         :: num_wall_sym
-        INTEGER                         :: num_wall_solid
         INTEGER                         :: num_le
 
         !----------------------------------------------------

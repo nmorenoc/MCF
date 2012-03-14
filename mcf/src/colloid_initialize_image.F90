@@ -57,7 +57,6 @@
         INTEGER                         :: num_colloid
         INTEGER                         :: num_le,num_peri
         INTEGER                         :: num, num_image
-        INTEGER                         :: i,j,k
         
         !----------------------------------------------------
         ! Initialization

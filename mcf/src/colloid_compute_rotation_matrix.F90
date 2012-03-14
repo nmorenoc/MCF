@@ -26,8 +26,6 @@
         
         INTEGER                         :: stat_info_sub
         INTEGER                         :: dim,i
-        REAL(MK), DIMENSION(3)          :: phi
-        REAL(MK)                        :: len
         REAL(MK), DIMENSION(3,3)        :: rot_matrix
         
         !----------------------------------------------------

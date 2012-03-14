@@ -49,7 +49,7 @@
         INTEGER                                 :: dim,num
         REAL(MK), DIMENSION(:,:),POINTER        :: t_drag
         REAL(MK), DIMENSION(:,:),POINTER        :: t_torque
-        INTEGER                                 :: i,j
+
         
         !----------------------------------------------------
         ! Initialization of variables.

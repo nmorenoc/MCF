@@ -1390,7 +1390,7 @@
            ! translation and rotation.
            !-------------------------------------------------
            
-           CALL colloid_compute_acceleration(colloids,time,stat_info_sub)
+           CALL colloid_compute_acceleration(colloids,stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN
               PRINT *, "marching_integrate_VV : ",&

@@ -65,7 +65,6 @@
         REAL(MK)                                :: d_phi, d_theta
         INTEGER                                 :: num_phi, num_theta
         REAL(MK)                                :: phi, theta, gamma
-        INTEGER                                 :: num_sur
         INTEGER                                 :: num_max
         INTEGER                                 :: num, num1, num2
         
