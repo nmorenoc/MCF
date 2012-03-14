@@ -95,45 +95,77 @@
         ! displacement in all direction relative to the 
         ! colloid center.
         !----------------------------------------------------
+
+        IF ( dim == 2 ) THEN
+           
+           SELECT CASE ( this%shape(sid) ) 
+              
+           CASE ( mcf_colloid_shape_cylinder )
+              
+              d_max = this%radius(1,sid)
+              
+           CASE ( mcf_colloid_shape_disk ) 
+              
+              d_max = this%radius(1,sid)
+           
+           CASE ( mcf_colloid_shape_ellipse )
+              
+              d_max = this%radius(1,sid)
+           
+           CASE (mcf_colloid_shape_dicolloid)
+           
+              d_max = this%radius(1,sid) 
+
+           CASE (mcf_colloid_shape_star) 
+              
+              d_max = this%radius(1,sid) + this%radius(2,sid)
+              
+           CASE DEFAULT
+           
+              PRINT *, __FILE__, ":", __LINE__, &
+                   "No such shape available !"
+              stat_info = -1
+              GOTO 9999
+              
+           END SELECT ! shape
+           
+        ELSE IF ( dim == 3 ) THEN
+           
+           SELECT CASE ( this%shape(sid) ) 
+              
+           CASE ( mcf_colloid_shape_cylinder )
+              
+              d_max = this%radius(1,sid)
+              
+              IF ( this%radius(3,sid) > this%radius(1,sid) ) THEN
+                 
+                 d_max = this%radius(3,sid)
+                 
+              END IF
+              
+           CASE ( mcf_colloid_shape_sphere ) 
+              
+              d_max = this%radius(1,sid)
+              
+           CASE ( mcf_colloid_shape_ellipsoid )
+              
+              d_max = this%radius(1,sid)
+              
+           CASE (mcf_colloid_shape_dicolloid)
+              
+              d_max = this%radius(1,sid) 
+              
+           CASE DEFAULT
+              
+              PRINT *, __FILE__, ":", __LINE__, &
+                   "No such shape available !"
+              stat_info = -1
+              GOTO 9999
+              
+           END SELECT ! shape
+
+        END IF ! dim 
         
-        SELECT CASE ( this%shape(sid) ) 
-           
-        CASE ( mcf_colloid_shape_cylinder )
-           
-           d_max = this%radius(1,sid)
-           
-           IF ( dim == 3 .AND. &
-                this%radius(3,sid) > this%radius(1,sid) ) THEN
-              
-              d_max = this%radius(3,sid)
-              
-           END IF
-           
-        CASE ( mcf_colloid_shape_sphere ) 
-           
-           d_max = this%radius(1,sid)
-           
-        CASE ( mcf_colloid_shape_ellipsoid )
-           
-           d_max = this%radius(1,sid)
-           
-        CASE (mcf_colloid_shape_dicolloid)
-           
-           d_max = this%radius(1,sid) 
-
-        CASE (mcf_colloid_shape_star) 
-           
-           d_max = this%radius(1,sid) + this%radius(2,sid)
-
-        CASE DEFAULT
-           
-           PRINT *, __FILE__, ":", __LINE__, &
-                "No such shape available !"
-           stat_info = -1
-           GOTO 9999
-           
-        END SELECT ! shape
-
         !----------------------------------------------------
         ! Give a tolerance dout for inconsistent movement
         ! of a rigid colloid.

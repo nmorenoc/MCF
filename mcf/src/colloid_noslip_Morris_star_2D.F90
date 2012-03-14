@@ -160,8 +160,10 @@
         theta = colloid_polar_angle(r_xf(1), r_xf(2))
         
         d_scoll = &
-             colloid_polar_star_r(this%radius(1,sid_c),this%radius(2,sid_c), &
-             REAL(this%freq(sid_c),MK),theta,this%theta(3,sid_c))
+             colloid_polar_star_r(this%radius(1,sid_c),&
+             this%radius(2,sid_c), &
+             REAL(this%freq(sid_c),MK),&
+             theta,this%theta(3,sid_c))
         
         IF( d_fcoll <= d_scoll ) THEN
            
@@ -283,13 +285,13 @@
         ! Set the maximum ratio for the extrapolation.
         !----------------------------------------------------
         
-        IF ( corr > mcf_colloid_dist_ratio ) THEN
+        IF ( corr > mcf_colloid_dist_ratio_max ) THEN
            
-           corr = mcf_colloid_dist_ratio
+           corr = mcf_colloid_dist_ratio_max
            
-        ELSE IF ( corr < -mcf_colloid_dist_ratio ) THEN
+        ELSE IF ( corr < -mcf_colloid_dist_ratio_max ) THEN
            
-           corr = -mcf_colloid_dist_ratio
+           corr = -mcf_colloid_dist_ratio_max
            
         END IF
         

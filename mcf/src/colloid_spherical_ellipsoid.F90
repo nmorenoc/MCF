@@ -1,9 +1,10 @@
-!------------------------------------------------------------
-! Function of ellipsoid, such as r,
-! in spherical coordinate system,
-!------------------------------------------------------------
-
       REAL(MK) FUNCTION colloid_spherical_ellipsoid_r(a,b,c,theta,phi)
+        !------------------------------------------------------------
+        ! Purpose   : Function of an ellipsoid, 
+        !             distance r on the surface from origin
+        !             in spherical coordinate system.
+        !------------------------------------------------------------
+        
         REAL(MK), INTENT(IN)            :: a
         REAL(MK), INTENT(IN)            :: b
         REAL(MK), INTENT(IN)            :: c

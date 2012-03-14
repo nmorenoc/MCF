@@ -6,8 +6,10 @@
         ! Purpose     : For 2D disk velocity
         !               no-slip boundary condition.
         !
+        ! Remark      : it is identical to 2D cylinder.
+        !
         ! Revision    : V0.3 4.3.2010, small bug is fixed
-        !               according to Bian et al. 2011
+        !               according to Bian et al. 2012
         !               paper.
         !               The bug was irrelevant for 
         !               irrotational colloid.
@@ -42,8 +44,8 @@
         !
         ! Output
         !
-        ! vc    : extrapolated velocity for the colloid
-        !         boundary particle.
+        ! vc        : extrapolated velocity for the colloid
+        !             boundary particle.
         ! stat_info : status of the routine.
         !----------------------------------------------------
         
@@ -126,28 +128,22 @@
         ! boundary particle.
         !----------------------------------------------------
         
-        CALL colloid_in_nearest_image(this,xc(1:dim),sid_c, &
-             xcoll(1:dim),r_xc(1:dim),vcoll(1:dim),stat_info_sub)
+        CALL colloid_in_nearest_image(this,xc(1:dim),sid_c,&
+             xcoll(1:dim),r_xc(1:dim),vcoll(1:dim),&
+             stat_info_sub)
+        
+        IF ( stat_info_sub /= 0 ) THEN
+           PRINT *, __FILE__, ":", __LINE__
+           stat_info = -1
+           GOTO 9999
+        END IF
         
         !----------------------------------------------------
         ! Get relative position of fluid particle to the 
         ! image center.
         !----------------------------------------------------
         
-        r_xf(1:dim) = xf(1:dim) - xcoll(1:dim)
-        
-        !----------------------------------------------------
-        ! Get equavilent translational velocity of the
-        ! angular velocity, if it is rotating.
-        !----------------------------------------------------
-        
-        IF ( this%rotate ) THEN
-           
-           CALL tool_cross_product(this%tool,&
-                this%omega(1:3,sid_c), r_xc(1:3),&
-                r_vc(1:3),stat_info_sub)
-           
-        END IF
+        r_xf(1:2) = xf(1:2) - xcoll(1:2)
         
         !----------------------------------------------------
         ! Distance between f and the image center.
@@ -163,7 +159,31 @@
         
         IF( d_fcoll <= this%radius(1,sid_c) ) THEN
            
-           vc(1:dim) = vcoll(1:dim) + r_vc(1:dim)
+           vc(1:dim) = vcoll(1:dim)
+           
+           !----------------------------------------------------
+           ! Get equavilent translational velocity of the
+           ! angular velocity, if it is rotating.
+           !----------------------------------------------------
+           
+           IF ( this%rotate ) THEN
+              
+              r_vc(:) = 0.0_MK
+              
+              CALL tool_cross_product(this%tool,&
+                   this%omega(1:3,sid_c), r_xc(1:3),&
+                   r_vc(1:3),stat_info_sub)
+              
+              IF ( stat_info_sub /= 0 ) THEN
+                 PRINT *, __FILE__, ":", __LINE__
+                 stat_info = -1
+                 GOTO 9999
+              END IF
+              
+              vc(1:dim) = vc(1:dim) + r_vc(1:dim)
+              
+           END IF
+           
            !PRINT *, "Penetration of f is not neccessary an error!" 
            !PRINT *, "dist,radius,xf,xcolloid,xcoll :", &
            !     d_fcoll,this%radius(1,sid_c),xf(1:dim),&
@@ -177,7 +197,7 @@
         ! Distance between c and the image center.
         !----------------------------------------------------
         
-        d_ccoll = SQRT(DOT_PRODUCT(r_xc(1:dim),r_xc(1:dim)))
+        d_ccoll = SQRT(DOT_PRODUCT(r_xc(1:2),r_xc(1:2)))
         
         !----------------------------------------------------
         ! Inconsistent movement happens, if c 
@@ -198,13 +218,13 @@
         ! Normalize r_xf and get nvector.
         !----------------------------------------------------
         
-        nvector(1:dim) = r_xf(1:dim) / d_fcoll
+        nvector(1:2) = r_xf(1:2) / d_fcoll
         
         !----------------------------------------------------
         ! Map r_xc on nvector and caculate the length.
         !----------------------------------------------------
         
-        d_cn = DOT_PRODUCT(r_xc(1:dim),nvector(1:dim))
+        d_cn = DOT_PRODUCT(r_xc(1:2),nvector(1:2))
         
         !----------------------------------------------------
         ! Distance from the colloid boundary particle to 
@@ -230,34 +250,34 @@
         ! f inside surface should not ever happen(d_fs<0).
         !----------------------------------------------------
         
-        IF( d_fs >= 0.0_MK .AND. d_fs <  mcf_machine_zero ) THEN
+        IF( ABS(d_fs) <  mcf_machine_zero ) THEN
            
            d_fs = mcf_machine_zero
            
-        ELSE IF ( d_fs < 0.0_MK .AND. d_fs > -mcf_machine_zero ) THEN
+           corr = mcf_colloid_dist_ratio_max
            
-           d_fs = -mcf_machine_zero
+        ELSE
            
-        END IF
-        
-        !----------------------------------------------------
-        ! Ratio of the distances, used for extrapolation.
-        !----------------------------------------------------
-        
-        corr = d_cs / d_fs
-        
-        !----------------------------------------------------
-        ! Set the maximum ratio for the extrapolation.
-        !----------------------------------------------------
-        
-        IF ( corr > mcf_colloid_dist_ratio ) THEN
+           !-------------------------------------------------
+           ! Ratio of the distances, used for extrapolation.
+           !-------------------------------------------------
            
-           corr = mcf_colloid_dist_ratio
+           corr = d_cs / d_fs
            
-        ELSE IF ( corr < -mcf_colloid_dist_ratio ) THEN
+           !----------------------------------------------------
+           ! Set the maximum ratio for the extrapolation.
+           !----------------------------------------------------
            
-           corr = -mcf_colloid_dist_ratio
-           
+           IF ( corr > mcf_colloid_dist_ratio_max ) THEN
+              
+              corr = mcf_colloid_dist_ratio_max
+              
+           ELSE IF ( corr < -mcf_colloid_dist_ratio_max ) THEN
+              
+              corr = -mcf_colloid_dist_ratio_max
+              
+           END IF
+
         END IF
         
         !----------------------------------------------------
@@ -270,6 +290,12 @@
            CALL tool_cross_product(this%tool,&
                 this%omega(1:3,sid_c), r_xs(1:3),&
                 r_vs(1:3),stat_info_sub)
+           
+           IF ( stat_info_sub /= 0 ) THEN
+              PRINT *, __FILE__, ":", __LINE__
+              stat_info = -1
+              GOTO 9999                 
+           END IF
            
         END IF
         

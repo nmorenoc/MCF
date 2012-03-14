@@ -149,7 +149,7 @@
         ! 0.5 is the valued used by Morris et al. 1997.
         !----------------------------------------------------
         
-        REAL(MK), PARAMETER     :: mcf_colloid_dist_ratio = 0.5_MK
+        REAL(MK), PARAMETER     :: mcf_colloid_dist_ratio_max = 0.5_MK
         
       
         
