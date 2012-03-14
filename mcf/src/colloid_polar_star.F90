@@ -1,7 +1,7 @@
 !----------------------------------------------------
 ! Star shapes related routines in polar coordinate system
 !----------------------------------------------------
-      REAL(MK) FUNCTION polar_star_r(a,b,c,theta,phi)
+      REAL(MK) FUNCTION colloid_polar_star_r(a,b,c,theta,phi)
         !----------------------------------------------------
         ! Function value of 
         ! r(theta)=a+b*cos(c*theta-phi).
@@ -13,12 +13,12 @@
         REAL(MK), INTENT(IN)            :: theta
         REAL(MK), INTENT(IN)            :: phi
         
-        polar_star_r = a + b * COS(c*(theta-phi))               
+        colloid_polar_star_r = a + b * COS(c*(theta-phi))               
         
-      END FUNCTION polar_star_r
+      END FUNCTION colloid_polar_star_r
       
       
-      REAL(MK) FUNCTION polar_star_dr(b,c,theta,phi)
+      REAL(MK) FUNCTION colloid_polar_star_dr(b,c,theta,phi)
         !----------------------------------------------------
         ! Derivative value of 
         ! r(theta)=a+b*cos(c*theta-phi).
@@ -29,12 +29,12 @@
         REAL(MK), INTENT(IN)            :: theta
         REAL(MK), INTENT(IN)            :: phi
         
-        polar_star_dr =  -b * c * SIN(c*(theta-phi))
+        colloid_polar_star_dr =  -b * c * SIN(c*(theta-phi))
         
-      END FUNCTION polar_star_dr
+      END FUNCTION colloid_polar_star_dr
       
       
-      REAL(MK) FUNCTION polar_star_ddr(b,c,theta,phi)
+      REAL(MK) FUNCTION colloid_polar_star_ddr(b,c,theta,phi)
         !----------------------------------------------------
         ! Second derivative value of 
         ! r(theta)=a+b*cos(c*theta-phi).
@@ -45,12 +45,12 @@
         REAL(MK), INTENT(IN)            :: theta
         REAL(MK), INTENT(IN)            :: phi
         
-        polar_star_ddr =  -b * c * c * COS(c*(theta-phi))
+        colloid_polar_star_ddr =  -b * c * c * COS(c*(theta-phi))
         
-      END FUNCTION polar_star_ddr
+      END FUNCTION colloid_polar_star_ddr
       
 
-      REAL(MK) FUNCTION polar_star_G(a,b,c,t,u,v,p,q)
+      REAL(MK) FUNCTION colloid_polar_star_G(a,b,c,t,u,v,p,q)
         !----------------------------------------------------
         ! Function G's value.
         ! Line connecting A(u,v) and B(p,q) is passing r(t)
@@ -71,17 +71,17 @@
         
         REAL(MK)                        :: r
         
-        r = polar_star_r(a,b,c,t,0.0_MK)
+        r = colloid_polar_star_r(a,b,c,t,0.0_MK)
         
-        polar_star_G = (v-q)*r*COS(t) - &
+        colloid_polar_star_G = (v-q)*r*COS(t) - &
              (u-p)*r*SIN(t) + p*(q-v)+q*(u-p)
         
         RETURN
         
-      END FUNCTION polar_star_G
+      END FUNCTION colloid_polar_star_G
       
       
-      REAL(MK) FUNCTION polar_star_dG(a,b,c,t,u,v,p,q)
+      REAL(MK) FUNCTION colloid_polar_star_dG(a,b,c,t,u,v,p,q)
         !----------------------------------------------------
         ! Function G's derivative value.
         ! Line connecting A(u,v) and B(p,q) is passing r(t)
@@ -107,15 +107,16 @@
         REAL(MK)                        :: dr
         
         
-        r  = polar_star_r(a,b,c,t,0.0_MK)
-        dr = polar_star_dr(b,c,t,0.0_MK)
+        r  = colloid_polar_star_r(a,b,c,t,0.0_MK)
+        dr = colloid_polar_star_dr(b,c,t,0.0_MK)
         
-        polar_star_dG = (v-q)*(dr*COS(t) -r*SIN(t)) - &
+        colloid_polar_star_dG = &
+             (v-q)*(dr*COS(t) -r*SIN(t)) - &
              (u-p)*(dr*SIN(t)+ r*COS(t))
         
         RETURN
         
-      END FUNCTION polar_star_dG
+      END FUNCTION colloid_polar_star_dG
       
       
       SUBROUTINE zero_bracket_G(a,b,c,u,v,p,q,&
@@ -199,12 +200,12 @@
         
         dx = (x2-x1) / nn
         x  = x1
-        gp = polar_star_G(a,b,c,x,u,v,p,q)
+        gp = colloid_polar_star_G(a,b,c,x,u,v,p,q)
         
         DO i = 1, nn
            
            x = x + dx
-           gc = polar_star_G(a,b,c,x,u,v,p,q)
+           gc = colloid_polar_star_G(a,b,c,x,u,v,p,q)
            
            IF ( gc * gp <= mcf_machine_zero )  THEN
               
@@ -252,7 +253,7 @@
       END SUBROUTINE zero_bracket_G
       
       
-      REAL(MK) FUNCTION polar_star_G_root(a,b,c,u,v,p,q,&
+      REAL(MK) FUNCTION colloid_polar_star_G_root(a,b,c,u,v,p,q,&
            xb1,xb2,xacc,stat_info)
         
         !----------------------------------------------------
@@ -302,11 +303,11 @@
         x1 = xb1
         x2 = xb2
         
-        g1 = polar_star_G(a,b,c,x1,u,v,p,q)
-        gh = polar_star_G(a,b,c,x2,u,v,p,q)
+        g1 = colloid_polar_star_G(a,b,c,x1,u,v,p,q)
+        gh = colloid_polar_star_G(a,b,c,x2,u,v,p,q)
         
         IF ( g1*gh > ABS(mcf_machine_zero) ) THEN
-           PRINT *, "polar_star_G_root : ", &
+           PRINT *, "colloid_polar_star_G_root : ", &
                 "Root must be bracketed"
            PRINT *, "u, v : ", u,v
            stat_info = -1
@@ -335,8 +336,8 @@
         dxold = ABS(x2-x1)
         dx    = dxold
         
-        g   = polar_star_G(a,b,c,rts,u,v,p,q)
-        dg  = polar_star_dG(a,b,c,rts,u,v,p,q)
+        g   = colloid_polar_star_G(a,b,c,rts,u,v,p,q)
+        dg  = colloid_polar_star_dG(a,b,c,rts,u,v,p,q)
         
         DO iter = 1, iter_max
            
@@ -399,17 +400,17 @@
            
         ELSE
            
-           polar_star_G_root = root
+           colloid_polar_star_G_root = root
            
         END IF
         
         
         RETURN
         
-      END FUNCTION polar_star_G_root
-
+      END FUNCTION colloid_polar_star_G_root
       
-      SUBROUTINE polar_star_intersectP(a,b,c,phi,u,v,p,q,x,y,stat_info)
+      
+      SUBROUTINE colloid_polar_star_intersectP(a,b,c,phi,u,v,p,q,x,y,stat_info)
         !----------------------------------------------------
         ! Find the intersecting point of line A(u,v) and B(p,q)
         ! to the curve given in polar coordinate 
@@ -475,23 +476,23 @@
         ! check if A is inside and B is outside.
         !----------------------------------------------------
         
-        thetaA =  polar_angle(u,v)
-        rA = SQRT(u**2+v**2)
-        r  = polar_star_r(a,b,c,thetaA, phi)
+        thetaA = colloid_polar_angle(u,v)
+        rA     = SQRT(u**2+v**2)
+        r      = colloid_polar_star_r(a,b,c,thetaA, phi)
         
         IF ( rA > r ) THEN
-           PRINT *, "polar_star_intersectP: ", &
+           PRINT *, "colloid_polar_star_intersectP: ", &
                 "A should be inside !"
            stat_info = -1
            GOTO 9999
         END IF
         
-        thetaB =  polar_angle(p,q)
-        rB = SQRT(p**2+q**2)
-        r  = polar_star_r(a,b,c,thetaB, phi)
+        thetaB =  colloid_polar_angle(p,q)
+        rB     = SQRT(p**2+q**2)
+        r      = colloid_polar_star_r(a,b,c,thetaB, phi)
         
         IF ( rB < r ) THEN
-           PRINT *, "polar_star_intersectP: ", &
+           PRINT *, "colloid_polar_star_intersectP: ", &
                 "B should be outside !"
            stat_info = -1
            GOTO 9999
@@ -504,7 +505,7 @@
         IF ( ABS(u) <=mcf_machine_zero .AND. &
              ABS(v) <=mcf_machine_zero) THEN
            
-           r = polar_star_r(a,b,c,thetaB,0.0_MK)
+           r  = colloid_polar_star_r(a,b,c,thetaB,0.0_MK)
            x  = r*COS(thetaB)
            y  = r*SIN(thetaB)
            GOTO 9999
@@ -589,25 +590,25 @@
         !PRINT *, "nb, xb1,xb2: ", nb, xb1(1:nb), xb2(1:nb)
         
         IF ( nb /= 1 ) THEN
-           PRINT *, "polar_star_intersectP: nb != 1, wrong !"
+           PRINT *, "colloid_polar_star_intersectP: nb != 1, wrong !"
            PRINT *, nb, xb1(nb), xb2(nb)
            stat_info = -1
            GOTO 9999
         END IF
         
         theta = &
-             polar_star_G_root(a,b,c,tu,tv,tp,tq,xb1(1),xb2(1),&
+             colloid_polar_star_G_root(a,b,c,tu,tv,tp,tq,xb1(1),xb2(1),&
              mcf_machine_zero*(xb1(1)+xb2(1))/2.0_MK,&
              stat_info_sub)
         
         IF ( stat_info_sub /= 0 )  THEN
-           PRINT *, "polar_star_intersectP : ", &
+           PRINT *, "colloid_polar_star_intersectP : ", &
                 "No root"
            stat_info = -1
            GOTO 9999
         END IF
         
-        r = polar_star_r(a,b,c,theta,0.0_MK)
+        r = colloid_polar_star_r(a,b,c,theta,0.0_MK)
         !PRINT *, theta, r
         !PRINT *
         
@@ -635,10 +636,10 @@
         
         RETURN
         
-      END SUBROUTINE polar_star_intersectP
+      END SUBROUTINE colloid_polar_star_intersectP
       
       
-      REAL(MK) FUNCTION polar_star_F(a,b,c,theta,u,v)
+      REAL(MK) FUNCTION colloid_polar_star_F(a,b,c,theta,u,v)
         !----------------------------------------------------
         ! Function F's value.
         !
@@ -671,17 +672,17 @@
         ! since polar coordinate is assumed to be rotated phi
         ! counter-clockwise. 
         !----------------------------------------------------
-        r  = polar_star_r(a,b,c,theta,0.0_MK)
-        dr = polar_star_dr(b,c,theta,0.0_MK)
+        r  = colloid_polar_star_r(a,b,c,theta,0.0_MK)
+        dr = colloid_polar_star_dr(b,c,theta,0.0_MK)
         
-        polar_star_F = r*dr + &
+        colloid_polar_star_F = r*dr + &
              r  * ( u*SIN(theta) - v*COS(theta)) - &
              dr * ( v*SIN(theta) + u*COS(theta)) 
         
-      END FUNCTION polar_star_F
+      END FUNCTION colloid_polar_star_F
       
       
-      REAL(MK) FUNCTION polar_star_dF(a,b,c,theta,u,v)
+      REAL(MK) FUNCTION colloid_polar_star_dF(a,b,c,theta,u,v)
         !----------------------------------------------------
         ! Above mentioned function F's derivative value.
         !----------------------------------------------------
@@ -698,15 +699,15 @@
         REAL(MK)                        :: ddr
         
         
-        r  = polar_star_r(a,b,c,theta,0.0_MK)
-        dr = polar_star_dr(b,c,theta,0.0_MK)
-        ddr= polar_star_ddr(b,c,theta,0.0_MK)
+        r  = colloid_polar_star_r(a,b,c,theta,0.0_MK)
+        dr = colloid_polar_star_dr(b,c,theta,0.0_MK)
+        ddr= colloid_polar_star_ddr(b,c,theta,0.0_MK)
         
-        polar_star_dF = r*ddr + dr**2 + &
+        colloid_polar_star_dF = r*ddr + dr**2 + &
              2.0_MK*dr*( u*SIN(theta) - v*COS(theta)) + &
              ( r-ddr) *( u*COS(theta) + v*Sin(theta))
         
-      END FUNCTION polar_star_dF
+      END FUNCTION colloid_polar_star_dF
 
       
       SUBROUTINE zero_bracket_F(a,b,c,u,v, &
@@ -788,12 +789,12 @@
         
         dx = (x2-x1) / nn
         x  = x1
-        fp = polar_star_F(a,b,c,x,u,v)
+        fp = colloid_polar_star_F(a,b,c,x,u,v)
         
         DO i = 1, nn
 
-           x = x + dx
-           fc = polar_star_F(a,b,c,x,u,v)
+           x  = x + dx
+           fc = colloid_polar_star_F(a,b,c,x,u,v)
            
            IF ( fc * fp <= mcf_machine_zero )  THEN
               
@@ -841,7 +842,7 @@
       END SUBROUTINE zero_bracket_F
       
       
-      REAL(MK) FUNCTION polar_star_F_root(a,b,c,u,v,&
+      REAL(MK) FUNCTION colloid_polar_star_F_root(a,b,c,u,v,&
            xb1,xb2,xacc,stat_info)
         
         !----------------------------------------------------
@@ -889,11 +890,11 @@
         x1 = xb1
         x2 = xb2
         
-        f1 = polar_star_F(a,b,c,x1,u,v)
-        fh = polar_star_F(a,b,c,x2,u,v)
+        f1 = colloid_polar_star_F(a,b,c,x1,u,v)
+        fh = colloid_polar_star_F(a,b,c,x2,u,v)
         
         IF ( f1*fh > ABS(mcf_machine_zero) ) THEN
-           PRINT *, "polar_star_F_root : ", &
+           PRINT *, "colloid_polar_star_F_root : ", &
                 "Root must be bracketed"
            PRINT *, "u, v : ", u,v
            stat_info = -1
@@ -922,8 +923,8 @@
         dxold = ABS(x2-x1)
         dx    = dxold
         
-        f   = polar_star_F(a,b,c,rts,u,v)
-        df  = polar_star_dF(a,b,c,rts,u,v)
+        f   = colloid_polar_star_F(a,b,c,rts,u,v)
+        df  = colloid_polar_star_dF(a,b,c,rts,u,v)
         
         DO iter = 1, iter_max
            
@@ -981,21 +982,21 @@
         ! PRINT *, iter
         IF ( iter >= iter_max ) THEN
            
-           polar_star_F_root = -1.0_MK
+           colloid_polar_star_F_root = -1.0_MK
            
         ELSE
            
-           polar_star_F_root = root
+           colloid_polar_star_F_root = root
            
         END IF
         
         
         RETURN
         
-      END FUNCTION polar_star_F_root
-
+      END FUNCTION colloid_polar_star_F_root
       
-      SUBROUTINE polar_star_shortestD(a,b,c,phi,p,q,x,y,d,stat_info)
+      
+      SUBROUTINE colloid_polar_star_shortestD(a,b,c,phi,p,q,x,y,d,stat_info)
         !----------------------------------------------------
         ! Find the shortest distance between a point (p,q)
         ! to the curve given in polar coordinate 
@@ -1070,7 +1071,7 @@
         ! Rotate axis by phi radian couter-clockwise.
         !----------------------------------------------------
         
-        theta =  polar_angle(p,q)
+        theta = colloid_polar_angle(p,q)
         r = SQRT(p**2+q**2)        
         theta = theta - phi
         
@@ -1128,7 +1129,7 @@
         DO i = 1, nb
            
            theta1 = &
-                polar_star_F_root(a,b,c,u,v,xb1(i),xb2(i),&
+                colloid_polar_star_F_root(a,b,c,u,v,xb1(i),xb2(i),&
                 mcf_machine_zero*(xb1(i)+xb2(i))/2.0_MK,&
                 stat_info_sub)
            
@@ -1139,7 +1140,7 @@
               GOTO 9999
            END IF
            
-           r1 = polar_star_r(a,b,c,theta1,0.0_MK)
+           r1 = colloid_polar_star_r(a,b,c,theta1,0.0_MK)
            x1 = r1*COS(theta1)
            y1 = r1*SIN(theta1)
            d1 = SQRT((u-x1)**2+(v-y1)**2)
@@ -1186,10 +1187,10 @@
         
         RETURN
         
-      END SUBROUTINE polar_star_shortestD
+      END SUBROUTINE colloid_polar_star_shortestD
       
       
-      LOGICAL FUNCTION polar_star_convex(c,phi,p,q,stat_info)
+      LOGICAL FUNCTION colloid_polar_star_convex(c,phi,p,q,stat_info)
         !----------------------------------------------------
         ! We first rotate axis by phi radian counter-clockwise,
         ! then always map point(p,q) by symmetry axis to
@@ -1223,7 +1224,7 @@
         ! Rotate axis by phi radian couter-clockwise.
         !----------------------------------------------------
         
-        theta = polar_angle(p,q)
+        theta = colloid_polar_angle(p,q)
         r = SQRT(p**2+q**2)
         theta = theta - phi
         
@@ -1257,14 +1258,14 @@
         
         IF ( theta <= mcf_pi / c / 2.0_MK ) THEN
            
-           polar_star_convex = .TRUE.
+           colloid_polar_star_convex = .TRUE.
            
         ELSE
            
-           polar_star_convex = .FALSE.
+           colloid_polar_star_convex = .FALSE.
            
         END IF
         
         RETURN
         
-      END FUNCTION polar_star_convex
+      END FUNCTION colloid_polar_star_convex

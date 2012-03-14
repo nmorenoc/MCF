@@ -73,7 +73,15 @@
         
         CALL colloid_in_nearest_image(this, x(1:dim), sid, &
              xcoll(1:dim),rx(1:dim),vcoll(1:dim),stat_info_sub)
-
+        
+        IF ( stat_info_sub /=0 ) THEN
+           
+           PRINT *, "colloid_in_relative_position: ", &
+                "colloid_in_nearst_image failed"
+           stat_info = -1
+           GOTO 9999
+           
+        END IF
         
 9999    CONTINUE
         

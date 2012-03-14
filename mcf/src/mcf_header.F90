@@ -169,7 +169,9 @@
         !----------------------------------------------------
 
         INTEGER, PARAMETER      :: mcf_colloid_shape_cylinder  = 1
+        INTEGER, PARAMETER      :: mcf_colloid_shape_disk      = 2
         INTEGER, PARAMETER      :: mcf_colloid_shape_sphere    = 2
+        INTEGER, PARAMETER      :: mcf_colloid_shape_ellipse   = 3
         INTEGER, PARAMETER      :: mcf_colloid_shape_ellipsoid = 3
         INTEGER, PARAMETER      :: mcf_colloid_shape_dicolloid = 4
         INTEGER, PARAMETER      :: mcf_colloid_shape_star      = 5

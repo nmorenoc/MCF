@@ -1,11 +1,11 @@
-      SUBROUTINE colloid_noslip_Morris_ellipse(this, &
+      SUBROUTINE colloid_noslip_Morris_ellipsoid(this, &
            xf,xc,vf,vc,sid_c,stat_info)
         !----------------------------------------------------
-        ! Subroutine  : colloid_noslip_Morris_ellipse
+        ! Subroutine  : colloid_noslip_Morris_ellipsoid
         !----------------------------------------------------
-        ! Purpose     : For 2D ellipse.
+        ! Purpose     : For 3D ellipse.
         !
-        ! Revision    : V0.1 16.03.2009, orignal version.
+        ! Revision    : V0.1 14.03.2012, orignal version.
         !
         !----------------------------------------------------
         ! Author      : Xin Bian
@@ -276,4 +276,4 @@
         
         RETURN
         
-      END SUBROUTINE colloid_noslip_Morris_ellipse
+      END SUBROUTINE colloid_noslip_Morris_ellipsoid

@@ -1,95 +1,46 @@
-!----------------------------------------------------
-! Reference :
-! <<Distance from a Point to an Ellipse in 2D>>
-! David Eberly 2008.
-!----------------------------------------------------
-
-      REAL(MK) FUNCTION colloid_cartesian_ellipse_F(a,b,u,v,t)
+      SUBROUTINE colloid_cartesian_ellipse_shortestD(&
+           a,b,phi,p,q,x,y,d,stat_info)
         !----------------------------------------------------
-        ! F(t) = (a*u/(t+a**2))**2 + (b*v/(t+b**2))**2 - 1
-        !----------------------------------------------------
-
-        REAL(MK), INTENT(IN)            :: a
-        REAL(MK), INTENT(IN)            :: b
-        REAL(MK), INTENT(IN)            :: u
-        REAL(MK), INTENT(IN)            :: v
-        REAL(MK), INTENT(IN)            :: t
-        
-        colloid_cartesian_ellipse_F = &
-             (a*u/(t+a**2))**2 + &
-             (b*v/(t+b**2))**2 - 1
-        
-      END FUNCTION colloid_cartesian_ellipse_F
-      
-      
-      REAL(MK) FUNCTION colloid_cartesian_ellipse_F1(a,b,u,v,t)
-        !----------------------------------------------------
-        ! First derivative of F(t)
-        ! F1 = -2*a**2*u**2/(t+a**2)**3-2*b**2*v**2/(t+b**2)**3
-        !----------------------------------------------------
-
-        REAL(MK), INTENT(IN)            :: a
-        REAL(MK), INTENT(IN)            :: b
-        REAL(MK), INTENT(IN)            :: u
-        REAL(MK), INTENT(IN)            :: v
-        REAL(MK), INTENT(IN)            :: t
-        
-        
-        colloid_cartesian_ellipse_F1 = &
-             -2.0_MK*a**2*u**2 / (t+a**2)**3 - &
-             2.0_MK*b**2*v**2 / (t+b**2)**3
-        
-        
-      END FUNCTION colloid_cartesian_ellipse_F1
-      
-      
-      REAL(MK) FUNCTION colloid_cartesian_ellipse_F2(a,b,u,v,t)
-        !----------------------------------------------------
-        ! Second derivative of F(t)
-        ! F2 = 6*a**2*u**2/(t+a**2)**4+6*b**2*v**2/(t+b**2)**4
-        !----------------------------------------------------
-
-        REAL(MK), INTENT(IN)            :: a
-        REAL(MK), INTENT(IN)            :: b
-        REAL(MK), INTENT(IN)            :: u
-        REAL(MK), INTENT(IN)            :: v
-        REAL(MK), INTENT(IN)            :: t
-        
-        
-        colloid_cartesian_ellipse_F2 = &
-             6.0_MK*a**2*u**2 / (t+a**2)**4 + &
-             6.0_MK*b**2*v**2 / (t+b**2)**4 
-        
-        
-      END FUNCTION colloid_cartesian_ellipse_F2
-      
-      
-      SUBROUTINE colloid_cartesian_ellipse_shortestD(a,b,phi,p,q,x,y,d)
-        !----------------------------------------------------
-        ! Find the short distance from point A(p,q) to
-        ! the surface of a ellipse.
+        ! Find the shortest distance from point A(p,q) to
+        ! the surface of an ellipse.
         !
         ! Input :
-        ! a : semimajor axis along x coordinate.
-        ! b : semiminor axis along y coordinate.
-        ! center of ellipse is at origin (0,0).
+        ! center of ellipse is assumed to be at origin (0,0).
+        !
+        ! a   : semimajor axis along x coordinate.
+        ! b   : semiminor axis along y coordinate.
+        !       a>=b must be satisfied.
         ! phi : ellipse rotate phi radian to x direction.
-        !       couter-clockwise is positive.
-        ! A(p,q) is the point which can be inside or outside
-        ! of the ellipse.
-        
+        !       counter-clockwise is positive.
+        ! A(p,q) is a point which can be either inside or 
+        !        outside of the ellipse.
+        !
         ! Output : 
-        !(x,y): coordniate on ellipse which has shortest
-        !        distance to A(u,v)
-        ! d   : shortest distance from A to ellipse.
+        !(x,y): coordinate for a point B on ellipse which 
+        !       has shortest distance to A(u,v)
+        ! d   : shortest distance from A to B.
         !
         !
-        ! Remark : rotate point A(p,q) phi radian clockwise,
-        !          then find shortes distance from A(u,v) to
-        !          ellipse x**2/a**2 + y**2/b**2 = 1 at point
-        !          B(x',v').
-        !          rotate pointe B(x',v') counter-clockwise
+        ! Remark : 1)rotate point A(p,q) phi radian clockwise,
+        !          
+        !          2)use the symmetry of ellipse, assume
+        !          flip A(x,v) to the first quadrant.
+        !
+        !          3)find shortest distance from A(u,v) to
+        !          the ellipse x**2/a**2 + y**2/b**2 = 1 at 
+        !          point B(x',v') on the surface.
+        !
+        !          4)flip B(x',v') back using symmetry.
+        !
+        !          5)rotate point B(x',v') counter-clockwise
         !          phi radian to get B(x,v).
+        !
+        !----------------------------------------------------
+        ! Reference :
+        ! <<Distance from a Point to an Ellipse in 2D>>
+        ! David Eberly,
+        ! Geometric Tools, LLC, 2008.
+        ! http://www.geometrictools.com/
         !----------------------------------------------------
         
         REAL(MK), INTENT(IN)            :: a
@@ -100,6 +51,7 @@
         REAL(MK), INTENT(OUT)           :: x
         REAL(MK), INTENT(OUT)           :: y
         REAL(MK), INTENT(OUT)           :: d
+        INTEGER, INTENT(OUT)            :: stat_info
         
         !----------------------------------------------------
         ! Local variables start here.
@@ -115,14 +67,14 @@
 
         REAL(MK)                        :: t0
         REAL(MK)                        :: t1
-        REAL(MK)                        :: f
-        REAL(MK)                        :: f1
+        REAL(MK)                        :: f, df
         INTEGER                         :: iter
         
         !----------------------------------------------------
         ! Initialization of variables.
         !----------------------------------------------------
         
+        stat_info = 0
         flip_x = .FALSE.
         flip_y = .FALSE.
         
@@ -137,20 +89,20 @@
         v = len*SIN(theta-phi)
         
         !----------------------------------------------------
-        ! Flip the point A(u,v) to non-negative u,v by symmetry,
+        ! Flip point A(u,v) to non-negative u,v by symmetry,
         ! i.e.,(0,0),(u,0),(0,v) or (u,v)(first quadrant).
         !----------------------------------------------------
         
         IF ( u < 0.0_MK ) THEN
            
-           u = -u
+           u      = -u
            flip_x = .TRUE.
            
         END IF
         
         IF ( v < 0.0_MK ) THEN
            
-           v = -v
+           v      = -v
            flip_y = .TRUE.
            
         END IF
@@ -193,7 +145,8 @@
         ELSE
            
            !-------------------------------------------------
-           ! point A(u,v) is in first quadrant.
+           ! point A(u,v) is in first quadrant
+           ! (non-zero cooridnate).
            !-------------------------------------------------
            
            !-------------------------------------------------
@@ -204,16 +157,16 @@
            !-------------------------------------------------
            
            t0 = b*v-b**2
-           f = colloid_cartesian_ellipse_F(a,b,u,v,t0)
+           f  = colloid_cartesian_ellipse_F(a,b,u,v,t0)
            
            iter = 0
            
            DO WHILE( ABS(f) > mcf_machine_zero .AND. &
                 iter < 20 )
               
-              f1 = colloid_cartesian_ellipse_F1(a,b,u,v,t0)
+              df = colloid_cartesian_ellipse_dF(a,b,u,v,t0)
               
-              t1 = t0 - f/f1
+              t1 = t0 - f/df
               
               f = colloid_cartesian_ellipse_F(a,b,u,v,t1)
               
@@ -253,3 +206,64 @@
         RETURN
         
       END SUBROUTINE  colloid_cartesian_ellipse_shortestD
+
+
+      REAL(MK) FUNCTION colloid_cartesian_ellipse_F(a,b,u,v,t)
+        !----------------------------------------------------
+        ! F(t) = (a*u/(t+a**2))**2 + (b*v/(t+b**2))**2 - 1
+        !----------------------------------------------------
+
+        REAL(MK), INTENT(IN)            :: a
+        REAL(MK), INTENT(IN)            :: b
+        REAL(MK), INTENT(IN)            :: u
+        REAL(MK), INTENT(IN)            :: v
+        REAL(MK), INTENT(IN)            :: t
+        
+        colloid_cartesian_ellipse_F = &
+             (a*u/(t+a**2))**2 + &
+             (b*v/(t+b**2))**2 - 1
+        
+      END FUNCTION colloid_cartesian_ellipse_F
+      
+      
+      REAL(MK) FUNCTION colloid_cartesian_ellipse_dF(a,b,u,v,t)
+        !----------------------------------------------------
+        ! First derivative of F(t)
+        ! F1 = -2*a**2*u**2/(t+a**2)**3-2*b**2*v**2/(t+b**2)**3
+        !----------------------------------------------------
+
+        REAL(MK), INTENT(IN)            :: a
+        REAL(MK), INTENT(IN)            :: b
+        REAL(MK), INTENT(IN)            :: u
+        REAL(MK), INTENT(IN)            :: v
+        REAL(MK), INTENT(IN)            :: t
+        
+        
+        colloid_cartesian_ellipse_dF = &
+             -2.0_MK*a**2*u**2 / (t+a**2)**3 - &
+             2.0_MK*b**2*v**2 / (t+b**2)**3
+        
+        
+      END FUNCTION colloid_cartesian_ellipse_dF
+      
+      
+      REAL(MK) FUNCTION colloid_cartesian_ellipse_ddF(a,b,u,v,t)
+        !----------------------------------------------------
+        ! Second derivative of F(t)
+        ! F2 = 6*a**2*u**2/(t+a**2)**4+6*b**2*v**2/(t+b**2)**4
+        !----------------------------------------------------
+
+        REAL(MK), INTENT(IN)            :: a
+        REAL(MK), INTENT(IN)            :: b
+        REAL(MK), INTENT(IN)            :: u
+        REAL(MK), INTENT(IN)            :: v
+        REAL(MK), INTENT(IN)            :: t
+        
+        
+        colloid_cartesian_ellipse_ddF = &
+             6.0_MK*a**2*u**2 / (t+a**2)**4 + &
+             6.0_MK*b**2*v**2 / (t+b**2)**4 
+        
+        
+      END FUNCTION colloid_cartesian_ellipse_ddF
+      

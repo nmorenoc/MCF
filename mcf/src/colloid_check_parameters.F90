@@ -201,14 +201,68 @@
            SELECT CASE( this%shape(j) ) 
               
               !----------------------------------------------
-              ! 2D disk / 3D sphere.
+              ! cylinder, disk/sphere
               !----------------------------------------------
               
-           CASE (1)
+           CASE (mcf_colloid_shape_cylinder)
               
-              !----------------------------------------------
-              ! 2D ellipse / 3D ellipsolid
-              !----------------------------------------------
+              DO i = 1, num_dim
+                 
+                 IF ( this%radius(i,j) < mcf_machine_zero ) THEN
+                    PRINT *, "colloid_check_parameters: ", &
+                         "radius must be bigger than 0 !"
+                    stat_info = -1
+                    GOTO 9999
+                 END IF
+                 
+              END DO
+
+              IF ( num_dim == 3 .AND. &
+                   this%radius(1,j) < this%radius(2,j) ) THEN
+                 
+                 PRINT *, "colloid_check_parameters: ", &
+                      "bigger radius must be in front !"
+                 stat_info = -1
+                 GOTO 9999
+                 
+              END IF
+              
+           CASE (mcf_colloid_shape_sphere)
+              
+              IF ( this%radius(1,j) < mcf_machine_zero ) THEN
+                 PRINT *, "colloid_check_parameters: ", &
+                      "radius must be bigger than 0 !"
+                 stat_info = -1
+                 GOTO 9999
+              END IF
+              
+              
+           CASE (mcf_colloid_shape_ellipsoid)
+              
+              DO i = 1, num_dim
+                 
+                 IF ( this%radius(i,j) < mcf_machine_zero ) THEN
+                    PRINT *, "colloid_check_parameters: ", &
+                         "radius must be bigger than 0 !"
+                    stat_info = -1
+                    GOTO 9999
+                 END IF
+                 
+              END DO
+
+              DO i = 1, num_dim - 1
+                 
+                 IF ( this%radius(i,j) < this%radius(i+1,j) ) THEN
+                    PRINT *, "colloid_check_parameters: ", &
+                         "bigger radius must be in front !"
+                    stat_info = -1
+                    GOTO 9999
+                 END IF
+                 
+              END DO
+
+           CASE (mcf_colloid_shape_dicolloid)
+              
               DO i = 1, num_dim
                  IF ( this%radius(i,j) < mcf_machine_zero ) THEN
                     PRINT *, "colloid_check_parameters: ", &
@@ -218,13 +272,27 @@
                  END IF
               END DO
               
-           CASE (2)
+              DO i = 1, num_dim - 1
+                 
+                 IF ( this%radius(i,j) < this%radius(i+1,j) ) THEN
+                    PRINT *, "colloid_check_parameters: ", &
+                         "bigger radius must be in front !"
+                    stat_info = -1
+                    GOTO 9999
+                 END IF
+                 
+              END DO
               
-              !----------------------------------------------
-              ! 2D star
-              !----------------------------------------------
+           CASE (mcf_colloid_shape_star)
               
-           CASE (3)
+              DO i = 1, num_dim
+                 IF ( this%radius(i,j) < mcf_machine_zero ) THEN
+                    PRINT *, "colloid_check_parameters: ", &
+                         "radius must be bigger than 0 !"
+                    stat_info = -1
+                    GOTO 9999
+                 END IF
+              END DO
               
               IF ( this%radius(2,j) < 0.0_MK ) THEN
                  PRINT *, "colloid_check_parameters : Radius (" , &
@@ -242,6 +310,13 @@
                  lcheck = .FALSE.
                  GOTO 9999
               END IF
+              
+           CASE DEFAULT
+              
+              PRINT *, "colloid_check_parameters: ", &
+                   "No shape available !"
+              stat_info = -1
+              GOTO 9999
               
            END SELECT ! shape(j)
            

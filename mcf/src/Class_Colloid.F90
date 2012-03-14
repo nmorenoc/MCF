@@ -304,6 +304,7 @@
 #include "colloid_polar_star.F90"
 #include "colloid_cartesian_ellipse.F90"
 #include "colloid_spherical_ellipsoid.F90"
+#include "colloid_cartesian_ellipsoid.F90"
 #include "colloid_initialize_image.F90"
 #include "colloid_compute_image.F90"
 #include "colloid_nearest_image.F90"

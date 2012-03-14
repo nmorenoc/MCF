@@ -1347,6 +1347,7 @@
            ELSE
 
               this%acc_vector(1:3,i) = d_vector(1:3,i) / len
+              this%acc_vector(4,i)   = d_vector(4,i)
               
            END IF
            

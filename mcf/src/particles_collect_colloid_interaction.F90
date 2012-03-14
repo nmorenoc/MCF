@@ -123,6 +123,11 @@
            CALL colloid_in_relative_position(colloids,&
                 this%x(1:dim,ip),sid,rx(1:dim),stat_info_sub)
            
+           IF ( stat_info_sub /= 0 ) THEN
+              PRINT *, __FILE__, ":", __LINE__
+              stat_info = -1
+              GOTO 9999
+           END IF
            !-------------------------------------------------
            ! Sum up torque of colloidal boundary particles
            !-------------------------------------------------

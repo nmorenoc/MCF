@@ -1,17 +1,18 @@
 !------------------------------------------------------------
-! Ellipsoid r in spherical coordinate system.
+! Function of ellipsoid, such as r,
+! in spherical coordinate system,
 !------------------------------------------------------------
 
-      REAL(MK) FUNCTION spherical_ellipsoid_r(a,b,c,theta,phi)
+      REAL(MK) FUNCTION colloid_spherical_ellipsoid_r(a,b,c,theta,phi)
         REAL(MK), INTENT(IN)            :: a
         REAL(MK), INTENT(IN)            :: b
         REAL(MK), INTENT(IN)            :: c
         REAL(MK), INTENT(IN)            :: theta
         REAL(MK), INTENT(IN)            :: phi
         
-        spherical_ellipsoid_r = &
+        colloid_spherical_ellipsoid_r = &
              SQRT( 1.0_MK / ( COS(theta)**2*SIN(phi)**2/a**2 + &
              SIN(theta)**2*SIN(phi)**2/b**2 + &
              COS(phi)**2/c**2 ) )
         
-      END FUNCTION spherical_ellipsoid_r
+      END FUNCTION colloid_spherical_ellipsoid_r

@@ -86,7 +86,13 @@
         
         CALL colloid_in_nearest_image(this,xc(1:dim),sid_c, &
              xcoll(1:dim),r_xc(1:dim),vcoll(1:dim),stat_info_sub)
-      
+
+        IF ( stat_info_sub /= 0 ) THEN
+           PRINT *, "colloid_noslip_Frozen: ",&
+                "colloid in_nearst_image failed !"
+           stat_info = -1
+           GOTO 9999
+        END IF
         !----------------------------------------------------
         ! Assign the colloid boundary particle with
         ! the speed of the colloid center.

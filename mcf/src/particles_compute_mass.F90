@@ -156,15 +156,26 @@
                  
                  SELECT CASE(coll_shape(i))
                     
-                 CASE( mcf_colloid_shape_disk)
+                 CASE( mcf_colloid_shape_cylinder)
                     
                     !----------------------------------------
-                    ! 2D Disk area.
+                    ! 2D cylinder area.
                     !----------------------------------------
                     
                     coll_vol = mcf_pi * coll_radius(1,i)**2.0_MK
                     coll_m(i) = init_rho * coll_vol
                     coll_mmi(3,i) = 0.5_MK*coll_m(i)*coll_radius(1,i)**2
+                    
+                 CASE( mcf_colloid_shape_disk)
+                    
+                    !----------------------------------------
+                    ! 2D disk area.
+                    !----------------------------------------
+                    
+                    coll_vol = mcf_pi * coll_radius(1,i)**2.0_MK
+                    coll_m(i) = init_rho * coll_vol
+                    coll_mmi(3,i) = 0.5_MK*coll_m(i)*coll_radius(1,i)**2
+             
                     
                  CASE (mcf_colloid_shape_ellipse)
                     
@@ -176,6 +187,13 @@
                     coll_m(i)= init_rho*coll_vol
                     coll_mmi(3,i) = 0.25_MK*coll_m(i)* &
                          ( coll_radius(1,i)**2+coll_radius(2,i)**2 )
+                    
+                 CASE (mcf_colloid_shape_dicolloid)
+                    
+                    PRINT *, "particles_compute_mass: ", &
+                         "Dicolloid in 2D not implemented."
+                    stat_info = -1
+                    GOTO 9999
                     
                  CASE (mcf_colloid_shape_star)
                     
@@ -195,7 +213,8 @@
                     
                     DO WHILE ( theta <= 2.0_MK*mcf_pi )
                        
-                       r = polar_star_r(coll_radius(1,i),coll_radius(2,i), &
+                       r = colloid_polar_star_r(&
+                            coll_radius(1,i),coll_radius(2,i), &
                             REAL(coll_freq(i),MK),theta,0.0_MK)
                        
                        coll_vol = coll_vol + r**2 * d_theta / 2.0_MK
@@ -206,17 +225,10 @@
                     END DO
                     
                     coll_m(i)   = coll_vol * init_rho
-                    coll_mmi(3,i) = ami * init_rho
-                    
-                 CASE (mcf_colloid_shape_dicolloid)
-                    
-                    PRINT *, "particles_compute_mass: ", &
-                         "Dicolloid in 2D not implemented."
-                    stat_info = -1
-                    GOTO 9999
+                    coll_mmi(3,i) = ami * init_rho              
                     
                  CASE  DEFAULT
-
+                    
                     PRINT *, "particles_compute_mass: ", &
                          "No such shape in 2D !"
                     stat_info = -1
@@ -241,6 +253,18 @@
                  
                  SELECT CASE(coll_shape(i))
                     
+                    !----------------------------------------
+                    ! momentum of inertia is not checked!
+                    !----------------------------------------
+                    
+                 CASE(mcf_colloid_shape_cylinder)
+                     
+                    coll_vol = mcf_pi * &
+                         coll_radius(1,i)**2.0_MK * &
+                         coll_radius(2,i)
+                    coll_m(i) = init_rho * coll_vol
+                    coll_mmi(3,i) = 0.5_MK*coll_m(i)*coll_radius(1,i)**2
+  
                  CASE(mcf_colloid_shape_sphere)
                     
                     !----------------------------------------
