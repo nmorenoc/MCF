@@ -51,12 +51,12 @@ read_conformation_fmt   = FORMATTED
 #---------------------------------------------------------------------
 # <output pre-run(relax) particles results>
 #          
-# output_relax_particles_file: prefix name of ouput files. 
+# output_particles_relax_file: prefix name of ouput files. 
 #	   	       <timestep>.out will be appended.
-# output_relax_particles_fmt : format of output file. One of:
+# output_particles_relax_fmt : format of output file. One of:
 #                             FORMATTED    (i.e. ASCII text)
 #                             UNFORMATTED  (i.e. binary)
-# output_relax_particles_freq_step: frequency for writing output files.
+# output_particles_relax_freq_step: frequency for writing output files.
 #	   	        (in simulation time step)
 #---------------------------------------------------------------------
 

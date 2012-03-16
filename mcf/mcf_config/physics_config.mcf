@@ -100,7 +100,7 @@ time_end     = 1000.0
 #
 #     rho    	: density of solvent(initial input)
 #     eta	: absolute/dynamic(shear) viscosity
-#     eta_coef  : calibriting parameter used in 
+#     eta_coef  : calibrating parameter used in 
 #                 Hu&Adams Phys. Fluid. 2006 formulation(ksai).
 #     ksai      : bulk viscosity
 #     kt        : Boltzmann Constant * Temperature for SDPD.
@@ -128,7 +128,7 @@ gamma    = 7.0
 #       < Relax run / pre-run physics parameters for fluid >
 #       
 #     Note that relax run is taking vantage of SDPD's feature
-#     by swithing a pesudo-temperature(kt_relax) on.
+#     by swithing a pseudo-temperature(kt_relax) on.
 #     The difference from real simulation is that dt_relax and
 #     c_relax may be different values.
 #
@@ -156,7 +156,7 @@ c_relax        = 1.0
 #   < Non-Newtonian viscoelastic (Oldroyd-B) parameters >
 #
 #   tau            : relaxation time of polymer molecules.
-#   n_p            : number of dumbells per unit volume.
+#   n_p            : number of dumbbells per unit volume.
 #   kt_p           : Boltzmann Constant * Temperature for dumbell.
 #   eigen_dynamics : logical value indicating if we are
 #                    using eigen-dynamics way.
@@ -319,44 +319,74 @@ flow_adjust_freq = 10
 #
 #
 #
-#  Idividual characteristics:
+#  Individual characteristics
 #
-#  coll_shape     : 1 disk(2D)/sphere(3D); 
-#  		    2 ellipse(2D)/ellpsoid(3D);
-#		    3 star a+b*cos(c*theta)(2D)/rotate 2D with x-axis
-#                   4 dicolloid, consist of two overlapping disks(2D)/spheres(2D)
-#  coll_radius    : initial radius of the colloid, 2D/3D.
-#                   shape 1: 1st scalar is radius.
-#                   shape 2: radius for different directions.
-#                   shape 3(2D): 1st scalar is radius, 
-#                                2nd is magnitude of shape fluctuation.
-#	            shape 4: radius(1) for each colloid
-#                            radius(2): distance of each colloid 
-#                                       from dicolloid center
-#  coll_freq      : useful for arbitray shape 3, determin the roughness 
-#                   frequency(integer).
+#  coll_shape     : 1 
+#                     2D: cylinder; 
+#                     3D: cylinder, 
+#                         by default axis is along z direction periodically.
+#                   2
+#                     2D: disk (the same as 2D cylinder)
+#                     3D: sphere 
+#  		    3
+#                     2D: ellipse
+#                     3D: ellipsoid (spheroid: prolate and oblate)
+#		    4 
+#                     2D: dicolloid, 
+#                         consist of two overlapping disks with same size.
+#                     3D: dicolloid, 
+#                         consist of two overlapping spheres with same size.
+#                   5
+#                     2D: star a+b*cos(c*theta)(2D)/rotate 2D with x-axis
+#
+#  coll_radius    : initial shape parameters of the colloid,
+#                   it means differently for different shape.
+#                   1 
+#                      1st is radius.
+#                      2nd is its length in 3D.
+#                   2 
+#                      1st is radius. 
+#                   3
+#                      1st is radius in major direction, semi-major axis; 
+#                      3rd is radius in minor direction, semi-minor axis;
+#                      2nd is either equal to 1st or 2nd.
+#	            4  
+#                      1st is radius in major direction, semi-major axis;
+#                      2nd is radius in minor direction, semi-minor axis.
+#                   5
+#                      1st is average radius; 
+#                      2nd is magnitude of shape fluctuation.
+#                      
+#  coll_freq      : useful for start shape 5, determin the roughness of star or
+#                   frequency of shape fluctuation (integer number).
+#
 #  coll_m         : mass of a colloid, 
 #                   calculated according to its volume and density.
+#
 #  coll_mmi       : mass momentum inertia of a colloid, 
 #                   calculated according to its distribution of mass.
 #
 #  coll_x         : initial position of its center.
+#
 #  coll_v         : initial translating velocity of its center.
 #
-#  ***coll_rotation_matrix : initial rotation matrix 
+#  ************************(obsolete)
+#  coll_rotation_matrix : initial rotation matrix 
 #                    which indicate its orientation.
 #                    A11,A21(,A31); A12,A22(,A32); A13,A23(,A33).
 #  It is not input anymore, since it is difficult to keep each element
 #  of matrix consistent, down to machine precision.
 #  Instead we need a rotation vector, which can be converted to rotation matrix.
-#  ****		     
+#  ************************
+#
 #  coll_rotation_vector I: 
 #                 : I1, I2, I3 (always 3D vector), phi (4th dimension)
 #                   I is recommended to be unit, otherwise will be normalized.
 #                   theta is the angle rotated around I before simulation,
 #                   i.e., initial orientation.
 #
-#  ***coll_theta     : rotated angle(usefull for 2D object only), 
+#  ************************(obsolete)
+#  coll_theta     : rotated angle(usefull for 2D object only), 
 #                   always 3D vector
 #
 #  Note : for 2D object, 
@@ -365,6 +395,7 @@ flow_adjust_freq = 10
 #         for 3D object,
 #         theta is useless, therefore, rotation matrix should be given,
 #         if not given, its principla axes are along with OXYZ.
+#  ************************
 #
 #  coll_omega     : initial rotating velocity, always 3D vector.
 #----------------------------------------------------------------------
@@ -372,40 +403,39 @@ flow_adjust_freq = 10
 num_colloid          = 1
 coll_rho             = 1.0e3
 coll_rho_type        = 0
-coll_translate       = FALSE
-coll_rotate          = FALSE
+coll_translate       = F
+coll_rotate          = F
 coll_place           = 1
 coll_noslip          = 2
 coll_body_force_type = 1
 coll_body_force      = 0.0,0.0
 
 
-cc_lub_cut_off = 0.0
-cc_lub_cut_on  = 0.0
+cc_lub_cut_off   = 0.0
+cc_lub_cut_on    = 0.0
 
 cc_repul_cut_off = 0.0
 cc_repul_cut_on  = 0.0
 cc_repul_F0      = 0.0
 
-cw_lub_cut_off = 0.0
-cw_lub_cut_on  = 0.0
+cw_lub_cut_off   = 0.0
+cw_lub_cut_on    = 0.0
 
 cw_repul_cut_off = 0.0
 cw_repul_cut_on  = 0.0
 cw_repul_F0      = 0.0
 
 
-coll_shape      = 1
-coll_radius     = 0.02,0.0
-coll_freq       = 0
-coll_m          = 0.0
-coll_mmi        = 0.0
-coll_x          = 0.05,0.05
-coll_v          = 0.0,0.0
-coll_rot_vector   = 1.0,0.0,0.0,1.57
-#coll_rot_matrix = 1.0,0.0,0.0,1.0
-coll_theta      = 0.0,0.0,0.0
-coll_omega      = 0.0,0.0,0.0
+coll_shape       = 1
+coll_radius      = 0.02,0.0
+coll_freq        = 0
+coll_m           = 0.0
+coll_mmi         = 0.0
+coll_x           = 0.05,0.05
+coll_v           = 0.0,0.0
+coll_rot_vector  = 1.0,0.0,0.0,1.57
+oll_theta        = 0.0,0.0,0.0
+coll_omega       = 0.0,0.0,0.0
 
 
 #----------------------------------------------------------------------
