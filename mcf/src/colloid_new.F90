@@ -48,6 +48,7 @@
         this%num_dim     = dim
         this%num_colloid = num
         
+        this%adapt_t_coef = 1.0_MK
         this%rho         = 1.e3_MK
         this%rho_type    = 0
         this%translate   = .FALSE.
@@ -268,7 +269,7 @@
         this%num_dim     = d_num_dim
         this%num_colloid = d_num_colloid
         
-    
+        this%adapt_t_coef= 1.0_MK
         this%rho         = 1.e3_MK
         this%rho_type    = 0
         this%translate   = .FALSE.
@@ -496,6 +497,7 @@
         PRINT *, '---***********************************---'
         
         PRINT *, "num_colloid        : ", this%num_colloid
+        PRINT *, "adapt_t_coef       : ", this%adapt_t_coef
         PRINT *, "rho                : ", this%rho
         PRINT *, "rho type           : ", this%rho_type
         PRINT *, "translate          : ", this%translate

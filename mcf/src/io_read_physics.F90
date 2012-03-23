@@ -101,6 +101,7 @@
         !----------------------------------------------------
         
         INTEGER                                 :: num_colloid
+        REAL(MK)                                :: coll_adapt_t_coef
         REAL(MK)                                :: coll_rho
         INTEGER                                 :: coll_rho_type
         LOGICAL                                 :: coll_translate
@@ -899,6 +900,7 @@
                 GOTO 9999
              END IF
              
+             coll_adapt_t_coef= 1.0_MK
              coll_rho       = 0.0_MK
              coll_rho_type  = 0
              coll_translate = .TRUE.
@@ -958,6 +960,14 @@
              theta_index    = 0
              omega_index  = 0
              
+          ELSE IF (carg == 'COLL_ADAPT_T_COEF') THEN
+             
+             !-----------------------------------------------
+             ! colloids adaptive time step coefficient
+             !-----------------------------------------------
+             
+             READ(cvalue,*,IOSTAT=ios, ERR=200) coll_adapt_t_coef
+             
           ELSE IF (carg == 'COLL_RHO') THEN
              
              !-----------------------------------------------
@@ -965,7 +975,7 @@
              !-----------------------------------------------
              
              READ(cvalue,*,IOSTAT=ios, ERR=200) coll_rho
-             
+         
           ELSE IF(carg == 'COLL_RHO_TYPE' .AND. &
                num_species > 1 .AND. &
                num_colloid > 0 ) THEN
@@ -1387,8 +1397,10 @@
               
               CALL colloid_new(colloids,&
                    num_dim,num_colloid,stat_info_sub)
+              CALL colloid_set_adapt_t_coef(colloids, &
+                   coll_adapt_t_coef,stat_info_sub)
               CALL colloid_set_rho(colloids, &
-                   coll_rho,stat_info_sub)         
+                   coll_rho,stat_info_sub)
               CALL colloid_set_rho_type(colloids, &
                    coll_rho_type,stat_info_sub)
               CALL colloid_set_translate(colloids,&

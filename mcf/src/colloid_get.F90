@@ -52,6 +52,22 @@
       END FUNCTION colloid_get_num_colloid
       
       
+      REAL(MK) FUNCTION colloid_get_adapt_t_coef(this, stat_info)
+        !---------------------------------------
+        ! Return the coefficient of adaptive t.
+        !---------------------------------------
+
+        TYPE(Colloid), INTENT(IN)       :: this
+        INTEGER, INTENT(OUT)            :: stat_info
+        
+        stat_info = 0
+        colloid_get_adapt_t_coef = this%adapt_t_coef
+        
+        RETURN
+        
+      END FUNCTION colloid_get_adapt_t_coef
+      
+
       REAL(MK) FUNCTION colloid_get_rho(this, stat_info)
         !---------------------------------------
         ! Return the density of colloids.

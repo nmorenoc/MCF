@@ -110,7 +110,7 @@
         stat_info_sub = 0
         
         IF ( this%place == mcf_colloid_place_lattice ) THEN
-           PRINT *, "colloid_create_boundary_particles: ", &
+           PRINT *, "colloid_create_boundary_particles_2D: ", &
                 "Boundary particles located on lattice !"
            GOTO 9999
         END IF
@@ -132,7 +132,7 @@
         num_dim = this%num_dim
         
         IF ( num_dim /= 2 ) THEN
-           PRINT *, "colloid_create_boundary_particle : ", &
+           PRINT *, "colloid_create_boundary_particle_2D: ", &
                 "Dimension should be 2 !"
            stat_info = -1
            GOTO 9999
@@ -256,7 +256,7 @@
               ! 2D Disk. ( currently only available)
               !----------------------------------------------
               
-           CASE (mcf_colloid_shape_sphere)
+           CASE (mcf_colloid_shape_cylinder:mcf_colloid_shape_disk)
               
               !----------------------------------------------
               ! Check if placing boundary particles with
@@ -569,7 +569,7 @@
                  
               CASE DEFAULT
                  
-                 PRINT *, "colloid_create_boundary_particle : ", &
+                 PRINT *, "colloid_create_boundary_particle_2D : ", &
                       "Type of placing  not supported ! "
                  stat_info = -1
                  GOTO 9999
@@ -578,7 +578,7 @@
               
            CASE DEFAULT
               
-              PRINT *, "colloid_create_boundary_particle : ", &
+              PRINT *, "colloid_create_boundary_particle_2D : ", &
                    "shape not supported ! "
               stat_info = -1
               GOTO 9999

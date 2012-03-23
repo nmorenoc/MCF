@@ -657,8 +657,8 @@
            !CALL physics_display_parameters(mcf_phys,stat_info_sub)
            !CALL debug_display_parameters(global_debug,stat_info_sub)
            !CALL rhs_display_parameters(mcf_rhs,stat_info_sub)
-           !CALL stateEquation_display_parameters(mcf_stateEquation,&
-           !stat_info_sub)
+           CALL stateEquation_display_parameters(mcf_stateEquation,&
+           stat_info_sub)
            CALL technique_display_parameters(mcf_tech,stat_info_sub)
            !CALL marching_display_parameters(mcf_marching,&
            !     stat_info_sub)

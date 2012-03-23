@@ -46,7 +46,8 @@
            
            !this%dt_f = 0.25_MK * SQRT(this%h / this%fa_max)
            !this%dt_f = 0.5_MK * SQRT(this%h / this%fa_max)
-           this%dt_f = 1.0_MK * SQRT(this%h / this%fa_max)
+           !this%dt_f = 1.0_MK * SQRT(this%h / this%fa_max)
+           this%dt_f = this%adapt_t_coef * SQRT(this%h / this%fa_max)
            
         ELSE
            

@@ -149,8 +149,6 @@
            
            a = this%radius(1,i)
            b = this%radius(2,i)
-           c = this%radius(3,i)
-           d = a-b
            
            SELECT CASE ( this%shape(i) )
               
@@ -295,6 +293,8 @@
                  
               ELSE IF ( dim == 3 ) THEN
                  
+                 c = this%radius(3,i)
+                 
                  !-------------------------------------------
                  ! Transpose it to the first orientation.
                  !-------------------------------------------
@@ -357,6 +357,9 @@
               ! 2D dicolloid with two disks 
               ! 3D dicolloid with two spheres.
               !----------------------------------------------
+
+              d = a - b
+              
               !----------------------------------------------
               ! Calculate the distance of p from the center
               ! of a colloid, or its image.
@@ -438,9 +441,9 @@
                        d_pc = SQRT(d_pc)
                        
                        d_pc = SQRT(b**2-d**2) - d_pc
-
+                       
                        d_pc = SQRT(rp_x(1)**2+d_pc**2)
-
+                       
                        IF ( d_pc > this%din ) THEN
                           
                           l_in = .TRUE.
@@ -476,7 +479,7 @@
               theta = colloid_polar_angle(rp_x(1),rp_x(2))
               
               d_sc  = colloid_polar_star_r(&
-                   this%radius(1,i),this%radius(2,i), &
+                   a,b,&
                    REAL(this%freq(i),MK),theta,this%acc_vector(4,i))
               
               !----------------------------------------------

@@ -96,6 +96,7 @@
 
            INTEGER                            :: num_dim
            INTEGER                            :: num_colloid
+           REAL(MK)                           :: adapt_t_coef
            REAL(MK)                           :: rho
            INTEGER                            :: rho_type
            LOGICAL                            :: translate

@@ -305,7 +305,31 @@
         
       END SUBROUTINE colloid_set_num_colloid
 
-      
+
+      SUBROUTINE colloid_set_adapt_t_coef(this,d_coef,stat_info)
+        !-----------------------------------------
+        ! Set the coefficient of adaptive time step
+        !-----------------------------------------
+        
+        TYPE(Colloid), INTENT(INOUT)    :: this
+        REAL(MK), INTENT(IN)            :: d_coef
+        INTEGER, INTENT(OUT)            :: stat_info
+
+        stat_info = 0
+
+        IF ( d_coef < 0.0_MK  ) THEN
+           PRINT *, "colloid_set_adapt_t_coef : ", &
+                "Wrong coefficient !"
+           stat_info = -1
+        END IF
+        
+        this%adapt_t_coef = d_coef
+        
+        RETURN
+        
+      END SUBROUTINE colloid_set_adapt_t_coef
+
+
       SUBROUTINE colloid_set_rho(this,d_rho,stat_info)
         !-----------------------------------------
         ! Set the colloid density.
