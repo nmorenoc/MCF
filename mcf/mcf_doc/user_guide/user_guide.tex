@@ -1233,10 +1233,21 @@ For non-Brownian simulation, the random force component is absent.
 \textit{M} is number index of a colloidal particle.
 \textit{MM} is the total number of colloidal particles.
 
-\textbf{$step, time, [x, y(, z)], [v_x, v_y(, v_z)],
-F_x, F_y(, F_z)$},
-\textbf{$[\phi],[(\omega_x, \omega_y(, \omega_z)], 
-[T_x, T_y(, T_z)]$}.
+Whether quantities inside $[~]$ are present depends
+on whether colloid is translational or rotational.
+
+2D:
+\textbf{$step, time, [x, y], [v_x, v_y],
+F_x, F_y$},
+\textbf{$[\phi],[\omega_z], 
+[T_z]$}.
+
+3D:
+\textbf{$step, time, [x, y, z], [v_x, v_y, v_z],
+F_x, F_y, F_z$},\\
+\textbf{$[rm_{xx},rm_{yx},rm_{zx},rm_{xy},rm_{yy},rm_{zy},rm_{xz},rm_{yz},rm_{zz}]$},
+\textbf{$[\omega_x, \omega_y, \omega_z],[T_x, T_y, T_z]$},
+where $rm$ stands for rotation matrix.
 
 \subsection{\textbf{restart\_physics\_file}\\
 (\textit{mcf\_restart\_physicsQQQ.mcf})}
