@@ -144,15 +144,6 @@ not locally.
 otherwise, colloid-colloid interaction is calculated 
 efficiently locally.
 
-#************************************************************
--D__COLLOID_SEPARATE_FILE :
-#************************************************************
-
-writing colloids into separate file,
-each colloid has its own file.
-otherwise, by default, all colloids are written into the same
-file every step/time freq, just like SPH/SDPD particles.
-
 
 #------------------------------------------------------------
 #************************************************************
@@ -227,6 +218,15 @@ particle files for each particle.
 note:
 1) -D__PARTICLES_STRESS_SEPARATE must be set to enable
 calculation of stress separately
+
+#************************************************************
+-D__IO_COLLOID_SEPARATE:
+#************************************************************
+
+writing colloids into separate files,
+each colloid has its own file.
+otherwise, by default, all colloids are written into the same
+file every step/time freq, just like SPH/SDPD particles.
 
 #************************************************************
 -D__IO_WALL_FORCE_SEPARATE :

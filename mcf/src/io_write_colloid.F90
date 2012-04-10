@@ -276,11 +276,11 @@
                  END DO
               END DO
               
-              j_start = j_end + 1
-              j_end   = j_start + num_dim -1
+              !j_start = j_end + 1
+              !j_end   = j_start + num_dim -1
               
-              output(j_start:j_end,1:num_colloid) = &
-                   theta(1:3,1:num_colloid)
+              !output(j_start:j_end,1:num_colloid) = &
+              !     theta(1:3,1:num_colloid)
            
               j_start = j_end + 1
               j_end   = j_start + num_dim - 1
