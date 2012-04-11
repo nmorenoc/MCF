@@ -205,14 +205,14 @@
                  stat_info = -1
                  GOTO 9999
               END IF
-#if 0              
+             
            CASE (mcf_colloid_shape_dicolloid)
               
               !----------------------------------------------
               ! For a 3D dicolloid
               !----------------------------------------------
               
-              CALL colloid_noslip_Morris_dicolloid(this, &
+              CALL colloid_noslip_Morris_dicolloid_3D(this, &
                    xf,xc,vf,vc,sid_c,stat_info_sub)
               
               IF( stat_info_sub /= 0 ) THEN
@@ -220,7 +220,7 @@
                  stat_info = -1
                  GOTO 9999
               END IF
-#endif         
+        
            END SELECT ! shape
            
         END IF
@@ -237,4 +237,5 @@
 #include "colloid_noslip_Morris_sphere.F90"
 #include "colloid_noslip_Morris_ellipse.F90"
 #include "colloid_noslip_Morris_ellipsoid.F90"
+#include "colloid_noslip_Morris_dicolloid_3D.F90"
 #include "colloid_noslip_Morris_star_2D.F90"

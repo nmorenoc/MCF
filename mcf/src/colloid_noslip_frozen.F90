@@ -1,6 +1,6 @@
-      SUBROUTINE colloid_noslip_Frozen(this,xc,vc,sid_c,stat_info)
+      SUBROUTINE colloid_noslip_frozen(this,xc,vc,sid_c,stat_info)
         !----------------------------------------------------
-        ! Subroutine  : colloid_noslip_Frozen
+        ! Subroutine  : colloid_noslip_frozen
         !----------------------------------------------------
         !
         ! Purpose     : Private.
@@ -101,7 +101,8 @@
         vc(1:dim) =  vcoll(1:dim) 
         
         !----------------------------------------------------
-        ! Get translational angular velocity if rotating.
+        ! Add up equavilent translational velocity from
+        ! rotation
         !----------------------------------------------------
         
         r_vc(:) = 0.0_MK
@@ -122,5 +123,5 @@
         
         RETURN
         
-      END SUBROUTINE colloid_noslip_Frozen
+      END SUBROUTINE colloid_noslip_frozen
       

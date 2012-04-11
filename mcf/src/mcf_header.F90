@@ -176,6 +176,13 @@
         INTEGER, PARAMETER      :: mcf_colloid_shape_dicolloid = 4
         INTEGER, PARAMETER      :: mcf_colloid_shape_star      = 5
 
+        !----------------------------------------------------
+        ! Define the no-slip condition.
+        !----------------------------------------------------
+
+        INTEGER, PARAMETER      :: mcf_no_slip_frozen  = 1
+        INTEGER, PARAMETER      :: mcf_no_slip_Morris  = 2
+        
 
         !----------------------------------------------------
         ! Define how to place particles for 

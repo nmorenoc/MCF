@@ -71,9 +71,9 @@
         
         SELECT CASE( this%noslip_type )
            
-        CASE (1)
+        CASE ( mcf_no_slip_frozen )
            
-           CALL colloid_noslip_Frozen(this,xc,vc,sid_c,stat_info_sub)
+           CALL colloid_noslip_frozen(this,xc,vc,sid_c,stat_info_sub)
            
            IF( stat_info_sub /= 0 ) THEN
               PRINT *, "colloid_noslip : ", &
@@ -82,7 +82,7 @@
               GOTO 9999
            END IF
            
-        CASE (2)
+        CASE ( mcf_no_slip_Morris )
            
            CALL colloid_noslip_Morris(this,xf,xc,vf,vc,sid_c,&
                 stat_info_sub)
@@ -114,7 +114,7 @@
         
       END SUBROUTINE colloid_noslip
       
-#include "colloid_noslip_Frozen.F90"
+#include "colloid_noslip_frozen.F90"
 #include "colloid_noslip_Morris.F90"
 #include "colloid_noslip_Zhu.F90"
 
