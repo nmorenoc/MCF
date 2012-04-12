@@ -112,14 +112,15 @@
         CALL colloid_in_nearest_image(this,xc(1:dim),sid_c,&
              xcoll(1:dim),r_xc(1:dim),vcoll(1:dim),&
              stat_info_sub)
-      
+        !PRINT *, "xc, sid_c, xcoll, r_xc, vcoll: ", &
+        !     xc(:), sid_c, xcoll(:), r_xc(:), vcoll(:)
         !----------------------------------------------------
         ! Get relative position of fluid particle to 
         ! the center of the geometry.
         !----------------------------------------------------
         
         r_xf(1:dim) = xf(1:dim) - xcoll(1:dim)
-        
+        !PRINT *, "r_xf: ", r_xf(:)
         !----------------------------------------------------
         ! Using body attached coordinate,
         ! the ellipsoid is in its frist orientation,
@@ -138,20 +139,9 @@
         r_xc(1:dim) = MATMUL(&
              TRANSPOSE(this%acc_matrix(1:dim,1:dim,sid_c)),&
              r_xc(1:dim) )
-        
-#if 0
-        !----------------------------------------------------
-        ! Check if the fluid particle is inside of 
-        ! the geometry.
-        !----------------------------------------------------
-        
-        !----------------------------------------------------
-        ! Check if the boundary particle is outside of
-        ! the geometry.
-        !----------------------------------------------------
-        
-#endif
-
+        !PRINT *, "acc_matrix: ", this%acc_matrix(:,:,sid_c)
+        !PRINT *, "r_xf, r_xc: ", r_xf(:), r_xc(:)
+                
         !----------------------------------------------------
         ! Find the shortest distance from the fluid particle
         ! to the surface of the ellipsoid.
@@ -171,7 +161,20 @@
            stat_info = -1
            GOTO 9999
         END IF
+        !PRINT *, "r_xf, r_xs, d_fs: ", r_xf(:), r_xs(:), d_fs
         
+#if 0
+        !----------------------------------------------------
+        ! Check if the fluid particle is inside of 
+        ! the geometry.
+        !----------------------------------------------------
+        
+        !----------------------------------------------------
+        ! Check if the boundary particle is outside of
+        ! the geometry.
+        !----------------------------------------------------
+        
+#endif
         !----------------------------------------------------
         ! If the fuild particle lies exactly on
         ! the surface, assign the maximum ratio.
@@ -189,7 +192,7 @@
            
            nvector(1:dim) = &
                 ( r_xf(1:dim)- r_xs(1:dim) ) /  d_fs
-           
+           !PRINT *, "nvector: ", nvector(:)
            !-------------------------------------------------
            ! Map (r_xs-r_xc) onto nvector and 
            ! calculate its length.
@@ -198,13 +201,13 @@
            d_cs = &
                 DOT_PRODUCT((r_xs(1:dim)-r_xc(1:dim)),&
                 nvector(1:dim))
-           
+           !PRINT *, "d_cs: ", d_cs
            !-------------------------------------------------
            ! Ratio of the distances, used for extrapolation.
            !-------------------------------------------------
            
            corr = d_cs / d_fs
-           
+           !PRINT *, "corr: ", corr
            !-------------------------------------------------
            ! Set the maximum ratio of the extrapolation.
            !-------------------------------------------------
@@ -227,8 +230,8 @@
              vcoll(1:dim) )
         ocoll(1:dim) = MATMUL(&
              TRANSPOSE(this%acc_matrix(1:dim,1:dim,sid_c)),&
-             this%omega(1:3,sid_c) )
-     
+             this%omega(1:dim,sid_c) )
+        !PRINT *, "vcoll, ocoll: ", vcoll(:), ocoll(:)
         !----------------------------------------------------
         ! Extrapolate velocity for the colloid boundary 
         ! particle, considering the movment of colloid.
@@ -237,13 +240,13 @@
         r_vs(:) = 0.0_MK
         
         CALL tool_cross_product(this%tool,&
-             ocoll(1:3), r_xs(1:3),&
-             r_vs(1:3),stat_info_sub)
-        
+             ocoll(1:dim), r_xs(1:dim),&
+             r_vs(1:dim),stat_info_sub)
+        !PRINT *, "r_vs: ", r_vs(:)
         vc(1:dim) = -corr *&
              (vf(1:dim)-vcoll(1:dim)-r_vs(1:dim)) + &
              vcoll(1:dim) + r_vs(1:dim)
-        
+        !PRINT *, "vc: ", vc(:)
         !----------------------------------------------------
         ! Transfer the result back to the fixed coordinate.
         !----------------------------------------------------
@@ -251,10 +254,10 @@
         vc(1:dim) = &
              MATMUL(this%acc_matrix(1:dim,1:dim,sid_c),&
              vc(1:dim) )
-        
+        !PRINT *, "vc: ", vc(:)
         
 9999    CONTINUE
-        
+        !STOP
         RETURN
         
       END SUBROUTINE colloid_noslip_Morris_ellipsoid

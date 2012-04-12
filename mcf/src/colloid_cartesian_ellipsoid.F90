@@ -89,7 +89,7 @@
            IF ( u(i) < 0.0_MK ) THEN
               
               u(i) = -u(i)
-              flip = .TRUE.
+              flip(i) = .TRUE.
               
            END IF
            
@@ -182,6 +182,18 @@
            
         END IF
         
+        !----------------------------------------------------
+        ! Flip back the result
+        !----------------------------------------------------
+        DO i = 1, 3
+           
+           IF ( flip(i) ) THEN
+              
+              x(i) = -x(i)
+              
+           END IF
+           
+        END DO
         
 9999    CONTINUE
         
