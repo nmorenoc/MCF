@@ -1,4 +1,4 @@
-      SUBROUTINE marching_integrate_Euler(this,time,dt,stat_info)
+      SUBROUTINE marching_integrate_Euler(this,step,time,dt,stat_info)
         !----------------------------------------------------
         ! Subroutine  : marching_integrate_Euler
         !----------------------------------------------------
@@ -39,12 +39,14 @@
         ! Arguments
         !
         ! this       : an object of Marching Class.
+        ! step       : current step.
         ! time       : current time.
         ! dt         : time step.
         ! stat_info  : return flag of status.
         !----------------------------------------------------
         
         TYPE(Marching), INTENT(INOUT)   :: this
+        INTEGER, INTENT(IN)             :: step
         REAL(MK), INTENT(IN)            :: time
         REAL(MK), INTENT(IN)            :: dt
         INTEGER, INTENT(OUT)	        :: stat_info
@@ -66,7 +68,7 @@
         LOGICAL                         :: stress_tensor
         LOGICAL                         :: stress_tensor_p
         LOGICAL                         :: stress_tensor_v
-        LOGICAL                         :: stress_tensor_r     
+        LOGICAL                         :: stress_tensor_r
         LOGICAL                         :: p_energy
         
         !----------------------------------------------------
@@ -75,6 +77,8 @@
         
         INTEGER                         :: num_species
         INTEGER                         :: num_dim
+        INTEGER                         :: step_start
+        
         LOGICAL                         :: eigen_dynamics
         
         INTEGER                         :: num_colloid
@@ -188,6 +192,8 @@
              physics_get_num_species(this%phys,stat_info_sub)
         num_dim        = &
              physics_get_num_dim(this%phys,stat_info_sub)
+        step_start     = &
+             physics_get_step_start(this%phys,stat_info_sub)    
         eigen_dynamics = &
              physics_get_eigen_dynamics(this%phys,stat_info_sub)
         
@@ -227,7 +233,7 @@
              particles_get_num_part_ghost(this%particles,stat_info_sub)
         num_part_all = &
              particles_get_num_part_all(this%particles,stat_info_sub)
-    
+        
         !----------------------------------------------------
         ! MPI parameters.
         !----------------------------------------------------
@@ -251,7 +257,7 @@
         !----------------------------------------------------
 	! Position integration r(t+dt) = r(t) + v(t) * dt,
         ! i.e. first order accuracy,
-        ! done only for real particles.
+        ! done only for real solvent particles.
         ! (incl. different boundary particles)
 	!----------------------------------------------------
         
@@ -259,7 +265,7 @@
              num_part_real,dt,1,stat_info_sub)
         
         IF (stat_info_sub /= 0) THEN
-           PRINT *, "marching_integrate_Euler : ",&
+           PRINT *, "marching_integrate_Euler: ",&
                 "Integrating position failed ! "
            stat_info = -1
            GOTO 9999
@@ -269,7 +275,7 @@
 	! Calculate new velocity 
         ! v(t+dt) = v(t)+lamda* a(t) * dt,
         ! using lamda=1.0 as coefficient in front 
-        ! of acceleration, done only for real particles.
+        ! of acceleration, done only for real solvent particles.
         ! (incl. different boundary particles)
        	!----------------------------------------------------
         
@@ -277,7 +283,7 @@
              num_part_real,dt,1.0_MK,stat_info_sub)
         
         IF ( stat_info_sub /= 0 ) THEN
-           PRINT *, "marching_integrate_Euler : ",&
+           PRINT *, "marching_integrate_Euler: ",&
                 "Updating velocity failed  !"
            stat_info = -1     
            GOTO 9999
@@ -301,7 +307,7 @@
               
               !----------------------------------------------
               ! Integrate eigenvalues with same order
-              ! as velocity.
+              ! as velocity for real particles.
               !----------------------------------------------
               
               CALL particles_integrate_eval(this%particles,&
@@ -309,7 +315,7 @@
               
               IF ( stat_info_sub /= 0 ) THEN
                  PRINT *,&
-                      "marching_integrate_Euler : ", &
+                      "marching_integrate_Euler: ", &
                       "Integrating eval failed !"
                  stat_info = -1
                  GOTO 9999
@@ -317,7 +323,7 @@
               
               !----------------------------------------------
               ! Integrate eigenvectors with same order
-              ! as velocity.
+              ! as velocity for real particles.
               !----------------------------------------------
               
               CALL particles_integrate_evec(this%particles,&
@@ -325,22 +331,22 @@
               
               IF ( stat_info_sub /= 0 ) THEN
                  PRINT *,&
-                      "marching_integrate_Euler : ", &
+                      "marching_integrate_Euler: ", &
                       "Integrating evec failed !"
                  stat_info = -1
                  GOTO 9999
               END IF
               
               !----------------------------------------------
-              ! Compute conformation tensor out of
-              ! eigenvalues and eigenvectors.
+              ! Compute conformation tensor out of eigenvalues
+              ! and eigenvectors for real particles.
               !----------------------------------------------
               
               CALL particles_compute_ct(this%particles,&
                    num_part_real,stat_info_sub)
               
               IF ( stat_info_sub /= 0 ) THEN
-                 PRINT *, "marching_integrate_Euler : ", &
+                 PRINT *, "marching_integrate_Euler: ", &
                       "Computing ct failed !"
                  stat_info = -1
                  GOTO 9999
@@ -351,14 +357,15 @@
               !----------------------------------------------
               ! Use acceleration of conformation tensor to
               ! integrate conformation tensor with same 
-              ! order as velocity.
+              ! order as velocity, done for real solvent
+              ! particles.
               !----------------------------------------------
               
               CALL particles_integrate_ct(this%particles,&
                    num_part_real,dt,1.0_MK,stat_info_sub)
               
               IF ( stat_info_sub /= 0 ) THEN
-                 PRINT *, "marching_integrate_Euler : ",&
+                 PRINT *, "marching_integrate_Euler: ",&
                       "Integrating ct failed  !"
                  stat_info = -1
                  GOTO 9999
@@ -379,7 +386,7 @@
                 num_part_real,dt,1.0_MK,stat_info_sub)
            
            IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_integrate_Euler : ",&
+              PRINT *, "marching_integrate_Euler: ",&
                    "Integrating potential energy failed !"
               stat_info = -1               
               GOTO 9999           
@@ -389,22 +396,22 @@
         
         !----------------------------------------------------
         ! If there are colloids, integrate their centers'
-        ! positions as rigid bodies, using same integrator.
+        ! positions as rigid bodies, using desired integrator.
 	!----------------------------------------------------
         
         IF ( num_colloid > 0 ) THEN
            
            !-------------------------------------------------
            ! Compute the rotation vector using rotating
-           ! velocity, i.e., first order.
+           ! velocity, using desired order.
            !-------------------------------------------------
         
-           CALL colloid_compute_rotation_vector(colloids,dt, &
-                1,stat_info_sub)
+           CALL colloid_compute_rotation_vector(colloids,&
+                step-step_start,dt,stat_info_sub)
            
            IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_integrate_Euler : ", &
-                   "Integrating colloids angle failed !"
+              PRINT *, "marching_integrate_Euler: ", &
+                   "Computing rotation vector of colloids failed !"
               stat_info = -1
               GOTO 9999
            END IF
@@ -416,10 +423,10 @@
            CALL colloid_compute_rotation_matrix(colloids,stat_info_sub)
            CALL colloid_compute_accumulation_matrix(colloids,stat_info_sub)
            CALL colloid_compute_accumulation_vector(colloids,stat_info_sub)
-                      
+           
            IF ( stat_info_sub /=0 ) THEN
               
-              PRINT *, "marching_integrate_Euler : ", &
+              PRINT *, "marching_integrate_Euler: ", &
                    "Computing rotaiton matrix failed "
               stat_info = -1
               GOTO 9999
@@ -434,22 +441,22 @@
                 this%particles,stat_info_sub)
            
            IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_integrate_Euler : ", &
-                   "Compute colloid boundary particle relative position failed !"
+              PRINT *, "marching_integrate_Euler: ", &
+                   "Computing boundary particles relative position failed !"
               stat_info = -1
               GOTO 9999
            END IF
            
            !-------------------------------------------------
            ! Integrate the positions of all colloids' centers,
-           ! using first order accuracy, i.e., explicit Euler.
+           ! using desired order.
            !-------------------------------------------------
            
-           CALL colloid_integrate_position(colloids,dt,&
-                1,stat_info_sub)
+           CALL colloid_integrate_position(colloids,&
+                step-step_start,dt,stat_info_sub)
            
            IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_integrate_Euler : ", &
+              PRINT *, "marching_integrate_Euler: ", &
                    "Integrating colloids position failed !"
               stat_info = -1
               GOTO 9999
@@ -464,22 +471,21 @@
                 this%particles,stat_info_sub)
            
            IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_integrate_Euler : ", &
-                   "Compute colloid boundary particle relative position failed !"
+              PRINT *, "marching_integrate_Euler: ", &
+                   "Computing boundary particles absolute position failed !"
               stat_info = -1
               GOTO 9999
            END IF
            
            !-------------------------------------------------
-           ! Integrate velocity using lamda=1.0 as 
-           ! coefficient in front of acceleration.
+           ! Integrate velocity using desired accuracy order.
            !-------------------------------------------------
            
-           CALL colloid_integrate_velocity(colloids,dt,&
-                1.0_MK,stat_info_sub)
+           CALL colloid_integrate_velocity(colloids,&
+                step-step_start,dt,stat_info_sub)
            
            IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_integrate_Euler : ",&
+              PRINT *, "marching_integrate_Euler: ",&
                    "Integrating colloids velocity failed !"
               stat_info = -1 
               GOTO 9999
@@ -494,7 +500,7 @@
            CALL colloid_adjust_colloid(colloids,stat_info_sub)
            
            IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_integrate_Euler : ", &
+              PRINT *, "marching_integrate_Euler: ", &
                    "Adjusting colloids failed !"
               stat_info = -1
               GOTO 9999
@@ -515,13 +521,23 @@
                 time+dt,time+dt,stat_info_sub)
            
            IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_integrate_Euler : ", &
+              PRINT *, "marching_integrate_Euler: ", &
                    "Updating boundary failed  !"
               stat_info = -1
               GOTO 9999
            END IF
+
+           CALL particles_integrate_boundary_position(this%particles, &
+                dt,1,stat_info_sub)
            
-        END IF
+           IF ( stat_info_sub /= 0 ) THEN
+              PRINT *, "marching_integrate_Euler: ", &
+                   "Integrating boundary position failed ! "
+              stat_info = -1
+              GOTO 9999
+           END IF
+           
+        END IF ! num_shear > 0
         
         !----------------------------------------------------
         ! Adjust real particles' r/v after motion
@@ -533,7 +549,7 @@
              num_part_real,stat_info_sub)
         
         IF (stat_info_sub /= 0 ) THEN
-           PRINT *, "marching_integrate_Euler : ",&
+           PRINT *, "marching_integrate_Euler: ",&
                 "Adjusting r or v failed ! "
            stat_info = -1
            GOTO 9999
@@ -566,10 +582,8 @@
              l_map_u    = p_energy,   &
              stat_info  = stat_info_sub )
 
-	!PRINT *, "After particles_decompose_partial!"
-        
         IF ( stat_info_sub /= 0 ) THEN
-           PRINT *,"marching_integrate_Euler : ", &
+           PRINT *,"marching_integrate_Euler: ", &
                 "Decomposing partially failed !"
            stat_info = -1
            GOTO 9999
@@ -602,7 +616,7 @@
              l_map_id = .TRUE., stat_info=stat_info_sub)
         
         IF ( stat_info_sub /= 0 ) THEN
-           PRINT *,"marching_integrate_Euler : ",  &
+           PRINT *,"marching_integrate_Euler: ",  &
                 "Creating ghosts first time failed !"
            stat_info = -1
            GOTO 9999
@@ -618,7 +632,7 @@
              stat_info_sub)
         
         IF ( stat_info_sub /= 0 ) THEN
-           PRINT *, "marching_integrate_Euler : ", &
+           PRINT *, "marching_integrate_Euler: ", &
                 "Setting boundary ghosts ID failed !"
            stat_info = -1
            GOTO 9999
@@ -648,7 +662,7 @@
              num_part_all, symmetry,stat_info_sub)
         
         IF ( stat_info_sub /= 0 ) THEN
-           PRINT *,"marching_integrate_euler : ", &
+           PRINT *,"marching_integrate_Euler: ", &
                 "Building neighbour list failed!"
            stat_info = -1
            GOTO 9999
@@ -662,7 +676,7 @@
              stat_info_sub)
         
         IF ( stat_info_sub /= 0 ) THEN 
-           PRINT *,"marching_integrate_Euler : ", & 
+           PRINT *,"marching_integrate_Euler: ", & 
                 "Computing density failed !"
            stat_info = -1 
            GOTO 9999
@@ -695,6 +709,8 @@
         END IF
         
         !-------------------------------------------------
+        ! After computing density, the list of colloid
+        ! boundary particles is created.
         ! Set colloidal boundary particles velocity
         ! according to its translation and rotation speed.
         !-------------------------------------------------
@@ -704,7 +720,7 @@
            CALL particles_set_colloid_velocity(this%particles,stat_info_sub)
            
            IF (stat_info_sub /= 0) THEN
-              PRINT *, 'marching_integrate_Euler : ',&
+              PRINT *, 'marching_integrate_Euler: ',&
                    'Setting colloid velocity failed !'
               stat_info = -1
               GOTO 9999
@@ -712,13 +728,20 @@
            
         END IF
 
+        !-------------------------------------------------
+        ! After computing density, the list of wall
+        ! boundary particles is created.
+        ! Set wall boundary particles velocity
+        ! accordingt to its translation speed.
+        !-------------------------------------------------
+
         IF ( num_shear > 0 ) THEN
            
            CALL particles_set_boundary_velocity(this%particles,&
                 stat_info_sub)
            
            IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_integrate_Euler : ", &
+              PRINT *, "marching_integrate_Euler: ", &
                    "particles setting boundary failed !"
               stat_info = -1           
               GOTO 9999           
@@ -748,7 +771,7 @@
              stat_info = stat_info_sub)
         
         IF ( stat_info_sub /= 0 ) THEN
-           PRINT *, "marching_integrate_Euler : ", &
+           PRINT *, "marching_integrate_Euler: ", &
                 "Updating ghosts with rho, v failed !"
            stat_info = -1
            GOTO 9999
@@ -786,8 +809,8 @@
         
         
         !----------------------------------------------------
-        ! If reference density rho_ref given from input file is
-        ! negative, we find the minimum density during
+        ! If reference density rho_ref is needed to calculate
+        ! dynamically, we find the minimum density during
         ! simulation and set by particles_set_rho_ref
         ! into state equation.
         !----------------------------------------------------
@@ -798,7 +821,7 @@
                 comm, MPI_PREC, stat_info_sub)
            
            IF(stat_info_sub /=0) THEN
-              PRINT *, "marching_marching : ", &
+              PRINT *, "marching_integrate_Euler: ", &
                    "Finding density extrem failed !"
               stat_info = -1
               GOTO 9999
@@ -808,7 +831,7 @@
                 stat_info_sub)
            
            IF(stat_info_sub /=0) THEN
-              PRINT *, "marching_marching : ", &
+              PRINT *, "marching_integrate_Euler: ", &
                    "Setting density extreme failed !"
               stat_info = -1
               GOTO 9999
@@ -825,7 +848,7 @@
              num_part_all,stat_info_sub)
         
         IF( stat_info_sub /=0 ) THEN
-           PRINT *, "marching_integrate_Euler", &
+           PRINT *, "marching_integrate_Euler: ", &
                 "Computing pressure failed !"
            stat_info = -1
            GOTO 9999
@@ -842,7 +865,7 @@
                 num_part_all,stat_info_sub)
            
            IF(stat_info_sub /=0) THEN
-              PRINT *, "marching_integrate_Eule : ", &
+              PRINT *, "marching_integrate_Euler: ", &
                    "Computing pressure tensor failed !"
               stat_info = -1
               GOTO 9999
@@ -859,7 +882,7 @@
              stat_info_sub)
         
         IF ( stat_info_sub /= 0 ) THEN
-           PRINT *,"marching_integrate_Euler : ", &
+           PRINT *,"marching_integrate_Euler: ", &
                 "Computing interaction failed !"
            stat_info = -1
            GOTO 9999
@@ -912,7 +935,7 @@
 #endif
            
            IF (stat_info_sub /= 0) THEN
-              PRINT *, "marching_integrate_Euler : ", &
+              PRINT *, "marching_integrate_Euler: ", &
                    "Receiving force (stress, vgt, au) from ghosts failed !"
               stat_info = -1
               GOTO 9999
@@ -923,14 +946,14 @@
         
         
         !----------------------------------------------------
-        ! Add external/body force only to real particles.
+        ! Add external/body force only to real solvent particles.
         !----------------------------------------------------
         
         CALL particles_apply_body_force(this%particles,&
              num_part_real,stat_info_sub)
         
         IF ( stat_info_sub /= 0 ) THEN           
-           PRINT *,"marching_integrate_euler : ", &
+           PRINT *,"marching_integrate_Euler: ", &
                 "Applying force failed !"
            stat_info = -1
            GOTO 9999
@@ -967,7 +990,7 @@
               
               IF ( stat_info_sub /= 0 ) THEN
                  PRINT *, &
-                      "marching_integrate_Euler : ", &
+                      "marching_integrate_Euler: ", &
                       "Computing aeval failed !"
                  stat_info = -1
                  GOTO 9999
@@ -982,7 +1005,7 @@
               
               IF ( stat_info_sub /= 0 ) THEN
                  PRINT *,&
-                      "marching_integrate_Euler : ", &
+                      "marching_integrate_Euler: ", &
                       "Computing aevec failed !"
                  stat_info = -1
                  GOTO 9999
@@ -999,7 +1022,7 @@
                    num_part_real,stat_info_sub)
               
               IF ( stat_info_sub /= 0 ) THEN
-                 PRINT *, "marching_integrate_Euler : ", &
+                 PRINT *, "marching_integrate_Euler: ", &
                       "Computing act failed !"
                  stat_info = -1
                  GOTO 9999
@@ -1030,7 +1053,7 @@
                 coll_drag,coll_torque,stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_integrate_Euler : ",&
+              PRINT *, "marching_integrate_Euler: ",&
                    "Summing up interaction on colloid locally has problem !"
               stat_info = -1
               GOTO 9999
@@ -1045,7 +1068,7 @@
                 comm,MPI_PREC,coll_drag,coll_torque,stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_integrate_Euler : ",&
+              PRINT *, "marching_integrate_Euler: ",&
                    "Summing up interaction on colloid globally has problem !"
               stat_info = -1
               GOTO 9999
@@ -1060,7 +1083,7 @@
                 MPI_PREC,wall_drag_c(1:num_dim,1:num_dim*2),stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_integrate_Euler : ",&
+              PRINT *, "marching_integrate_Euler: ",&
                    "c-c or c-w interaction has problem !"
               stat_info = -1
               GOTO 9999
@@ -1073,7 +1096,7 @@
            CALL colloid_apply_body_force(colloids,stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_integrate_Euler : ", &
+              PRINT *, "marching_integrate_Euler: ", &
                    "Applying body force on colloids has problem !"
               stat_info = -1
               GOTO 9999
@@ -1087,7 +1110,7 @@
            CALL colloid_compute_acceleration(colloids,stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_integrate_Euler : ",&
+              PRINT *, "marching_integrate_Euler: ",&
                    "Computing colloids accelerations has problem !"
               stat_info = -1
               GOTO 9999
@@ -1119,7 +1142,7 @@
 
 #endif  
            IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_integrate_Euler : ",&
+              PRINT *, "marching_integrate_Euler: ",&
                    "Summing up interaction on boundary locally has problem !"
               stat_info = -1
               GOTO 9999
@@ -1140,7 +1163,7 @@
       
 #endif     
            IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_integrate_Euler : ",&
+              PRINT *, "marching_integrate_Euler: ",&
                    "Summing up particles contribution on boundary has problem !"
               stat_info = -1
               GOTO 9999
@@ -1150,7 +1173,7 @@
                 MPI_PREC, wall_drag_c(1:num_dim,1:num_dim*2),stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_integrate_Euler : ",&
+              PRINT *, "marching_integrate_Euler: ",&
                    "Summing up colloids contribution on boundary has problem !"
               stat_info = -1
               GOTO 9999
@@ -1165,7 +1188,7 @@
                 stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_integrate_Euler : ",&
+              PRINT *, "marching_integrate_Euler: ",&
                    "Resetting boundary particles interaction failed !"
               stat_info = -1
               GOTO 9999
@@ -1175,7 +1198,7 @@
                 stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_integate_Euler : ",&
+              PRINT *, "marching_integate_Euler:  ",&
                    "Resetting boundary ghosts particles interaction failed !"
               stat_info = -1
               GOTO 9999

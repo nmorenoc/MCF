@@ -177,7 +177,7 @@
               r_vc(:) = 0.0_MK
               
               CALL tool_cross_product(this%tool,&
-                   this%omega(1:3,sid_c), r_xc(1:3),&
+                   this%omega(1:3,sid_c,1), r_xc(1:3),&
                    r_vc(1:3),stat_info_sub)
            
               vc(1:dim) = vc(1:dim) + r_vc(1:dim)
@@ -303,7 +303,7 @@
         r_vs(:) = 0.0_MK
         
         CALL tool_cross_product(this%tool,&
-             this%omega(1:3,sid_c), r_xs(1:3),&
+             this%omega(1:3,sid_c,1), r_xs(1:3),&
              r_vs(1:3),stat_info_sub)
         
         vc(1:dim) = -corr *&

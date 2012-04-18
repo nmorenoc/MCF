@@ -71,8 +71,9 @@
         LOGICAL                         :: dynamic_density_ref
         INTEGER                         :: stateEquation_type
         LOGICAL                         :: Newtonian
-        LOGICAL                         :: Brownian      
+        LOGICAL                         :: Brownian
         LOGICAL                         :: p_energy
+        INTEGER                         :: integrate_colloid_type
         
         !----------------------------------------------------
         ! Physics parameters :
@@ -123,11 +124,11 @@
         INTEGER                         :: coll_body_force_type
         LOGICAL                         :: coll_translate
         LOGICAL                         :: coll_rotate
-        REAL(MK),DIMENSION(:,:),POINTER :: coll_v
-        REAL(MK),DIMENSION(:,:),POINTER :: coll_omega
+        REAL(MK),DIMENSION(:,:,:),POINTER:: coll_v
+        REAL(MK),DIMENSION(:,:,:),POINTER:: coll_omega
         REAL(MK),DIMENSION(:,:),POINTER :: coll_drag
         REAL(MK),DIMENSION(:,:),POINTER :: coll_torque
-        REAL(MK),DIMENSION(:,:),POINTER :: coll_reset
+        REAL(MK),DIMENSION(:,:,:),POINTER:: coll_reset
         REAL(MK)                        :: coll_k
         REAL(MK), DIMENSION(3)          :: coll_mom        
         
@@ -268,7 +269,9 @@
              control_get_Brownian(this%ctrl,stat_info_sub)
         p_energy            = &
              control_get_p_energy(this%ctrl,stat_info_sub)
-        
+        integrate_colloid_type = &
+             control_get_integrate_colloid_type(this%ctrl,stat_info_sub)
+      
         symmetry = .TRUE.
         CALL control_set_symmetry(this%ctrl,symmetry, stat_info_sub)
         CALL control_set_Brownian(this%ctrl,.TRUE., stat_info_sub)
@@ -407,12 +410,14 @@
                 .TRUE.,stat_info_sub)
 #endif
            
-           ALLOCATE(coll_reset(3,num_colloid))
-           coll_reset(:,:) = 0.0_MK
+           ALLOCATE(coll_reset(3,num_colloid,integrate_colloid_type))
+           coll_reset(:,:,:) = 0.0_MK
            CALL colloid_set_v(colloids, &
-                coll_reset(1:num_dim,1:num_colloid),stat_info_sub)
+                coll_reset(1:num_dim,1:num_colloid,1:integrate_colloid_type),&
+                stat_info_sub)
            CALL colloid_set_omega(colloids, &
-                coll_reset(1:3,1:num_colloid),stat_info_sub)
+                coll_reset(1:3,1:num_colloid,1:integrate_colloid_type),&
+                stat_info_sub)
            
         END IF ! num_colloid > 0
         
@@ -980,7 +985,7 @@
              step_current <  step_relax )  .OR.  &
              ( relax_type == 2 .AND. disorder > disorder_level ) )
            
-           CALL marching_integrate(this,&
+           CALL marching_integrate(this,step_current,&
                 time_current,dt_relax,stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN              
@@ -1104,7 +1109,7 @@
 	
         DO WHILE ( k_energy * mcf_kinetics_reduce_factor > k_energy0  )
            
-           CALL marching_integrate(this,&
+           CALL marching_integrate(this,step_current,&
                 time_current,dt_relax,stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN              

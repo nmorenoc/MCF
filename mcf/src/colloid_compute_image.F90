@@ -115,7 +115,7 @@
         this%x_image(1:dim,1:num_colloid,1) = &
              this%x(1:dim,1:num_colloid)
         this%v_image(1:dim,1:num_colloid,1) = &
-             this%v(1:dim,1:num_colloid)
+             this%v(1:dim,1:num_colloid,1)
         
         !----------------------------------------------------
         ! First loop over each dimension for Lees Edwards b.c.
@@ -147,7 +147,7 @@
                                length(k) )
                           
                           this%v_image(k,j,num) = &
-                               this%v(k,j) + &
+                               this%v(k,j,1) + &
                                ( shear_v(k,2*i-1) - shear_v(k,2*i) )
                           
                        END DO ! j = 1, num_colloid
@@ -179,7 +179,7 @@
                                length(k) )
                           
                           this%v_image(k,j,num) = &
-                               this%v(k,j) + &
+                               this%v(k,j,1) + &
                                ( shear_v(k,2*i) - shear_v(k,2*i-1) )
                           
                        END DO ! j = 1, num_colloid

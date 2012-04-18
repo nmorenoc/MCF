@@ -63,6 +63,7 @@
         LOGICAL                         :: p_energy
         LOGICAL                         :: flow_v_fixed
         INTEGER                         :: integrate_type
+        INTEGER                         :: integrate_colloid_type
         INTEGER                         :: adaptive_dt
         INTEGER                         :: write_output
         INTEGER                         :: write_restart
@@ -389,6 +390,12 @@
              READ(cvalue,*,IOSTAT=ios,ERR=200) integrate_type
              CALL control_set_integrate_type(ctrl,&
                   integrate_type,stat_info_sub)
+             
+          ELSE IF (carg == 'INTEGRATE_COLLOID_TYPE') THEN
+             
+             READ(cvalue,*,IOSTAT=ios,ERR=200) integrate_colloid_type
+             CALL control_set_integrate_colloid_type(ctrl,&
+                  integrate_colloid_type,stat_info_sub)
              
           ELSE IF (carg == 'ADAPTIVE_DT') THEN
              

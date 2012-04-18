@@ -178,7 +178,7 @@
         !----------------------------------------------------
         
         x_image(1:dim) = this%x(1:dim,sid)
-        v_image(1:dim) = this%v(1:dim,sid)
+        v_image(1:dim) = this%v(1:dim,sid,1)
         rx(1:dim)      = x(1:dim) - x_image(1:dim)
         
         !----------------------------------------------------

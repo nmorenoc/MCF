@@ -130,7 +130,7 @@
                     
                     this%x(i,j) = this%min_phys(i) 
                     
-                    this%v(i,j) = 0.0_MK
+                    this%v(i,j,1) = 0.0_MK
                     
                  CASE ( ppm_param_bcdef_wall_sym ) 
                     
@@ -140,7 +140,7 @@
                     
                     this%x(i,j) = this%min_phys(i) 
                     
-                    this%v(i,j) = 0.0_MK
+                    this%v(i,j,1) = 0.0_MK
                     
                  CASE ( ppm_param_bcdef_wall_solid )
                     
@@ -150,7 +150,7 @@
                     
                     this%x(i,j) = this%min_phys(i)
                     
-                    this%v(i,j) = 0.0_MK
+                    this%v(i,j,1) = 0.0_MK
                     
                  CASE ( ppm_param_bcdef_LE ) 
                     
@@ -166,7 +166,7 @@
                                MODULO(this%x(k,j) - shear_length(k,2*i-1), &
                                length(k) )
                           
-                          this%v(k,j) = this%v(k,j) + &
+                          this%v(k,j,1) = this%v(k,j,1) + &
                                ( shear_v(k,2*i) - shear_v(k,2*i-1) )
                           
                        END IF ! k == i
@@ -205,7 +205,7 @@
                     this%x(i,j) = &
                          this%max_phys(i) - mcf_machine_zero
                     
-                    this%v(i,j) = 0.0_MK
+                    this%v(i,j,1) = 0.0_MK
                     
                  CASE ( ppm_param_bcdef_wall_sym ) 
                     
@@ -216,7 +216,7 @@
                     this%x(i,j) = &
                          this%max_phys(i)  - mcf_machine_zero
                     
-                    this%v(i,j) = 0.0_MK
+                    this%v(i,j,1) = 0.0_MK
                     
                  CASE ( ppm_param_bcdef_wall_solid )
                     
@@ -227,7 +227,7 @@
                     this%x(i,j) = &
                          this%max_phys(i) - mcf_machine_zero
                     
-                    this%v(i,j) = 0.0_MK
+                    this%v(i,j,1) = 0.0_MK
                     
                  CASE ( ppm_param_bcdef_LE ) 
                     
@@ -243,7 +243,7 @@
                                MODULO(this%x(k,j) - shear_length(k,2*i), &
                                length(k) )
                           
-                          this%v(k,j) = this%v(k,j) + &
+                          this%v(k,j,1) = this%v(k,j,1) + &
                                ( shear_v(k,2*i-1) - shear_v(k,2*i) )
                           
                        END IF ! k == i

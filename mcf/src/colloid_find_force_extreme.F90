@@ -58,7 +58,7 @@
         DO i = 1, num
            
            fa(i) = &
-                SQRT(DOT_PRODUCT(this%f(1:dim,i), this%f(1:dim,i)))
+                SQRT(DOT_PRODUCT(this%f(1:dim,i,1), this%f(1:dim,i,1)))
            
         END DO
         

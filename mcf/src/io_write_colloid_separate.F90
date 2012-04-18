@@ -45,7 +45,7 @@
         LOGICAL                         :: translate
         LOGICAL                         :: rotate
         REAL(MK),DIMENSION(:,:),POINTER :: x
-        REAL(MK),DIMENSION(:,:),POINTER :: v
+        REAL(MK),DIMENSION(:,:,:),POINTER:: v
 #ifdef __DRAG_PART
         REAL(MK),DIMENSION(:,:),POINTER :: drag_lub
         REAL(MK),DIMENSION(:,:),POINTER :: drag_repul
@@ -53,7 +53,7 @@
         REAL(MK),DIMENSION(:,:),POINTER :: drag
         REAL(MK),DIMENSION(:,:,:),POINTER::rot_matrix
         REAL(MK),DIMENSION(:,:),POINTER :: theta
-        REAL(MK),DIMENSION(:,:),POINTER :: omega
+        REAL(MK),DIMENSION(:,:,:),POINTER:: omega
         REAL(MK),DIMENSION(:,:),POINTER :: torque
         
         INTEGER                         :: data_dim
@@ -175,7 +175,7 @@
            j_end   = j_start + num_dim -1
               
            output(j_start:j_end,1:num_colloid) = &
-                v(1:num_dim,1:num_colloid)
+                v(1:num_dim,1:num_colloid,1)
            
         END IF ! translate
         
@@ -236,7 +236,7 @@
               j_end   = j_start
               
               output(j_end,1:num_colloid) = &
-                   omega(3,1:num_colloid)
+                   omega(3,1:num_colloid,1)
               
            ELSE IF ( num_dim == 3 ) THEN
               
@@ -266,7 +266,7 @@
               j_end   = j_start + num_dim - 1
               
               output(j_start:j_end,1:num_colloid) = &
-                   omega(1:3,1:num_colloid)
+                   omega(1:3,1:num_colloid,1)
               
            END IF ! num_dim
            

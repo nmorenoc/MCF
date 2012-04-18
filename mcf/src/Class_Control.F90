@@ -60,6 +60,7 @@
            LOGICAL                    :: p_energy
            LOGICAL                    :: flow_v_fixed
            INTEGER                    :: integrate_type
+           INTEGER                    :: integrate_colloid_type
            INTEGER                    :: adaptive_dt
            INTEGER                    :: write_output
            INTEGER                    :: write_restart

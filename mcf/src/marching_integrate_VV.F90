@@ -1,4 +1,4 @@
-      SUBROUTINE marching_integrate_VV(this,time,dt,stat_info)
+      SUBROUTINE marching_integrate_VV(this,step,time,dt,stat_info)
         !----------------------------------------------------
         ! Subroutine  : marching_integrate_VV
         !----------------------------------------------------
@@ -46,6 +46,7 @@
         !----------------------------------------------------
         
         TYPE(Marching), INTENT(INOUT)   :: this
+        INTEGER, INTENT(IN)             :: step
         REAL(MK), INTENT(IN)            :: time
         REAL(MK), INTENT(IN)            :: dt
         INTEGER, INTENT(OUT)	        :: stat_info
@@ -76,6 +77,8 @@
         
         INTEGER                         :: num_species
         INTEGER                         :: num_dim
+        INTEGER                         :: step_start
+
         LOGICAL                         :: eigen_dynamics
         
         INTEGER                         :: num_colloid
@@ -188,6 +191,8 @@
              physics_get_num_species(this%phys,stat_info_sub)
         num_dim        = &
              physics_get_num_dim(this%phys,stat_info_sub)
+        step_start     = &
+             physics_get_step_start(this%phys,stat_info_sub)
         eigen_dynamics = &
              physics_get_eigen_dynamics(this%phys,stat_info_sub)
         
@@ -388,8 +393,8 @@
                    num_part_real,dt,0.5_MK,stat_info_sub)
               
               IF (stat_info_sub /= 0 ) THEN
-                 PRINT *, "marching_integrate_VV : ", &
-                      "Integrating ct failed  !"
+                 PRINT *, "marching_integrate_VV: ", &
+                      "Integrating ct failed !"
                  stat_info = -1
                  GOTO 9999
               END IF
@@ -409,7 +414,7 @@
                 num_part_real,dt,0.5_MK,stat_info_sub)
            
            IF (stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_integrate_VV : ", &
+              PRINT *, "marching_integrate_VV: ", &
                    "Integrating potential energy failed !"
               stat_info = -1
               GOTO 9999
@@ -418,11 +423,7 @@
         END IF ! p_energy
         
         
-        !----------------------------------------------------
-        ! If there are colloids, update their centers'
-        ! positions as rigid bodies, using same integrator.
-	!----------------------------------------------------
-
+       
 #ifdef __DEBUG_INTEGRATE_VV
         IF ( debug_flag == 3 ) THEN
            debug_time0 = &
@@ -432,42 +433,17 @@
 
         IF ( num_colloid > 0 ) THEN           
            
-           !----------------------------------------------------
-           ! Integrate velocity using lamda=0.5 as coefficient
-           ! in front of acceleration, i.e.,
-           ! V'(t+dt) = V(t) + 0.5 * F(t) * dt
-           !----------------------------------------------------
-           
-           CALL colloid_integrate_velocity(colloids, dt, &
-                0.5_MK,stat_info_sub)
+           !-------------------------------------------------
+           ! Compute the rotation vector using rotating
+           ! velocity, using desired order.
+           !-------------------------------------------------
+        
+           CALL colloid_compute_rotation_vector(colloids,&
+                step-step_start, dt,stat_info_sub)
            
            IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_integrate_VV : ", &
-                   "Integrating colloids velocity failed !"
-              stat_info = -1
-              GOTO 9999
-           END IF
-           
-           !-------------------------------------------------
-           ! Integrate positions of all colloids,
-           ! using second order accuracy, however
-           ! since we have integrated translation and angular
-           ! velocity already by half time step dt/2,
-           ! we should have 1 order integrator which is
-           ! 2nd order accuracy,(rotation vector and boundary
-           ! particle positions)
-           ! phi(t+dt) = omega'(t+dt) * dt -> rotation vector 
-           ! r(t+dt)   = r(t) + r'(t+dt) * dt.
-           ! Similar as for particles.
-           !-------------------------------------------------
-           
-
-           CALL colloid_compute_rotation_vector(colloids,dt, &
-                1,stat_info_sub)
-           
-           IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_integrate_VV : ", &
-                   "Integrating colloids angle failed !"
+              PRINT *, "marching_integrate_VV: ", &
+                   "Computing rotation vector of colloids failed !"
               stat_info = -1
               GOTO 9999
            END IF
@@ -482,7 +458,7 @@
         
            IF ( stat_info_sub /=0 ) THEN
               
-              PRINT *, "marching_integrate_VV : ", &
+              PRINT *, "marching_integrate_VV: ", &
                    "Computing rotaiton matrix failed "
               stat_info = -1
               GOTO 9999
@@ -497,22 +473,22 @@
                 this%particles,stat_info_sub)
            
            IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_integrate_VV : ", &
-                   "Integrating colloid boundary particle position failed !"
+              PRINT *, "marching_integrate_VV: ", &
+                   "Computing boundary particles relative position failed!"
               stat_info = -1
               GOTO 9999
            END IF
            
            !-------------------------------------------------
            ! Integrate the positions of all colloids' centers,
-           ! using first order accuracy, i.e., explicit Euler.
+           ! using desired order.
            !-------------------------------------------------
          
-           CALL colloid_integrate_position(colloids,dt, &
-                1,stat_info_sub)
+           CALL colloid_integrate_position(colloids,&
+                step-step_start,dt,stat_info_sub)
            
            IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_integrate_VV : ", &
+              PRINT *, "marching_integrate_VV: ", &
                    "Integrating colloids position failed !"
               stat_info = -1
               GOTO 9999
@@ -528,12 +504,25 @@
                 this%particles,stat_info_sub)
            
            IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_integrate_Euler : ", &
-                   "Compute colloid boundary particle relative position failed !"
+              PRINT *, "marching_integrate_VV: ", &
+                   "Computing boundary particles absolute position failed !"
               stat_info = -1
               GOTO 9999
            END IF
-
+           
+           !----------------------------------------------------
+           ! Integrate velocity using desired accuracy order.
+           !----------------------------------------------------
+           
+           CALL colloid_integrate_velocity(colloids,&
+                step-step_start,dt,stat_info_sub)
+           
+           IF ( stat_info_sub /= 0 ) THEN
+              PRINT *, "marching_integrate_VV: ", &
+                   "Integrating colloids velocity failed !"
+              stat_info = -1
+              GOTO 9999
+           END IF
            !-------------------------------------------------
            ! In case colloids centers go out of physical
            ! boundary, adjust them according to boundary
@@ -543,7 +532,7 @@
            CALL colloid_adjust_colloid(colloids,stat_info_sub)
 
            IF (stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_integrate_VV : ", &
+              PRINT *, "marching_integrate_VV: ", &
                    "Adjusting colloids r or v failed !"
               stat_info = -1
               GOTO 9999
@@ -571,7 +560,7 @@
         IF ( num_shear > 0 ) THEN
            
            CALL boundary_update_boundary(tboundary, &
-                time+dt,time+0.5*dt,stat_info_sub)
+                time+dt,time+0.5_MK*dt,stat_info_sub)
            
            IF ( stat_info_sub /= 0 ) THEN
               PRINT *, "marching_integrate_VV : ", &
@@ -721,7 +710,7 @@
              stat_info_sub)
         
         IF ( stat_info_sub /= 0 ) THEN
-           PRINT *, "marching_integrate_Euler : ", &
+           PRINT *, "marching_integrate_VV: ", &
                 "Setting boundary ghosts ID failed !"
            stat_info = -1
            GOTO 9999
@@ -831,7 +820,7 @@
                 stat_info = stat_info_sub)
            
            IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_integrate_VV : ", &
+              PRINT *, "marching_integrate_VV: ", &
                    "Receiving density from ghosts failed !"
               stat_info = -1
               GOTO 9999
@@ -850,6 +839,8 @@
 #endif   
         
         !-------------------------------------------------
+        ! After computing density, the list of colloid
+        ! boundary particles is created.
         ! Set colloidal boundary particles velocity
         ! accordingt to its translation and rotation speed.
         !-------------------------------------------------
@@ -859,7 +850,7 @@
            CALL particles_set_colloid_velocity(this%particles,stat_info_sub)
            
            IF (stat_info_sub /= 0) THEN
-              PRINT *, 'marching_integrate_VV : ',&
+              PRINT *, 'marching_integrate_VV: ',&
                    'Setting colloid velocity failed !'
               stat_info = -1
               GOTO 9999
@@ -867,13 +858,20 @@
            
         END IF
 
+        !-------------------------------------------------
+        ! After computing density, the list of wall
+        ! boundary particles is created.
+        ! Set wall boundary particles velocity
+        ! accordingt to its translation speed.
+        !-------------------------------------------------
+
         IF ( num_shear > 0 ) THEN
 
            CALL particles_set_boundary_velocity(this%particles,&
                 stat_info_sub)
            
            IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_integrate_VV : ", &
+              PRINT *, "marching_integrate_VV: ", &
                    "particles setting boundary failed !"
               stat_info = -1           
               GOTO 9999           
@@ -920,7 +918,7 @@
 #endif   
 
         IF ( stat_info_sub /= 0 ) THEN
-           PRINT *, "marching_integrate_VV : ", &
+           PRINT *, "marching_integrate_VV: ", &
                 "Mapping ghosts with rho, v (,ct) failed!"
            stat_info = -1
            GOTO 9999
@@ -950,7 +948,7 @@
              stat_info_sub)
         
         IF ( stat_info_sub /= 0 ) THEN
-           PRINT *, "marching_integrate_VV : ", &
+           PRINT *, "marching_integrate_VV: ", &
                 "Setting boundary ghosts velocity failed !"
            stat_info = -1
            GOTO 9999
@@ -970,7 +968,7 @@
                 comm, MPI_PREC, stat_info_sub)
            
            IF(stat_info_sub /=0) THEN
-              PRINT *, "marching_marching : ", &
+              PRINT *, "marching_integrate_VV: ", &
                    "Finding density extrem failed !"
               stat_info = -1
               GOTO 9999
@@ -980,7 +978,7 @@
                 stat_info_sub)
            
            IF(stat_info_sub /=0) THEN
-              PRINT *, "marching_marching : ", &
+              PRINT *, "marching_integrate_VV: ", &
                    "Setting density extreme failed !"
               stat_info = -1
               GOTO 9999
@@ -1005,7 +1003,7 @@
              num_part_all,stat_info_sub)
         
         IF( stat_info_sub /=0 ) THEN
-           PRINT *, "marching_integrate_VV : ", &
+           PRINT *, "marching_integrate_VV: ", &
                 "Computing pressure failed !" 
            stat_info = -1
            GOTO 9999
@@ -1032,7 +1030,7 @@
                 num_part_all,stat_info_sub)
            
            IF(stat_info_sub /=0) THEN
-              PRINT *, "marching_integrate_VV : ", &
+              PRINT *, "marching_integrate_VV: ", &
                    "Computing pressure tensor failed !"
               stat_info = -1
               GOTO 9999
@@ -1058,7 +1056,7 @@
              stat_info_sub)
         
         IF ( stat_info_sub /= 0 ) THEN
-           PRINT *,"marching_integrate_VV : ",&
+           PRINT *,"marching_integrate_VV: ",&
                 "Computing interaction failed !"
            stat_info = -1
            GOTO 9999
@@ -1127,7 +1125,7 @@
 #endif
            
            IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_integrate_VV : ", &
+              PRINT *, "marching_integrate_VV: ", &
                    "Receiving force (stress, vgt, au) from ghosts failed !"
               stat_info = -1
               GOTO 9999
@@ -1153,7 +1151,7 @@
              num_part_real,stat_info_sub)
         
         IF ( stat_info_sub /= 0 ) THEN
-           PRINT *,"marching_integrate_VV : ", &
+           PRINT *,"marching_integrate_VV: ", &
                 "Applying body force failed!"
            stat_info = -1
            GOTO 9999
@@ -1183,7 +1181,7 @@
                    num_part_real,stat_info_sub)
               
               IF ( stat_info_sub /= 0 ) THEN
-                 PRINT *, "marching_integrate_VV : ", &
+                 PRINT *, "marching_integrate_VV: ", &
                       "Computing evgt failed !"
                  stat_info = -1
                  GOTO 9999
@@ -1197,7 +1195,7 @@
                    num_part_real,stat_info_sub)
               
               IF ( stat_info_sub /= 0 ) THEN
-                 PRINT *, "marching_integrate_VV : ",&
+                 PRINT *, "marching_integrate_VV: ",&
                       "Computing aeval failed !"
                  stat_info = -1
                  GOTO 9999
@@ -1211,7 +1209,7 @@
                    num_part_real,stat_info_sub)
               
               IF ( stat_info_sub /= 0 ) THEN
-                 PRINT *, "marching_integrate_VV : ",&
+                 PRINT *, "marching_integrate_VV: ",&
                       "Computing aevec failed !"
                  stat_info = -1
                  GOTO 9999
@@ -1226,7 +1224,7 @@
               
               IF ( stat_info_sub /= 0 ) THEN
                  PRINT *,&
-                      "marching_integrate_VV : ", &
+                      "marching_integrate_VV: ", &
                       "Integrating eva 2nd time failed !"
                  stat_info = -1
                  GOTO 9999
@@ -1241,7 +1239,7 @@
               
               IF (stat_info_sub /= 0 ) THEN
                  PRINT *,&
-                      "marching_integrate_VV : ",&
+                      "marching_integrate_VV  ",&
                       "Integrating evec 2nd time failed !"
                  stat_info = -1
                  GOTO 9999
@@ -1319,7 +1317,7 @@
                 coll_drag,coll_torque,stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_integrate_VV : ", &
+              PRINT *, "marching_integrate_VV: ", &
                    "Summing up interaction on colloid locally has problem !"
               stat_info = -1
               GOTO 9999
@@ -1335,7 +1333,7 @@
                 comm,MPI_PREC,coll_drag,coll_torque,stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_integrate_VV : ",&
+              PRINT *, "marching_integrate_VV: ",&
                    "Summing up interaction on colloid globally has problem !"
               stat_info = -1
               GOTO 9999
@@ -1366,7 +1364,7 @@
         END IF
 #endif   
            IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_integrate_VV : ", &
+              PRINT *, "marching_integrate_VV: ", &
                    "Summing up interaction on colloid globally has problem !"
               stat_info = -1
               GOTO 9999
@@ -1379,7 +1377,7 @@
            CALL colloid_apply_body_force(colloids,stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_integrate_vv : ", &
+              PRINT *, "marching_integrate_VV: ", &
                    "Applying body force on colloids has problem !"
               stat_info = -1
               GOTO 9999
@@ -1393,7 +1391,7 @@
            CALL colloid_compute_acceleration(colloids,stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_integrate_VV : ",&
+              PRINT *, "marching_integrate_VV: ",&
                    "Computing colloids accelerations has problem !"
               stat_info = -1
               GOTO 9999
@@ -1425,7 +1423,7 @@
            
 #endif
            IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_integrate_VV : ", &
+              PRINT *, "marching_integrate_VV: ", &
                    "Summing up interaction on boundary locally has problem !"
               stat_info = -1
               GOTO 9999
@@ -1445,7 +1443,7 @@
                 stat_info=stat_info_sub)
 #endif     
            IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_integrate_VV : ",&
+              PRINT *, "marching_integrate_VV: ",&
                    "Summing up particles contribution on boundary has problem !"
               stat_info = -1
               GOTO 9999
@@ -1455,7 +1453,7 @@
                 MPI_PREC, wall_drag_c(1:num_dim,1:num_dim*2),stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_integrate_VV : ",&
+              PRINT *, "marching_integrate_VV: ",&
                    "Summing up colloids contribution on boundary has problem !"
               stat_info = -1
               GOTO 9999
@@ -1471,7 +1469,7 @@
                 stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_integrate_VV : ",&
+              PRINT *, "marching_integrate_VV: ",&
                    "Resetting boundary particles interaction failed !"
               stat_info = -1
               GOTO 9999
@@ -1481,7 +1479,7 @@
                 stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_integate_VV : ", &
+              PRINT *, "marching_integate_VV: ", &
                    "Resetting boundary interaction failed !"
               stat_info = -1
               GOTO 9999
@@ -1500,7 +1498,7 @@
              num_part_real,dt,0.5_MK,stat_info_sub)
         
         IF( stat_info_sub /=0 ) THEN
-           PRINT *, "marching_integrate_VV : ", &
+           PRINT *, "marching_integrate_VV: ", &
                 "Updating velocity second time has problem !"
            stat_info = -1
            GOTO 9999
@@ -1516,7 +1514,7 @@
              num_part_real,stat_info_sub)
         
         IF( stat_info_sub /= 0 ) THEN
-           PRINT *, "marching_integrate_VV : ", &
+           PRINT *, "marching_integrate_VV: ", &
                 "Adjusting r or v failed ! "
            stat_info = -1
            GOTO 9999
@@ -1533,7 +1531,7 @@
                 num_part_real,dt,0.5_MK,stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_integrate_VV : ",&
+              PRINT *, "marching_integrate_VV: ",&
                    "Updating potential energy second time has problem !"
               stat_info = -1
               GOTO 9999
@@ -1541,6 +1539,7 @@
            
         END IF ! p_energy
     
+#if 0
 
         !----------------------------------------------------
         ! If there are colloids, update their velocities
@@ -1567,7 +1566,7 @@
            CALL particles_set_colloid_velocity(this%particles,stat_info_sub)
            
            IF (stat_info_sub /= 0) THEN
-              PRINT *, 'marching_integrate_VV : ',&
+              PRINT *, 'marching_integrate_VV: ',&
                    'Setting colloid velocity failed !'
               stat_info = -1
               GOTO 9999
@@ -1575,6 +1574,7 @@
            
         END IF ! num_colloid > 0
         
+#endif
         !----------------------------------------------------
         ! Update boundary :
         !
@@ -1589,7 +1589,7 @@
                 time+dt,time+dt,stat_info_sub)
            
            IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_integrate_VV : ", &
+              PRINT *, "marching_integrate_VV: ", &
                    "Updating boundary failed  !"
               stat_info = -1
               GOTO 9999
@@ -1599,7 +1599,7 @@
                 stat_info_sub)
            
            IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_integrate_VV : ", &
+              PRINT *, "marching_integrate_VV: ", &
                    "particles setting boundary failed !"
               stat_info = -1           
               GOTO 9999           
@@ -1627,7 +1627,7 @@
                    rank,debug_time_record(1:debug_index),stat_info_sub)
               
               IF ( stat_info_sub /= 0 ) THEN
-                 PRINT *, "marching_integrate_VV : ", &
+                 PRINT *, "marching_integrate_VV: ", &
                       "debug_write_time has problem ! "
                  stat_info_sub = -1
                  GOTO 9999

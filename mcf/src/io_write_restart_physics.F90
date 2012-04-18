@@ -136,10 +136,10 @@
         REAL(MK), DIMENSION(:), POINTER :: coll_m
         REAL(MK),DIMENSION(:,:),POINTER :: coll_mmi
         REAL(MK),DIMENSION(:,:),POINTER :: coll_x
-        REAL(MK),DIMENSION(:,:),POINTER :: coll_v
+        REAL(MK),DIMENSION(:,:,:),POINTER:: coll_v
         REAL(MK),DIMENSION(:,:),POINTER :: coll_acc_vector
         REAL(MK),DIMENSION(:,:),POINTER :: coll_theta        
-        REAL(MK),DIMENSION(:,:),POINTER :: coll_omega
+        REAL(MK),DIMENSION(:,:,:),POINTER:: coll_omega
         
         !----------------------------------------------------
         ! Boundary parameters.
@@ -813,10 +813,10 @@
               
               IF(num_dim == 2) THEN
                  WRITE(cbuf, '(2(A,E16.8))') &
-                      'coll_v = ',coll_v(1,i),',', coll_v(2,i)
+                      'coll_v = ',coll_v(1,i,1),',', coll_v(2,i,1)
               ELSE IF (num_dim == 3 ) THEN
                  WRITE(cbuf, '(3(A,E16.8))') &
-                      'coll_v = ',coll_v(1,i),',', coll_v(2,i), ',', coll_v(3,i)
+                      'coll_v = ',coll_v(1,i,1),',', coll_v(2,i,1), ',', coll_v(3,i,1)
               END IF
               WRITE(UNIT=this%restart_physics_unit,FMT='(A)',IOSTAT=stat_info_sub)  TRIM(cbuf)
               WRITE(UNIT=this%restart_physics_unit,FMT='(A)',IOSTAT=stat_info_sub) ' '
@@ -834,7 +834,7 @@
               WRITE(UNIT=this%restart_physics_unit,FMT='(A)',IOSTAT=stat_info_sub) ' '
               
               WRITE(cbuf, '(3(A,E16.8))') &
-                   'coll_omega = ',coll_omega(1,i),',', coll_omega(2,i), ',', coll_omega(3,i)
+                   'coll_omega = ',coll_omega(1,i,1),',', coll_omega(2,i,1), ',', coll_omega(3,i,1)
               WRITE(UNIT=this%restart_physics_unit,FMT='(A)',IOSTAT=stat_info_sub)  TRIM(cbuf)
               WRITE(UNIT=this%restart_physics_unit,FMT='(A)',IOSTAT=stat_info_sub) ' '
               WRITE(UNIT=this%restart_physics_unit,FMT='(A)',IOSTAT=stat_info_sub) ' '

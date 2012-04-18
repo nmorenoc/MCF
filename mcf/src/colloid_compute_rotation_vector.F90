@@ -1,5 +1,5 @@
       SUBROUTINE colloid_compute_rotation_vector(this,&
-           dt,accuracy_order,stat_info)
+           step,dt,stat_info)
         !----------------------------------------------------
         ! Subroutine  : colloid_compute_rotation_vector
         !----------------------------------------------------
@@ -24,12 +24,12 @@
         !----------------------------------------------------
         
         TYPE(Colloid), INTENT(OUT)      :: this
+        INTEGER, INTENT(IN)             :: step
         REAL(MK), INTENT(IN)            :: dt
-        INTEGER, INTENT(IN)             :: accuracy_order
         INTEGER, INTENT(OUT)            :: stat_info
         
-        INTEGER                         :: stat_info_sub
         INTEGER                         :: dim,i
+        INTEGER                         :: itype, order
         REAL(MK),DIMENSION(3)           :: axis
         REAL(MK)                        :: phi
         
@@ -38,57 +38,117 @@
         !----------------------------------------------------
         
         stat_info     = 0
-        stat_info_sub = 0
         dim           = this%num_dim
-
+        itype         = this%integrate_type
+        
 #if __PARTICLES_POSITION_FIXED
 #else        
+
+        !----------------------------------------------------
+        ! Select different accuracy oder for
+        ! When the step is smaller then integrator order,
+        ! a lower order (step) integrator is used.
+        ! When the step is bigger than or equal to integrator
+        ! order, the actual order (itype) is used.
+        !----------------------------------------------------
+    
+        IF ( step < itype ) THEN
+           order = step
+        ELSE
+           order = itype             
+        END IF
+
         IF ( this%rotate ) THEN
-
-           !-------------------------------------------------
-           ! Select different accuracy oder:
-           ! 1 velocity contribution;
-           ! 2 velocity + acceleration contribution.
-           !-------------------------------------------------
            
-           SELECT CASE (accuracy_order)
+           DO i = 1, this%num_colloid
               
-           CASE(1)
+              !----------------------------------------------
+              ! Calculate the roation axis at this time
+              !----------------------------------------------
+              
+              SELECT CASE (order)
+                 
+              CASE (1)
+                 
+                 axis(1:3) = this%omega(1:3,i,1) * dt
+                 
+              CASE (2)   
+                 
+                 axis(1:3) = ( 3.0_MK * this%omega(1:3,i,1) - &
+                      this%omega(1:3,i,2)) * dt / 2.0_MK
+                 
+              CASE (3)
+                 
+                 axis(1:3) = ( 23.0_MK * this%omega(1:3,i,1) - &
+                      16.0_MK * this%omega(1:3,i,2) + &
+                      5.0_MK * this%omega(1:3,i,3) ) * dt / 12.0_MK
+                 
+              CASE (4)
+                 
+                 axis(1:3) =  ( 55.0_MK * this%omega(1:3,i,1) - &
+                      59.0_MK * this%omega(1:3,i,2) + &
+                      37.0_MK * this%omega(1:3,i,3) - &
+                      9.0_MK * this%omega(1:3,i,4) ) * dt / 24.0_MK
+                 
+              CASE (5)
+                 
+                 axis(1:3) = ( 1901.0_MK* this%omega(1:3,i,1) - &
+                      2774.0_MK * this%omega(1:3,i,2) + &
+                      2616.0_MK * this%omega(1:3,i,3) - &
+                      1274.0_MK * this%omega(1:3,i,4) + &
+                      251.0_MK * this%omega(1:3,i,5) ) * dt / 720.0_MK
+                 
+              CASE DEFAULT
+                 
+                 PRINT *, "colloid_compute_rotation_vector: ",&
+                      "integrator not available!"
+                 stat_info = -1
+                 GOTO 9999
+                 
+              END SELECT ! order
+              
+              !-----------------------------------------------
+              ! Calculate the roation vector at this time
+              ! step and normalize it.
+              !----------------------------------------------
+              
+              phi = SQRT(DOT_PRODUCT(axis(1:3),axis(1:3)))
+              
+              IF ( phi < mcf_machine_zero ) THEN
+                 phi       = 0.0_MK
+                 axis(1)   = 1.0_MK
+                 axis(2:3) = 0.0_MK
+              ELSE
+                 axis(1:3) = axis(1:3) / phi
+              END IF
+              
+              this%rot_vector(1:3,i) = axis(1:3)
+              this%rot_vector(4,i)   = phi
+              
+              !-------------------------------------------
+              ! Only usefull for 2D,
+              ! since 3D roation angle can not be simply
+              ! added up for accumulating rotated angle.
+              !-------------------------------------------
+              
+              this%theta(3,i) = this%theta(3,i) + phi
+              
+           END DO ! num_colloid
            
-              DO i = 1, this%num_colloid
-                 
-                 !-------------------------------------------
-                 ! Calculate the roation vector at this time
-                 ! step and normalize it.
-                 !-------------------------------------------
-
-                 axis(1:3) = this%omega(1:3,i) * dt
-                 
-                 phi = SQRT(DOT_PRODUCT(axis(1:3),axis(1:3)))
-                 
-                 IF ( phi < mcf_machine_zero ) THEN
-                    phi       = 0.0_MK
-                    axis(1)   = 1.0_MK
-                    axis(2:3) = 0.0_MK
-                 ELSE
-                    axis(1:3) = axis(1:3) / phi
-                 END IF
-                 
-                 this%rot_vector(1:3,i) = axis(1:3)
-                 this%rot_vector(4,i)   = phi
-                 
-                 !-------------------------------------------
-                 ! Only usefull for 2D,
-                 ! since 3D roation angle can not be simply
-                 ! added up for accumulating rotated angle.
-                 !-------------------------------------------
-                 
-                 this%theta(3,i) = this%theta(3,i) + phi
-                 
-              END DO
-              
-           CASE(2)
-              
+        END IF ! rotate
+        
+#endif
+        
+9999    CONTINUE
+        
+        RETURN
+        
+      END SUBROUTINE colloid_compute_rotation_vector
+      
+#if 0      
+      ! to delete
+   CASE(2)
+           
               DO i = 1, this%num_colloid
                  
                  !-------------------------------------------
@@ -123,14 +183,4 @@
               END DO ! i = 1, num_colloid
               
            END SELECT ! accuracy_order
-           
-        END IF ! rotate
-        
 #endif
-        
-9999    CONTINUE
-        
-        RETURN
-        
-      END SUBROUTINE colloid_compute_rotation_vector
-      

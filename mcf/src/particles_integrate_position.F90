@@ -85,7 +85,7 @@
            
            DO i = 1, num
               
-              IF ( this%id(this%sid_idx,i) == mcf_particle_type_fluid) THEN
+              IF ( this%id(this%sid_idx,i) == mcf_particle_type_fluid ) THEN
                  
                  this%x(1:dim,i) = &
                       this%x(1:dim,i) + &
@@ -99,7 +99,7 @@
            
            DO i = 1, num
               
-              IF ( this%id(this%sid_idx,i) == mcf_particle_type_fluid) THEN
+              IF ( this%id(this%sid_idx,i) == mcf_particle_type_fluid ) THEN
                  
                  this%x(1:dim,i) = &
                       this%x(1:dim,i) + &
@@ -129,3 +129,4 @@
         RETURN
         
       END SUBROUTINE particles_integrate_position
+      

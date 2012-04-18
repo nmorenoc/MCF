@@ -96,6 +96,7 @@
 
            INTEGER                            :: num_dim
            INTEGER                            :: num_colloid
+           INTEGER                            :: integrate_type
            REAL(MK)                           :: adapt_t_coef
            REAL(MK)                           :: rho
            INTEGER                            :: rho_type
@@ -137,6 +138,10 @@
            !  mmi        : mass momentum of inertia
            !  x          : position
            !  v          : translating velocity
+           ! v(:,:,1)    : current time step
+           ! v(:,:,2)    : previous time step
+           ! v(:,:,3)    : pre-previous time step
+           ! v(:,:,4)    : pre-pre-previous time step
            !  drag       : drag
            !  rot_vector : current rotation vector
            !  acc_vector : accumulation rotation vector       
@@ -146,6 +151,7 @@
            !               usefull in 2D but not in 3D.
            !  omega      : rotating velocity, 
            !               pseudovector always 3D
+           !  about omega(:,:,i), check for v(:,:,i)
            !  torque     : torque, pseudovector always 3D
            !  num_numerical_part : 
            !               number of particles one colloid consist of
@@ -159,7 +165,7 @@
            REAL(MK), DIMENSION(:), POINTER    :: m
            REAL(MK), DIMENSION(:,:), POINTER  :: mmi
            REAL(MK), DIMENSION(:,:), POINTER  :: x
-           REAL(MK), DIMENSION(:,:), POINTER  :: v
+           REAL(MK), DIMENSION(:,:,:),POINTER :: v
            REAL(MK), DIMENSION(:,:), POINTER  :: drag_lub
            REAL(MK), DIMENSION(:,:), POINTER  :: drag_repul
            REAL(MK), DIMENSION(:,:), POINTER  :: drag
@@ -168,7 +174,7 @@
            REAL(MK), DIMENSION(:,:,:), POINTER:: rot_matrix
            REAL(MK), DIMENSION(:,:,:), POINTER:: acc_matrix
            REAL(MK), DIMENSION(:,:), POINTER  :: theta
-           REAL(MK), DIMENSION(:,:), POINTER  :: omega
+           REAL(MK), DIMENSION(:,:,:),POINTER :: omega
            REAL(MK), DIMENSION(:,:), POINTER  :: torque
            INTEGER, DIMENSION(:), POINTER     :: num_physical_part
            INTEGER, DIMENSION(:), POINTER     :: num_numerical_part
@@ -177,20 +183,22 @@
            !  Derived quantities, can always be
            !  calcualted from basic quantities.
            !  f        : force per unit mass(for translation)
+           !  about f(:,:,i), check for v(:,:,i)
            !  fa_min   : mimimum force acceleration.
            !  fa_max   : maximum force acceleration.
            !  alpha    : force per unit mass(for rotation),
            !              pseudovector always 3D
+           !  about alpha(:,:,i), check for v(:,:,i)           
            !  k_energy : kinetic energy 
            !  mom      : momentum of  colloids
            !  k_energy_tot : 
            !  mom_tot  :
            !-------------------------------------------------
            
-           REAL(MK), DIMENSION(:,:), POINTER  :: f
+           REAL(MK), DIMENSION(:,:,:),POINTER :: f
            REAL(MK)                           :: fa_min
            REAL(MK)                           :: fa_max
-           REAL(MK), DIMENSION(:,:), POINTER  :: alpha
+           REAL(MK), DIMENSION(:,:,:),POINTER :: alpha
            REAL(MK), DIMENSION(:), POINTER    :: k_energy
            REAL(MK), DIMENSION(:,:), POINTER  :: mom
            REAL(MK)                           :: k_energy_tot

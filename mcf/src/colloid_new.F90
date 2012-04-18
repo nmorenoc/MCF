@@ -48,7 +48,8 @@
         this%num_dim     = dim
         this%num_colloid = num
         
-        this%adapt_t_coef = 1.0_MK
+        this%integrate_type = 1
+        this%adapt_t_coef   = 1.0_MK
         this%rho         = 1.e3_MK
         this%rho_type    = 0
         this%translate   = .FALSE.
@@ -104,8 +105,8 @@
         this%x(:,1) = 0.05_MK
         
         NULLIFY(this%v)
-        ALLOCATE(this%v(dim,num))
-        this%v(:,:) = 0.0_MK
+        ALLOCATE(this%v(dim,num,this%integrate_type))
+        this%v(:,:,:) = 0.0_MK
         
 #if __DRAG_PART
         NULLIFY(this%drag_lub)
@@ -145,8 +146,8 @@
         this%theta(:,:) = 0.0_MK
     
         NULLIFY(this%omega)
-        ALLOCATE(this%omega(3,num))
-        this%omega(:,:) = 0.0_MK
+        ALLOCATE(this%omega(3,num,this%integrate_type))
+        this%omega(:,:,:) = 0.0_MK
         
         NULLIFY(this%torque)
         ALLOCATE(this%torque(3,num))
@@ -161,15 +162,15 @@
         this%num_numerical_part(:)  = 0
          
         NULLIFY(this%f)
-        ALLOCATE(this%f(dim,num))
-        this%f(:,:) = 0.0_MK
+        ALLOCATE(this%f(dim,num,this%integrate_type))
+        this%f(:,:,:) = 0.0_MK
         
         this%fa_min = 0.0_MK
         this%fa_max = 0.0_MK
 
         NULLIFY(this%alpha)
-        ALLOCATE(this%alpha(3,num))
-        this%alpha(:,:) = 0.0_MK
+        ALLOCATE(this%alpha(3,num,this%integrate_type))
+        this%alpha(:,:,:) = 0.0_MK
         
         NULLIFY(this%k_energy)
         ALLOCATE(this%k_energy(num))
@@ -227,7 +228,8 @@
       END SUBROUTINE colloid_init_default
       
       
-      SUBROUTINE colloid_init(this,d_num_dim,d_num_colloid,stat_info)
+      SUBROUTINE colloid_init(this,&
+           d_num_dim,d_num_colloid,d_integrate_type,stat_info)
         !----------------------------------------------------
         ! Subroutine  : colloid_init
         !----------------------------------------------------
@@ -253,6 +255,7 @@
         TYPE(Colloid),INTENT(OUT)       :: this
         INTEGER, INTENT(IN)             :: d_num_dim
         INTEGER, INTENT(IN)             :: d_num_colloid
+        INTEGER, INTENT(IN)             :: d_integrate_type        
         INTEGER,INTENT(OUT)             :: stat_info
         
         INTEGER                         :: stat_info_sub
@@ -266,8 +269,9 @@
 
         NULLIFY(this%tech)
 
-        this%num_dim     = d_num_dim
-        this%num_colloid = d_num_colloid
+        this%num_dim        = d_num_dim
+        this%num_colloid    = d_num_colloid
+        this%integrate_type = d_integrate_type
         
         this%adapt_t_coef= 1.0_MK
         this%rho         = 1.e3_MK
@@ -331,8 +335,8 @@
         this%x(:,:) = 0.0_MK
         
         NULLIFY(this%v)
-        ALLOCATE(this%v(d_num_dim,d_num_colloid))
-        this%v(:,:) = 0.0_MK
+        ALLOCATE(this%v(d_num_dim,d_num_colloid,d_integrate_type))
+        this%v(:,:,:) = 0.0_MK
         
 #if __DRAG_PART
         NULLIFY(this%drag_lub)
@@ -369,8 +373,8 @@
         this%theta(:,:) = 0.0_MK
     
         NULLIFY(this%omega)
-        ALLOCATE(this%omega(3,d_num_colloid))
-        this%omega(:,:) = 0.0_MK
+        ALLOCATE(this%omega(3,d_num_colloid,d_integrate_type))
+        this%omega(:,:,:) = 0.0_MK
         
         NULLIFY(this%torque)
         ALLOCATE(this%torque(3,d_num_colloid))
@@ -390,15 +394,15 @@
         !----------------------------------------------------
         
         NULLIFY(this%f)
-        ALLOCATE(this%f(d_num_dim,d_num_colloid))
-        this%f(:,:) = 0.0_MK
+        ALLOCATE(this%f(d_num_dim,d_num_colloid,d_integrate_type))
+        this%f(:,:,:) = 0.0_MK
         
         this%fa_min = 0.0_MK
         this%fa_max = 0.0_MK
         
         NULLIFY(this%alpha)
-        ALLOCATE(this%alpha(3,d_num_colloid))
-        this%alpha(:,:) = 0.0_MK
+        ALLOCATE(this%alpha(3,d_num_colloid,d_integrate_type))
+        this%alpha(:,:,:) = 0.0_MK
         
         NULLIFY(this%k_energy)
         ALLOCATE(this%k_energy(d_num_colloid))
@@ -497,6 +501,7 @@
         PRINT *, '---***********************************---'
         
         PRINT *, "num_colloid        : ", this%num_colloid
+        PRINT *, "integrate_type     : ", this%integrate_type
         PRINT *, "adapt_t_coef       : ", this%adapt_t_coef
         PRINT *, "rho                : ", this%rho
         PRINT *, "rho type           : ", this%rho_type
@@ -538,10 +543,10 @@
            PRINT *, "m                  : ", this%m(i)
            PRINT *, "mmi                : ", this%mmi(1:3,i)
            PRINT *, "x                  : ", this%x(1:dim,i)
-           PRINT *, "v                  : ", this%v(1:dim,i)
+           PRINT *, "v                  : ", this%v(1:dim,i,1)
            PRINT *, "rotation vector    : ", this%acc_vector(1:4,i)
            !PRINT *, "theta              : ", this%theta(1:3,i)
-           PRINT *, "omega              : ", this%omega(1:3,i)
+           PRINT *, "omega              : ", this%omega(1:3,i,1)
            PRINT *, "num_physical_part  : ",&
                 this%num_physical_part(i)
            PRINT *, "num_numerical_part : ", &

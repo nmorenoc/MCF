@@ -98,7 +98,7 @@
         !------------------------------------------
         
         x_coll(1:dim) = this%x(1:dim,sid_c)
-        v_coll(1:dim) = this%v(1:dim,sid_c)
+        v_coll(1:dim) = this%v(1:dim,sid_c,1)
         
         !---------------------------------------
         ! In context of periodic or Lees-Edwards
@@ -313,7 +313,7 @@
            r(1:dim) = xc(1:dim) - x_coll(1:dim)
            
            CALL tool_cross_product(this%tool,&
-                this%omega(1:3,sid_c), r(1:3),&
+                this%omega(1:3,sid_c,1), r(1:3),&
                 v_r(1:3),stat_info_sub)
 
         END IF

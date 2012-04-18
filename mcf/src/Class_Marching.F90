@@ -13,6 +13,21 @@
         !               all procedures using this Module sharing the
         !               same copy of this Module.
         !
+        !               Integrator here is always explict one!
+        !
+        !               For solvent particles, the integrator is always
+        !               one step method at this moment, due to expense
+        !               of saving quantites(velocity, force) of 
+        !               previous time steps. However, it can be higher
+        !               than 1st order by using intermediate time step
+        !               or first(velocity) and second(force) derivatives
+        !               such as velocity Verlet method
+        !
+        !               For (non)colloidal particles, the integrator
+        !               may use quantites of up to 5 previous steps,
+        !               such as Admas-Bashfort 5th order integrator.
+        !
+        !
       	!
       	!  References :
      	!

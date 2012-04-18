@@ -382,6 +382,22 @@
         
       END SUBROUTINE control_set_integrate_type
 
+      
+      SUBROUTINE control_set_integrate_colloid_type(this,&
+           d_integrate_type,stat_info)
+        
+        TYPE(Control), INTENT(INOUT)             :: this
+        INTEGER, INTENT(IN)                      :: d_integrate_type
+        INTEGER, INTENT(out)                     :: stat_info
+       
+        stat_info = 0
+        
+        this%integrate_colloid_type = d_integrate_type
+       
+        RETURN
+        
+      END SUBROUTINE control_set_integrate_colloid_type
+
 
       SUBROUTINE control_set_adaptive_dt(this,d_adaptive_dt,stat_info)
         

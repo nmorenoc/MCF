@@ -21,9 +21,9 @@
 !-------------------------------------------------
 
       INTEGER FUNCTION colloid_get_num_dim(this, stat_info)
-        !---------------------------------------
-        !   Return the num of dimension.
-        !---------------------------------------
+        !----------------------------------------------------
+        ! Return the num of dimension.
+        !----------------------------------------------------
         
         TYPE(Colloid), INTENT(IN)       :: this
         INTEGER, INTENT(OUT)            :: stat_info
@@ -37,9 +37,9 @@
 
 
       INTEGER FUNCTION colloid_get_num_colloid(this, stat_info)
-        !---------------------------------------
-        !   Return the num of colloids.
-        !---------------------------------------
+        !----------------------------------------------------
+        ! Return the num of colloids.
+        !----------------------------------------------------
 
         TYPE(Colloid), INTENT(IN)       :: this
         INTEGER, INTENT(OUT)            :: stat_info
@@ -53,9 +53,9 @@
       
       
       REAL(MK) FUNCTION colloid_get_adapt_t_coef(this, stat_info)
-        !---------------------------------------
+        !----------------------------------------------------
         ! Return the coefficient of adaptive t.
-        !---------------------------------------
+        !----------------------------------------------------
 
         TYPE(Colloid), INTENT(IN)       :: this
         INTEGER, INTENT(OUT)            :: stat_info
@@ -69,9 +69,9 @@
       
 
       REAL(MK) FUNCTION colloid_get_rho(this, stat_info)
-        !---------------------------------------
+        !----------------------------------------------------
         ! Return the density of colloids.
-        !---------------------------------------
+        !----------------------------------------------------
 
         TYPE(Colloid), INTENT(IN)       :: this
         INTEGER, INTENT(OUT)            :: stat_info
@@ -85,9 +85,9 @@
 
 
       INTEGER FUNCTION colloid_get_rho_type(this, stat_info)
-        !---------------------------------------
+        !----------------------------------------------------
         ! Return the density type of colloids.
-        !---------------------------------------
+        !----------------------------------------------------
 
         TYPE(Colloid), INTENT(IN)       :: this
         INTEGER, INTENT(OUT)            :: stat_info
@@ -101,9 +101,9 @@
 
       
       LOGICAL FUNCTION colloid_get_translate(this,stat_info)
-        !--------------------------------------------
+        !----------------------------------------------------
         ! Return if the colloids can translate or not.
-        !--------------------------------------------
+        !----------------------------------------------------
         
         TYPE(Colloid), INTENT(IN)       :: this
         INTEGER, INTENT(OUT)            :: stat_info
@@ -118,9 +118,9 @@
 
       
       LOGICAL FUNCTION colloid_get_rotate(this,stat_info)
-        !--------------------------------------------
+        !----------------------------------------------------
         ! Return if the colloids can rotate or not.
-        !--------------------------------------------
+        !----------------------------------------------------
         
         TYPE(Colloid), INTENT(IN)       :: this
         INTEGER, INTENT(OUT)            :: stat_info
@@ -135,9 +135,9 @@
 
       
       INTEGER FUNCTION colloid_get_place(this,stat_info)
-        !--------------------------------------------
+        !----------------------------------------------------
         ! Return how to place boundary particles.
-        !--------------------------------------------
+        !----------------------------------------------------
         
         TYPE(Colloid), INTENT(IN)       :: this
         INTEGER, INTENT(OUT)            :: stat_info
@@ -152,9 +152,9 @@
       
       
       INTEGER FUNCTION colloid_get_noslip_type(this,stat_info)
-        !--------------------------------------------
+        !----------------------------------------------------
         ! Return how to model noslip boundary.
-        !--------------------------------------------
+        !----------------------------------------------------
         
         TYPE(Colloid), INTENT(IN)       :: this
         INTEGER, INTENT(OUT)            :: stat_info
@@ -169,9 +169,9 @@
 
 
       INTEGER FUNCTION colloid_get_body_force_type(this,stat_info)
-        !--------------------------------------------
+        !----------------------------------------------------
         ! Return body force type of colloid
-        !--------------------------------------------
+        !----------------------------------------------------
         
         TYPE(Colloid), INTENT(IN)       :: this
         INTEGER, INTENT(OUT)            :: stat_info
@@ -186,9 +186,9 @@
 
       
       SUBROUTINE colloid_get_body_force(this,d_body_force,stat_info)
-        !---------------------------------------
+        !----------------------------------------------------
         ! Return the body force of colloids.
-        !---------------------------------------
+        !----------------------------------------------------
         
         TYPE(Colloid), INTENT(IN)               :: this
         REAL(MK), DIMENSION(:), POINTER         :: d_body_force
@@ -575,9 +575,9 @@
 
 
       SUBROUTINE colloid_get_x(this,d_x,stat_info)
-        !---------------------------------------
+        !----------------------------------------------------
         ! Return the positions of colloids.
-        !---------------------------------------
+        !----------------------------------------------------
         
         TYPE(Colloid), INTENT(IN)               :: this
         REAL(MK), DIMENSION(:,:), POINTER       :: d_x
@@ -600,12 +600,12 @@
       
       
       SUBROUTINE colloid_get_v(this,d_v,stat_info)
-        !---------------------------------------
+        !----------------------------------------------------
         ! Return the velocity of colloids.
-        !---------------------------------------
+        !----------------------------------------------------
         
         TYPE(Colloid), INTENT(IN)               :: this
-        REAL(MK), DIMENSION(:,:), POINTER       :: d_v
+        REAL(MK), DIMENSION(:,:,:), POINTER     :: d_v
         INTEGER, INTENT(OUT)                    :: stat_info
         
         
@@ -615,9 +615,10 @@
            DEALLOCATE(d_v)
         END IF
         
-        ALLOCATE(d_v(this%num_dim,this%num_colloid))
+        ALLOCATE(d_v(this%num_dim,this%num_colloid,this%integrate_type))
         
-        d_v(:,:) = this%v(1:this%num_dim,1:this%num_colloid)
+        d_v(:,:,:) = &
+             this%v(1:this%num_dim,1:this%num_colloid,1:this%integrate_type)
         
         RETURN       
         
@@ -830,7 +831,7 @@
         !---------------------------------------
         
         TYPE(Colloid), INTENT(IN)               :: this
-        REAL(MK), DIMENSION(:,:), POINTER       :: d_omega
+        REAL(MK), DIMENSION(:,:,:), POINTER     :: d_omega
         INTEGER, INTENT(OUT)                    :: stat_info
         
         stat_info = 0
@@ -839,10 +840,10 @@
            DEALLOCATE(d_omega)
         END IF
         
-        ALLOCATE(d_omega(3,this%num_colloid))
+        ALLOCATE(d_omega(3,this%num_colloid,this%integrate_type))
         
-        d_omega(1:3,1:this%num_colloid) = &
-             this%omega(1:3,1:this%num_colloid)
+        d_omega(1:3,1:this%num_colloid,1:this%integrate_type) = &
+             this%omega(1:3,1:this%num_colloid,1:this%integrate_type)
         
         RETURN       
         
@@ -975,7 +976,7 @@
         !--------------------------------------------
         
         TYPE(Colloid), INTENT(IN)               :: this
-        REAL(MK), DIMENSION(:,:), POINTER       :: d_f
+        REAL(MK), DIMENSION(:,:,:), POINTER     :: d_f
         INTEGER, INTENT(OUT)                    :: stat_info
         
         stat_info = 0
@@ -984,10 +985,10 @@
            DEALLOCATE(d_f)
         END IF
 
-        ALLOCATE(d_f(this%num_dim,this%num_colloid))
+        ALLOCATE(d_f(this%num_dim,this%num_colloid,1:this%integrate_type))
         
-        d_f(:,:) = &
-             this%f(1:this%num_dim,1:this%num_colloid)
+        d_f(:,:,:) = &
+             this%f(1:this%num_dim,1:this%num_colloid,1:this%integrate_type)
         
         RETURN       
         
@@ -1042,7 +1043,7 @@
         !---------------------------------------
         
         TYPE(Colloid), INTENT(IN)               :: this
-        REAL(MK), DIMENSION(:,:), POINTER       :: d_alpha
+        REAL(MK), DIMENSION(:,:,:), POINTER     :: d_alpha
         INTEGER, INTENT(OUT)                    :: stat_info
         
         
@@ -1052,10 +1053,10 @@
            DEALLOCATE(d_alpha)
         END IF
         
-        ALLOCATE(d_alpha(3,this%num_colloid))
+        ALLOCATE(d_alpha(3,this%num_colloid,1:this%integrate_type))
         
-        d_alpha(1:3,1:this%num_colloid) = &
-             this%alpha(1:3,1:this%num_colloid)
+        d_alpha(1:3,1:this%num_colloid,1:this%integrate_type) = &
+             this%alpha(1:3,1:this%num_colloid,1:this%integrate_type)
         
         RETURN       
         
@@ -1312,7 +1313,7 @@
         
         IF ( this%translate ) THEN
            
-           v_coll(1:dim) = this%v(1:dim,b_sid)
+           v_coll(1:dim) = this%v(1:dim,b_sid,1)
            x_coll(1:dim) = this%x(1:dim,b_sid)
            
            r_px(1:dim) = &
@@ -1500,7 +1501,7 @@
            r_px(1:dim) = b_x(1:dim) - x_coll(1:dim)
            
            CALL tool_cross_product(this%tool,&
-                this%omega(1:3,b_sid),r_px(1:3),&
+                this%omega(1:3,b_sid,1),r_px(1:3),&
                 r_pv(1:3),stat_info_sub)
            
            b_v(1:dim) = b_v(1:dim) + &

@@ -109,7 +109,7 @@
            IF ( this%rotate ) THEN
               
               CALL tool_cross_product(this%tool,&
-                   this%omega(1:3,sid),rx(1:3),&
+                   this%omega(1:3,sid,1),rx(1:3),&
                    v_rotate(1:3),stat_info_sub)
               
               v(1:dim) = v(1:dim) + v_rotate(1:dim)

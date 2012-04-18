@@ -230,7 +230,7 @@
              vcoll(1:dim) )
         ocoll(1:dim) = MATMUL(&
              TRANSPOSE(this%acc_matrix(1:dim,1:dim,sid_c)),&
-             this%omega(1:dim,sid_c) )
+             this%omega(1:dim,sid_c,1) )
         !PRINT *, "vcoll, ocoll: ", vcoll(:), ocoll(:)
         !----------------------------------------------------
         ! Extrapolate velocity for the colloid boundary 

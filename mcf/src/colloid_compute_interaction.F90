@@ -188,7 +188,7 @@
            DO j = 1, num
               
               !----------------------------------------------
-              ! Assuming every one is inside the subdomain
+              ! Assuming every one is inside the sub-domain
               ! first, but if one dimension is outside,
               ! it means it is outside.
               !----------------------------------------------
@@ -222,7 +222,7 @@
            END DO ! j = 1, num
            
            !-------------------------------------------------
-           ! Allocate force/torque meory of local real colloids.
+           ! Allocate force/torque memory of local real colloids.
            !-------------------------------------------------
            
            ALLOCATE(F_p(dim,num_p))
@@ -546,9 +546,10 @@
                        
                        CALL colloid_compute_lubrication_cc(this,&
                             x_p(1:dim,i), x_p(1:dim,j),&
-                            this%v(1:dim,sid_p(i)),this%v(1:dim,sid_p(j)),&
-                            this%omega(1:3,sid_p(i)),&
-                            this%omega(1:3,sid_p(j)),&
+                            this%v(1:dim,sid_p(i),1),&
+                            this%v(1:dim,sid_p(j),1),&
+                            this%omega(1:3,sid_p(i),1),&
+                            this%omega(1:3,sid_p(j),1),&
                             sid_p(i), sid_p(j),&
                             F_i(1:dim),F_j(1:dim),&
                             T_i(1:3),T_j(1:3),stat_info_sub)
@@ -578,7 +579,7 @@
               
               !----------------------------------------------
               ! Loop each pair of real colloids in this 
-              ! subdomain and colloids in its ghost zone.
+              ! sub-domain and colloids in its ghost zone.
               !----------------------------------------------
               
               DO i = 1, num_p
@@ -589,10 +590,10 @@
                        
                        CALL colloid_compute_lubrication_cc(this,&
                             x_p(1:dim,i), x_p_ghost(1:dim,j),&
-                            this%v(1:dim,sid_p(i)), &
-                            this%v(1:dim,sid_p_ghost(j)),&
-                            this%omega(1:3,sid_p(i)),&
-                            this%omega(1:3,sid_p_ghost(j)),&
+                            this%v(1:dim,sid_p(i),1), &
+                            this%v(1:dim,sid_p_ghost(j),1),&
+                            this%omega(1:3,sid_p(i),1),&
+                            this%omega(1:3,sid_p_ghost(j),1),&
                             sid_p(i), sid_p_ghost(j), &
                             F_i(1:dim),F_j(1:dim),&
                             T_i(1:3),T_j(1:3),stat_info_sub)
@@ -659,7 +660,7 @@
                          "calling lubrication_cw !"
                     
                     CALL colloid_compute_lubrication_cw(this,&
-                         x_p(1:dim,i),this%v(1:dim,sid_p(i)),sid_p(i),&
+                         x_p(1:dim,i),this%v(1:dim,sid_p(i),1),sid_p(i),&
                          F_i(1:dim),FB(1:dim,1:dim2),stat_info_sub)
                     
                     IF ( stat_info_sub /= 0 ) THEN

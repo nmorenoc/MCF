@@ -159,7 +159,7 @@
            IF ( this%rotate ) THEN
               
               CALL tool_cross_product(this%tool,&
-                   this%omega(1:3,sid_c), r_xc(1:3),&
+                   this%omega(1:3,sid_c,1), r_xc(1:3),&
                    r_vc(1:3),stat_info_sub)
               
               IF ( stat_info_sub /= 0 ) THEN
@@ -279,7 +279,7 @@
         IF ( this%rotate ) THEN
            
            CALL tool_cross_product(this%tool,&
-                this%omega(1:3,sid_c), r_xs(1:3),&
+                this%omega(1:3,sid_c,1), r_xs(1:3),&
                 r_vs(1:3),stat_info_sub)
            
            IF ( stat_info_sub /= 0 ) THEN

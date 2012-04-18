@@ -1253,7 +1253,6 @@
              ( step_end >=0 .AND. &
              step_current <  step_end ) )
            
-        
            !-------------------------------------------------
            ! For adaptive dt, calculate dt now and update it
            !-------------------------------------------------
@@ -1309,15 +1308,27 @@
            END IF
            
            !-------------------------------------------------
+           ! Update current step and time.
+           !-------------------------------------------------
+           
+           step_current = step_current + 1
+           time_current = time_current + dt
+           
+           CALL physics_set_step_current(this%phys,step_current,&
+                stat_info_sub)
+           CALL physics_set_time_current(this%phys,time_current,&
+                stat_info_sub)
+      
+           !-------------------------------------------------
            ! Integrate with time
            !-------------------------------------------------
            
-           CALL marching_integrate(this,time_current,dt,&
+           CALL marching_integrate(this,step_current,time_current,dt,&
                 stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN              
               PRINT *, "marching_marching : ",&
-                   "Integrating failed !"
+                   "Integrating failed!"
               stat_info = -1
               GOTO 9999
            END IF
@@ -1333,13 +1344,14 @@
               
               IF( stat_info_sub /=0 ) THEN              
                  PRINT *, "marching_marching : ",&
-                      "colloid computing image failed !"
+                      "colloid computing image failed!"
                  stat_info = -1
                  GOTO 9999
               END IF
               
            END IF
            
+#if 0
            !-------------------------------------------------
            ! Update current step and time.
            !-------------------------------------------------
@@ -1351,7 +1363,7 @@
                 stat_info_sub)
            CALL physics_set_time_current(this%phys,time_current,&
                 stat_info_sub)
-          
+#endif     
            !-------------------------------------------------
            ! Check what we need to write at this time step.
            !-------------------------------------------------

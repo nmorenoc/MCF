@@ -38,13 +38,13 @@
         
         IF ( .NOT. this%translate ) THEN
               
-           this%v(:,:) = 0.0_MK
+           this%v(:,:,:) = 0.0_MK
            
         END IF
            
         IF ( .NOT. this%rotate ) THEN
               
-           this%omega(:,:) = 0.0_MK
+           this%omega(:,:,:) = 0.0_MK
            
         END IF
         

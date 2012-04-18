@@ -11,7 +11,12 @@
         !
         ! Reference   :
         !
-        ! Remark      :
+        ! Remark      : For the moment, we use always imposed
+        !               shear rate set-up, instead of imposed
+        !               shear stress on the wall, therefore,
+        !               velocity of the wall is known already 
+        !               according to time and there is no need 
+        !               to integrate wall position or velocity.
         !
         ! Revisions   : V0.2 18.11.2009, including
         !               Lees-Edwards boundary.

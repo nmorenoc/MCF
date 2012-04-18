@@ -40,7 +40,7 @@
         !----------------------------------------------------
         
         INTEGER                                 :: dim,num
-        INTEGER                                 :: i
+        INTEGER                                 :: itype,i
         REAL(MK), DIMENSION(3)                  :: omega1
         REAL(MK), DIMENSION(3)                  :: torque1
         REAL(MK), DIMENSION(3)                  :: alpha1
@@ -53,7 +53,7 @@
         
         dim   = this%num_dim
         num   = this%num_colloid
-        
+        itype = this%integrate_type
         
 #ifdef __COLLOID_NOACCE
         
@@ -65,43 +65,55 @@
         ! rotational acceleration.
         !----------------------------------------------------
         
-        this%f(1:dim,1:num)   = 0.0_MK
-        this%alpha(1:3,1:num) = 0.0_MK
+        this%f(1:dim,1:num,1:itype)   = 0.0_MK
+        this%alpha(1:3,1:num,1:itype) = 0.0_MK
         
 #else
         
         !----------------------------------------------------
-        ! Calculate translating accelerations.
+        ! Save the previous accelerations.
         !----------------------------------------------------
         
+        i = itype 
+        
+        DO WHILE ( i >= 2 )
+        
+           this%f(1:dim,1:num,i)  =  this%f(1:dim,1:num,i-1)                
+           this%alpha(1:3,1:num,i) = this%alpha(1:3,1:num,i-1)
+           
+           i = i -1
+           
+        END DO
+        
+        !----------------------------------------------------
+        ! Calculate current translating accelerations.
+        !----------------------------------------------------
+    
         IF( this%translate ) THEN
            
            DO i = 1, dim
               
-              this%f(i,1:num) = &
+              this%f(i,1:num,1) = &
                    this%drag(i,1:num) / this%m(1:num)
               
            END DO
            
         ELSE
            
-           this%f(1:dim,1:num) = 0.0_MK
+           this%f(1:dim,1:num,1) = 0.0_MK
            
         END IF
         
-        
         !----------------------------------------------------
-        ! Calculate rotating accelerations.
-        ! Note that torque and its accleration are 3D.
+        ! Calculate current rotating accelerations.
         !----------------------------------------------------
-        
+    
         IF( this%rotate ) THEN
            
            IF ( dim == 2 ) THEN
               
-              this%alpha(3,1:num) = &
+              this%alpha(3,1:num,1) = &
                    this%torque(3,1:num) / this%mmi(3,1:num)
-              
               
            ELSE IF ( dim == 3 )  THEN
               
@@ -115,10 +127,10 @@
                     ! is diagonal with same element,
                     ! no need to transfer.
                     !----------------------------------------
-
-                    this%alpha(1:3,1:num) = &
-                      this%torque(1:3,1:num) / this%mmi(1:3,1:num)
-              
+                    
+                    this%alpha(1:3,1:num,1) = &
+                         this%torque(1:3,1:num) / this%mmi(1:3,1:num)
+                    
                  CASE ( mcf_colloid_shape_ellipsoid, &
                       mcf_colloid_shape_dicolloid )
                     !----------------------------------------
@@ -128,7 +140,7 @@
                     
                     omega1(1:3)=&
                          MATMUL(this%acc_matrix(1:3,1:3,i),&
-                         this%omega(1:3,i))
+                         this%omega(1:3,i,1))
                     torque1(1:3)=&
                          MATMUL(this%acc_matrix(1:3,1:3,i),&
                          this%torque(1:3,i))
@@ -142,7 +154,7 @@
                          (this%mmi(2,i)-this%mmi(1,i))*omega1(1)*omega1(2))/&
                          this%mmi(3,i)
 
-                    this%alpha(1:3,i) = &
+                    this%alpha(1:3,i,1) = &
                          MATMUL(TRANSPOSE(this%acc_matrix(1:3,1:3,i)),&
                          alpha1(1:3))
                     
@@ -159,7 +171,7 @@
                     stat_info = -1
                     GOTO 9999
                     
-                 END SELECT ! shape                 
+                 END SELECT ! shape
                  
               END DO ! i = 1, num
               
@@ -167,10 +179,11 @@
            
         ELSE 
            
-           this%alpha(1:3,1:num) = 0.0_MK
+           this%alpha(1:3,1:num,1) = 0.0_MK
            
         END IF ! rotate
-        
+      
+    
         
         !----------------------------------------------------
         ! In context of symmetry boundaries, we have to 
@@ -183,9 +196,9 @@
            IF ( this%bcdef(2*i-1) == ppm_param_bcdef_symmetry .AND.&
                 this%bcdef(2*i) == ppm_param_bcdef_symmetry ) THEN
               
-              this%f(i,1:num) = 0.0_MK
+              this%f(i,1:num,1) = 0.0_MK
               
-              this%alpha(1:3,1:num) = 0.0_MK              
+              this%alpha(1:3,1:num,1) = 0.0_MK              
               
            END IF
            

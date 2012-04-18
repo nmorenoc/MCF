@@ -1,4 +1,5 @@
-      SUBROUTINE colloid_integrate_position(this,dt,accuracy_order,stat_info)
+      SUBROUTINE colloid_integrate_position(this,&
+           step,dt,stat_info)
         !----------------------------------------------------
         ! Subroutine  : colloid_integrate_position
         !----------------------------------------------------
@@ -9,8 +10,12 @@
         ! Remark      : Colloid are modeled as rigid body.
         !
         !
-        !  Revision   : V0.1  23.06.2009, original.
+        !  Revision   : V0.2, 18.04.2012, 
+        !               Adams-Bashforth method
+        !               is implemented,
+        !               inlcuding 1, 2, 3, 4, and 5 order.
         !
+        !               V0.1  23.06.2009, original.
         !----------------------------------------------------
         ! Author      : Xin Bian
         ! Contact     : xin.bian@aer.mw.tum.de
@@ -22,46 +27,88 @@
         !----------------------------------------------------
         
         TYPE(Colloid), INTENT(OUT)      :: this
+        INTEGER, INTENT(IN)             :: step
         REAL(MK), INTENT(IN)            :: dt
-        INTEGER, INTENT(IN)             :: accuracy_order
         INTEGER, INTENT(OUT)            :: stat_info
         
-        INTEGER                         :: stat_info_sub
+        INTEGER                         :: itype, order
         
         !----------------------------------------------------
         ! Initialization of variables.
         !----------------------------------------------------
         
         stat_info     = 0
-        stat_info_sub = 0
-
+        itype = this%integrate_type
+        
 #ifdef __PARTICLES_POSITION_FIXED
 #else
+        
+        !----------------------------------------------------
+        ! Select different accuracy oder for
+        ! When the step is smaller then integrator order,
+        ! a lower order (step) integrator is used.
+        ! When the step is bigger than or equal to integrator
+        ! order, the actual order (itype) is used.
+        !----------------------------------------------------
+        
+        IF ( step < itype ) THEN
+           order = step
+        ELSE
+           order = itype             
+        END IF
+        
         IF( this%translate ) THEN
            
-           !-------------------------------------------------
-           ! Select different accuracy oder:
-           ! 1 velocity contribution;
-           ! 2 velocity + acceleration contribution.
-           !-------------------------------------------------
-           
-           SELECT CASE (accuracy_order)
+           SELECT CASE (order)
               
-           CASE(1)
+           CASE (1)
               
               this%x(:,:) = &
-                   this%x(:, :) + this%v(:,:) * dt
+                   this%x(:,:) + this%v(:,:,1) * dt
               
-           CASE(2)
-           
+           CASE (2)
+              
               this%x(:,:) = &
-                   this%x(:,:) + this%v(:,:) * dt + &
-                   0.5_MK * this%f(:,:) * dt**2
+                   this%x(:,:) + &
+                   ( 3.0_MK * this%v(:,:,1) - this%v(:,:,2)) * dt / 2.0_MK
               
-           END SELECT ! accuracy_order
+           CASE (3)
+              
+              this%x(:,:) = &
+                   this%x(:,:) + &
+                   ( 23.0_MK * this%v(:,:,1) - &
+                   16.0_MK * this%v(:,:,2) + &
+                   5.0_MK * this%v(:,:,3) ) * dt / 12.0_MK
+              
+           CASE (4)
+              
+              this%x(:,:) = &
+                   this%x(:,:) + &
+                   ( 55.0_MK * this%v(:,:,1) - &
+                   59.0_MK * this%v(:,:,2) + &
+                   37.0_MK * this%v(:,:,3) - &
+                   9.0_MK * this%v(:,:,4) ) * dt / 24.0_MK
+              
+           CASE (5) 
+              
+              this%x(:,:) = &
+                   this%x(:,:) + &
+                   ( 1901.0_MK * this%v(:,:,1) - &
+                   2774.0_MK * this%v(:,:,2) + &
+                   2616.0_MK * this%v(:,:,3) - &
+                   1274.0_MK * this%v(:,:,4) + &
+                   251.0_MK * this%v(:,:,5) ) * dt / 720.0_MK
+              
+           CASE DEFAULT
+              
+              PRINT *, "colloid_integrate_position: ",&
+                   "integrator not available!"
+              stat_info = -1
+              GOTO 9999
+              
+           END SELECT ! order
            
-        END IF
-     
+        END IF ! translate
 #endif
    
 9999    CONTINUE

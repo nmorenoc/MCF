@@ -75,7 +75,7 @@
                  
                  DO j = 1, this%num_colloid
                     
-                    this%v(1:dim,j) = &
+                    this%v(1:dim,j,1) = &
                          (shear_v(1:dim,2*i) - shear_v(1:dim,2*i-1)) * &
                          ( this%x(i,j) - min_phys(i)) / &
                          length(i) + shear_v(1:dim,2*i-1)

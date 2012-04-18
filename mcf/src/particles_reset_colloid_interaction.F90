@@ -49,8 +49,8 @@
         INTEGER                                 :: stat_info_sub
         INTEGER                                 :: dim, num_colloid
         TYPE(Colloid), POINTER                  :: colloids
-        REAL(MK), DIMENSION(:,:), POINTER       :: coll_f
-        REAL(MK), DIMENSION(:,:), POINTER       :: coll_alpha
+        REAL(MK), DIMENSION(:,:,:), POINTER     :: coll_f
+        REAL(MK), DIMENSION(:,:,:), POINTER     :: coll_alpha
 
         REAL(MK), DIMENSION(3)                  :: rx, rf
         INTEGER                                 :: i,ip,sid
@@ -72,7 +72,7 @@
         NULLIFY(coll_alpha)
         
         IF ( num_colloid > 0 ) THEN
-        
+           
            CALL physics_get_colloid(this%phys,colloids,stat_info_sub)
            
            CALL colloid_get_f(colloids,coll_f,stat_info_sub)
@@ -88,20 +88,20 @@
               ip  = this%part_colloid_list(1,i)
               sid = this%part_colloid_list(2,i)
               
-              this%f(1:dim,ip) = coll_f(1:dim,sid)
+              this%f(1:dim,ip) = coll_f(1:dim,sid,1)
               
               CALL colloid_in_relative_position(colloids,&
                    this%x(1:dim,ip),sid,rx(1:dim),stat_info_sub)
               
               IF ( stat_info_sub /= 0 ) THEN
-                 PRINT *, "particles_reset_colloid_interaction : ", &
+                 PRINT *, "particles_reset_colloid_interaction: ", &
                       "Calculating colloid particle position failed !"
                  stat_info = -1
                  GOTO 9999
               END IF
               
               CALL tool_cross_product(this%tool,&
-                   coll_alpha(1:3,sid),rx(1:3), &
+                   coll_alpha(1:3,sid,1),rx(1:3), &
                    rf(1:3),stat_info_sub)
               
               this%f(1:dim,ip) = this%f(1:dim,ip) + &

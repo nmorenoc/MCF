@@ -57,9 +57,9 @@
            v2 = 0.0_MK         
            DO j=1, dim 
               
-              v2= v2+ this%v(j,i)**2
+              v2= v2+ this%v(j,i,1)**2
               this%mom(j,i) = this%mom(j,i) + &
-                   this%m(i) * this%v(j,i)            
+                   this%m(i) * this%v(j,i,1)            
            END DO
            
            this%k_energy(i) = this%k_energy(i) + &

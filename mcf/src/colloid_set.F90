@@ -83,7 +83,7 @@
            IF(ASSOCIATED(this%v))THEN
               DEALLOCATE(this%v)
            END IF
-           ALLOCATE(this%v(d_dim,num))
+           ALLOCATE(this%v(d_dim,num,this%integrate_type))
            
 #if __DRAG_PART
            IF(ASSOCIATED(this%drag_lub))THEN
@@ -96,7 +96,7 @@
            END IF
            ALLOCATE(this%drag_repul(d_dim,num))
 #endif
-
+           
            IF(ASSOCIATED(this%drag))THEN
               DEALLOCATE(this%drag)
            END IF
@@ -109,13 +109,13 @@
            IF(ASSOCIATED(this%f))THEN
               DEALLOCATE(this%f)
            END IF
-           ALLOCATE(this%f(d_dim,num))   
-
+           ALLOCATE(this%f(d_dim,num,this%integrate_type))   
+           
            IF(ASSOCIATED(this%mom))THEN
               DEALLOCATE(this%mom)
            END IF
            ALLOCATE(this%mom(d_dim,num))
-        
+           
            IF(ASSOCIATED(this%mom_tot))THEN
               DEALLOCATE(this%mom_tot)
            END IF
@@ -208,7 +208,7 @@
            IF(ASSOCIATED(this%v))THEN
               DEALLOCATE(this%v)
            END IF
-           ALLOCATE(this%v(dim,d_num))
+           ALLOCATE(this%v(dim,d_num,this%integrate_type))
            
 #if __DRAG_PART
            IF(ASSOCIATED(this%drag_lub))THEN
@@ -226,7 +226,7 @@
               DEALLOCATE(this%drag)
            END IF
            ALLOCATE(this%drag(dim,d_num))
-
+           
            IF(ASSOCIATED(this%rot_vector))THEN
               DEALLOCATE(this%rot_vector)
            END IF
@@ -256,7 +256,7 @@
               DEALLOCATE(this%omega)
            END IF
            
-           ALLOCATE(this%omega(3,d_num))
+           ALLOCATE(this%omega(3,d_num,this%integrate_type))
            
            IF(ASSOCIATED(this%torque))THEN
               DEALLOCATE(this%torque)
@@ -280,12 +280,12 @@
            IF(ASSOCIATED(this%f))THEN
               DEALLOCATE(this%f)
            END IF
-           ALLOCATE(this%f(dim,d_num))
+           ALLOCATE(this%f(dim,d_num,this%integrate_type))
            
            IF(ASSOCIATED(this%alpha))THEN
               DEALLOCATE(this%alpha)
            END IF
-           ALLOCATE(this%alpha(3,d_num))
+           ALLOCATE(this%alpha(3,d_num,this%integrate_type))
           
            IF(ASSOCIATED(this%k_energy))THEN
               DEALLOCATE(this%k_energy)
@@ -969,9 +969,9 @@
       
       
       SUBROUTINE colloid_set_mmi(this, d_mmi, stat_info)
-        !---------------------------------------
+        !----------------------------------------------------
         ! Set the mass momentum inertia of colloids
-        !---------------------------------------
+        !----------------------------------------------------
         
         TYPE(Colloid), INTENT(INOUT)            :: this
         REAL(MK), DIMENSION(:,:), INTENT(IN)    :: d_mmi
@@ -993,7 +993,7 @@
         END IF
         
         IF (num /= this%num_colloid) THEN
-           PRINT *, "colloid_set_mmi : ", &
+           PRINT *, "colloid_set_mmi: ", &
                 "Number of colloids doesn't match !"
            stat_info = -1
            GOTO 9999
@@ -1009,9 +1009,9 @@
 
 
       SUBROUTINE colloid_set_x(this,d_x,stat_info)
-        !---------------------------------------
+        !----------------------------------------------------
         ! Set the positions of colloids.
-        !---------------------------------------
+        !----------------------------------------------------
         
         TYPE(Colloid), INTENT(INOUT)            :: this
         REAL(MK), DIMENSION(:,:), INTENT(IN)    :: d_x
@@ -1022,21 +1022,21 @@
 
         stat_info = 0
                 
-        !---------------------------------------
+        !----------------------------------------------------
         ! Check if the input position's dimension
         ! and num of colloids match.
-        !---------------------------------------
+        !---------------------------------------------------
         dim = SIZE(d_x,1)
         num = SIZE(d_x,2)
         
         IF( dim /= this%num_dim) THEN
-           PRINT *, "colloid_set_x : ", "Wrong Dimension !"
+           PRINT *, "colloid_set_x: ", "Wrong Dimension !"
            stat_info = -1
            GOTO 9999
         END IF
         
         IF( num /= this%num_colloid) THEN
-           PRINT *, "colloid_set_x : ", "Wrong number of colloids !"
+           PRINT *, "colloid_set_x: ", "Wrong number of colloids !"
            stat_info = -1
            GOTO 9999
         END IF
@@ -1051,39 +1051,48 @@
       
 
       SUBROUTINE colloid_set_v(this,d_v,stat_info)
-        !---------------------------------------
+        !----------------------------------------------------
         ! Set the velocity of colloids.
-        !---------------------------------------
+        !----------------------------------------------------
         
         TYPE(Colloid), INTENT(INOUT)            :: this
-        REAL(MK), DIMENSION(:,:), INTENT(IN)    :: d_v
+        REAL(MK),DIMENSION(:,:,:), INTENT(IN)   :: d_v
         INTEGER, INTENT(OUT)                    :: stat_info
         
         INTEGER                                 :: dim
         INTEGER                                 :: num
+        INTEGER                                 :: itype
 
         stat_info = 0
         
-        !---------------------------------------
+        !----------------------------------------------------
         ! Check if the input velocity's dimension
         ! and num of colloids match.
-        !---------------------------------------
-        dim = SIZE(d_v,1)
-        num = SIZE(d_v,2)
+        !----------------------------------------------------
+        
+        dim   = SIZE(d_v,1)
+        num   = SIZE(d_v,2)
+        itype = SIZE(d_v,3)
         
         IF( dim /= this%num_dim) THEN
-           PRINT *, "colloid_set_v : ", "Wrong Dimension !"
+           PRINT *, "colloid_set_v: ", "Wrong Dimension !"
            stat_info = -1
            GOTO 9999
         END IF
         
         IF( num /= this%num_colloid) THEN
-           PRINT *, "colloid_set_v : ", "Wrong number of colloids !"
+           PRINT *, "colloid_set_v: ", "Wrong number of colloids !"
            stat_info = -1
            GOTO 9999
         END IF
         
-        this%v(:,:) = d_v(1:dim,1:num)
+        IF( itype /= this%integrate_type) THEN
+           PRINT *, "colloid_set_v: ", "Wrong integration type!"
+           stat_info = -1
+           GOTO 9999
+        END IF
+        
+        this%v(1:dim,1:num,1:itype) = d_v(1:dim,1:num,1:itype)
         
 9999    CONTINUE
         RETURN       
@@ -1093,10 +1102,10 @@
       
 #if __DRAG_PART
       SUBROUTINE colloid_set_drag_lub(this,d_drag,stat_info)
-        !---------------------------------------
+        !----------------------------------------------------
         ! Set the drag/force lubrication part
         ! exerted on a colloid object
-        !---------------------------------------
+        !----------------------------------------------------
         
         TYPE(Colloid), INTENT(INOUT)            :: this
         REAL(MK), DIMENSION(:,:), INTENT(IN)    :: d_drag
@@ -1105,25 +1114,24 @@
         INTEGER                                 :: dim
         INTEGER                                 :: num
         
-        
         stat_info = 0
         
-        !---------------------------------------
+        !----------------------------------------------------
         ! Check if the input force's dimension and
         ! num of colloids match.
-        !---------------------------------------
+        !----------------------------------------------------
         
         dim = SIZE(d_drag,1)
         num = SIZE(d_drag,2)
         
         IF( dim /= this%num_dim) THEN
-           PRINT *, "colloid_set_drag_lub : ", "Wrong Dimension !"
+           PRINT *, "colloid_set_drag_lub: ", "Wrong Dimension !"
            stat_info = -1
            GOTO 9999
         END IF
         
         IF( num /= this%num_colloid) THEN
-           PRINT *, "colloid_set_drag_lub : ", "Wrong number of colloids !"
+           PRINT *, "colloid_set_drag_lub: ", "Wrong number of colloids !"
            stat_info = -1
            GOTO 9999
         END IF
@@ -1138,10 +1146,10 @@
 
       
       SUBROUTINE colloid_set_drag_repul(this,d_drag,stat_info)
-        !---------------------------------------
+        !----------------------------------------------------
         ! Set the drag/force repulsive part
         ! exerted on a colloid object
-        !---------------------------------------
+        !----------------------------------------------------
         
         TYPE(Colloid), INTENT(INOUT)            :: this
         REAL(MK), DIMENSION(:,:), INTENT(IN)    :: d_drag
@@ -1162,13 +1170,13 @@
         num = SIZE(d_drag,2)
         
         IF( dim /= this%num_dim) THEN
-           PRINT *, "colloid_set_drag : ", "Wrong Dimension !"
+           PRINT *, "colloid_set_drag: ", "Wrong Dimension !"
            stat_info = -1
            GOTO 9999
         END IF
         
         IF( num /= this%num_colloid) THEN
-           PRINT *, "colloid_set_drag : ", "Wrong number of colloids !"
+           PRINT *, "colloid_set_drag: ", "Wrong number of colloids !"
            stat_info = -1
            GOTO 9999
         END IF
@@ -1184,9 +1192,9 @@
 
       
       SUBROUTINE colloid_set_drag(this,d_drag,stat_info)
-        !---------------------------------------
+        !----------------------------------------------------
         ! Set the drag/force exerted on a colloid object
-        !---------------------------------------
+        !----------------------------------------------------
         
         TYPE(Colloid), INTENT(INOUT)            :: this
         REAL(MK), DIMENSION(:,:), INTENT(IN)    :: d_drag
@@ -1198,22 +1206,22 @@
         
         stat_info = 0
         
-        !---------------------------------------
+        !----------------------------------------------------
         ! Check if the input force's dimension and
         ! num of colloids match.
-        !---------------------------------------
+        !----------------------------------------------------
         
         dim = SIZE(d_drag,1)
         num = SIZE(d_drag,2)
         
         IF( dim /= this%num_dim) THEN
-           PRINT *, "colloid_set_drag : ", "Wrong Dimension !"
+           PRINT *, "colloid_set_drag: ", "Wrong Dimension !"
            stat_info = -1
            GOTO 9999
         END IF
         
         IF( num /= this%num_colloid) THEN
-           PRINT *, "colloid_set_drag : ", "Wrong number of colloids !"
+           PRINT *, "colloid_set_drag: ", "Wrong number of colloids !"
            stat_info = -1
            GOTO 9999
         END IF
@@ -1228,9 +1236,9 @@
       
       
       SUBROUTINE colloid_add_drag(this, d_drag,stat_info)
-        !---------------------------------------
+        !----------------------------------------------------
         ! Accumulate the drag/force on colloids.
-        !---------------------------------------
+        !----------------------------------------------------
         
         TYPE(Colloid), INTENT(INOUT)            :: this
         REAL(MK), DIMENSION(:,:),INTENT(IN)     :: d_drag
@@ -1244,18 +1252,18 @@
         dim = SIZE(d_drag,1)
         num = SIZE(d_drag,2)
         
-        !---------------------------------------
+        !----------------------------------------------------
         ! check if the input force's dimension matches
-        !---------------------------------------
+        !----------------------------------------------------
         
         IF (dim /= this%num_dim) THEN
-           PRINT *, "colloid_add_drag : ", &
+           PRINT *, "colloid_add_drag: ", &
                 "Dimension doesn't match !"
            stat_info = -1
            GOTO 9999
         END IF
         IF (num /= this%num_colloid) THEN
-           PRINT *, "colloid_add_drag : ", &
+           PRINT *, "colloid_add_drag: ", &
                 "Number of colloids doesn't match !"
            stat_info = -1
            GOTO 9999
@@ -1271,9 +1279,9 @@
 
 
       SUBROUTINE colloid_set_rotation_vector(this,d_vector,stat_info)
-        !---------------------------------------
+        !----------------------------------------------------
         ! Set rotation vector
-        !---------------------------------------
+        !----------------------------------------------------
         
         TYPE(Colloid), INTENT(INOUT)            :: this
         REAL(MK), DIMENSION(:,:),INTENT(IN)     :: d_vector
@@ -1286,7 +1294,7 @@
         num = SIZE(d_vector,1)
         
         IF (num /= 4) THEN
-           PRINT *, "colloid_set_rotation_vector : ", &
+           PRINT *, "colloid_set_rotation_vector: ", &
                 "Number of dimension doesn't match !"
            stat_info = -1
            GOTO 9999
@@ -1295,7 +1303,7 @@
         num = SIZE(d_vector,2)
         
         IF (num /= this%num_colloid) THEN
-           PRINT *, "colloid_set_rotation_vector : ", &
+           PRINT *, "colloid_set_rotation_vector: ", &
                 "Number of colloids doesn't match !"
            stat_info = -1
            GOTO 9999
@@ -1400,9 +1408,9 @@
       
 
       SUBROUTINE colloid_set_rotation_matrix(this,d_matrix,stat_info)
-        !---------------------------------------
+        !----------------------------------------------------
         ! Set current rotation matrix.
-        !---------------------------------------
+        !----------------------------------------------------
         
         TYPE(Colloid), INTENT(INOUT)            :: this
         REAL(MK), DIMENSION(:,:,:),INTENT(IN)   :: d_matrix
@@ -1418,14 +1426,14 @@
         
         IF ( dim1 /= 3 .OR. &
              dim2 /= 3 ) THEN
-           PRINT *, "colloid_set_rotation_matrix : ", &
+           PRINT *, "colloid_set_rotation_matrix: ", &
                 "Number of dimension doesn't match !"
            stat_info = -1
            GOTO 9999
         END IF
 
         IF ( num /= this%num_colloid ) THEN
-           PRINT *, "colloid_set_rotation_matrix : ", &
+           PRINT *, "colloid_set_rotation_matrix: ", &
                 "Number of colloids doesn't match !"
            stat_info = -1
            GOTO 9999
@@ -1441,9 +1449,9 @@
       
 
       SUBROUTINE colloid_set_accumulation_matrix(this,d_matrix,stat_info)
-        !---------------------------------------
+        !----------------------------------------------------
         ! Set accumulative rotation matrix.
-        !---------------------------------------
+        !----------------------------------------------------
         
         TYPE(Colloid), INTENT(INOUT)            :: this
         REAL(MK), DIMENSION(:,:,:),INTENT(IN)   :: d_matrix
@@ -1482,9 +1490,9 @@
       
       
       SUBROUTINE colloid_set_theta(this,d_theta,stat_info)
-        !---------------------------------------
+        !----------------------------------------------------
         ! Set rotated angle.
-        !---------------------------------------
+        !----------------------------------------------------
         
         TYPE(Colloid), INTENT(INOUT)            :: this
         REAL(MK), DIMENSION(:,:),INTENT(IN)       :: d_theta
@@ -1513,39 +1521,47 @@
 
 
       SUBROUTINE colloid_set_omega(this,d_omega,stat_info)
-        !---------------------------------------
+        !----------------------------------------------------
         ! Set the rotating velocity of colloids.
-        !---------------------------------------
+        !----------------------------------------------------
         
         TYPE(Colloid), INTENT(INOUT)            :: this
-        REAL(MK), DIMENSION(:,:), INTENT(IN)    :: d_omega
+        REAL(MK), DIMENSION(:,:,:), INTENT(IN)  :: d_omega
         INTEGER, INTENT(OUT)                    :: stat_info
         
         INTEGER                                 :: dim
         INTEGER                                 :: num
-
+        INTEGER                                 :: itype
+        
         stat_info = 0
         
-        !---------------------------------------
+        !----------------------------------------------------
         ! Check if the input rotating velocity's
         ! dimension is 3.
-        !---------------------------------------
+        !----------------------------------------------------
         dim = SIZE(d_omega,1)
         num = SIZE(d_omega,2)
+        itype = SIZE(d_omega,3)
         
         IF( dim /= 3) THEN
-           PRINT *, "colloid_set_oemga : ", "Wrong Dimension !"
+           PRINT *, "colloid_set_oemga : ", "Wrong Dimension!"
            stat_info = -1
            GOTO 9999
         END IF
         
         IF( num /= this%num_colloid) THEN
-           PRINT *, "colloid_set_omega : ", "Wrong number of colloids !"
+           PRINT *, "colloid_set_omega : ", "Wrong number of colloids!"
+           stat_info = -1
+           GOTO 9999
+        END IF
+
+        IF( itype /= this%integrate_type) THEN
+           PRINT *, "colloid_set_omega : ", "Wrong integration type!"
            stat_info = -1
            GOTO 9999
         END IF
         
-        this%omega(1:3,1:num) = d_omega(1:3,1:num)
+        this%omega(1:3,1:num,1:itype) = d_omega(1:3,1:num,1:itype)
         
 9999    CONTINUE
         RETURN       
@@ -1554,9 +1570,9 @@
       
       
       SUBROUTINE colloid_set_torque(this,d_torque,stat_info)
-        !---------------------------------------
+        !----------------------------------------------------
         ! Set the torque of colloids.
-        !---------------------------------------
+        !----------------------------------------------------
         
         TYPE(Colloid), INTENT(INOUT)            :: this
         REAL(MK), DIMENSION(:,:), INTENT(IN)    :: d_torque
@@ -1567,10 +1583,10 @@
 
         stat_info = 0
         
-        !---------------------------------------
+        !----------------------------------------------------
         ! Check if the input torque's
         ! dimension is 3.
-        !---------------------------------------
+        !----------------------------------------------------
         dim = SIZE(d_torque,1)
         num = SIZE(d_torque,2)
         
@@ -1596,10 +1612,10 @@
 
       SUBROUTINE colloid_set_num_physical_part(this,&
            d_num_physical_part,stat_info)
-        !---------------------------------------
+        !----------------------------------------------------
         ! Set the number of physical particles,
         ! which consitute colloids.
-        !---------------------------------------
+        !----------------------------------------------------
         
         TYPE(Colloid), INTENT(INOUT)            :: this
         INTEGER, DIMENSION(:), INTENT(IN)       :: d_num_physical_part
@@ -1640,10 +1656,10 @@
 
       SUBROUTINE colloid_set_num_numerical_part(this,&
            d_num_numerical_part,stat_info)
-        !---------------------------------------
+        !----------------------------------------------------
         ! Set the number of numerical particles,
         ! which consitute colloids.
-        !---------------------------------------
+        !----------------------------------------------------
         
         TYPE(Colloid), INTENT(INOUT)            :: this
         INTEGER, DIMENSION(:), INTENT(IN)       :: d_num_numerical_part

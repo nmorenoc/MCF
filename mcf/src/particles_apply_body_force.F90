@@ -4,7 +4,7 @@
         !----------------------------------------------------
         !
         !  Purpose    : Apply external / body force to first
-        !                 num particles.
+        !               num particles.
         !
         !  Reference  :
         !
@@ -170,7 +170,7 @@
               
               DO j = 1, num
                  
-                 IF (this%id(this%sid_idx,j) ==0 ) THEN
+                 IF (this%id(this%sid_idx,j) == mcf_particle_type_fluid ) THEN
                     
                     this%f(i,j) = &
                          this%f(i,j) + body_force(i)
@@ -187,7 +187,7 @@
         IF( ASSOCIATED(body_force) ) THEN
            DEALLOCATE(body_force)
         END IF
-
+        
         RETURN
         
       END SUBROUTINE particles_apply_body_force_1direction
@@ -243,13 +243,13 @@
            IF( ABS(body_force(1)) > mcf_machine_zero) THEN
               
               IF ( this%x(num_dim, i) < max_phys(num_dim) * 0.5_MK .AND. &
-                   this%id(this%sid_idx, i) == 0) THEN
+                   this%id(this%sid_idx, i) == mcf_particle_type_fluid ) THEN
                  
                  this%f(1,i) = this%f(1,i) +&
                       body_force(1)
                  
               ELSE IF (this%x(num_dim,i) > max_phys(num_dim) * 0.5_MK .AND. &
-                   this%id(this%sid_idx, i) == 0) THEN
+                   this%id(this%sid_idx, i) == mcf_particle_type_fluid ) THEN
                  
                  this%f(1,i) = this%f(1,i) - &
                       body_force(1)
@@ -301,13 +301,12 @@
         INTEGER, INTENT(IN)                     :: num
         INTEGER, INTENT(OUT)                    :: stat_info
         
-        INTEGER                                 :: num_dim
         REAL(MK), DIMENSION(:), POINTER         :: body_force
         REAL(MK), DIMENSION(:), POINTER         :: min_phys
         REAL(MK), DIMENSION(:), POINTER         :: max_phys
         
         
-        REAL(MK)                                :: k
+        REAL(MK)                                :: i, k
         INTEGER                                 :: stat_info_sub
         
         stat_info     = 0
@@ -316,20 +315,24 @@
         NULLIFY(max_phys)          
         NULLIFY(body_force)
         
-        num_dim  = physics_get_num_dim(this%phys,stat_info_sub)
         CALL physics_get_min_phys(this%phys,min_phys,stat_info_sub)
         CALL physics_get_max_phys(this%phys,max_phys,stat_info_sub)
         CALL physics_get_body_force(this%phys,body_force,stat_info_sub)
         
         
         k = 2.0_MK* mcf_pi / &
-             ( max_phys(num_dim) - min_phys(num_dim) )
-        
+             ( max_phys(2) - min_phys(2) )
         
         IF( ABS(body_force(1)) > mcf_machine_zero) THEN
            
-           this%f(1,1:num) =  this%f(1,1:num) + &
-                body_force(1) * sin( k * this%x(num_dim,1:num))
+           DO i =1, num
+              
+              IF (this%id(this%sid_idx,i) == mcf_particle_type_fluid ) THEN
+                 this%f(1,i) =  this%f(1,i) + &
+                      body_force(1) * sin( k * this%x(2,i))
+              END IF
+              
+           END DO
            
         END IF
         

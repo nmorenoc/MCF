@@ -86,8 +86,7 @@
         REAL(MK)                        :: eval_tolerance
         REAL(MK), DIMENSION(6,6)        :: evec
         LOGICAL                         :: evec_normalize
-        REAL(MK)                        :: evec_tolerance
-              
+        REAL(MK)                        :: evec_tolerance              
         INTEGER                         :: body_force_type
         REAL(MK), DIMENSION(3)          :: body_force
         REAL(MK), DIMENSION(3)          :: body_force_d
@@ -101,6 +100,7 @@
         !----------------------------------------------------
         
         INTEGER                                 :: num_colloid
+        INTEGER                                 :: coll_integrate_type
         REAL(MK)                                :: coll_adapt_t_coef
         REAL(MK)                                :: coll_rho
         INTEGER                                 :: coll_rho_type
@@ -132,10 +132,10 @@
         REAL(MK),ALLOCATABLE, DIMENSION(:)      :: coll_m
         REAL(MK),ALLOCATABLE, DIMENSION(:,:)    :: coll_mmi
         REAL(MK),ALLOCATABLE,DIMENSION(:,:)     :: coll_x        
-        REAL(MK),ALLOCATABLE,DIMENSION(:,:)     :: coll_v
+        REAL(MK),ALLOCATABLE,DIMENSION(:,:,:)   :: coll_v
         REAL(MK),ALLOCATABLE, DIMENSION(:,:)    :: coll_acc_vector
         REAL(MK),ALLOCATABLE, DIMENSION(:,:)    :: coll_theta    
-        REAL(MK),ALLOCATABLE,DIMENSION(:,:)     :: coll_omega
+        REAL(MK),ALLOCATABLE,DIMENSION(:,:,:)   :: coll_omega
         INTEGER                                 :: coll_index
         INTEGER                                 :: shape_index
         INTEGER                                 :: radius_index
@@ -194,6 +194,8 @@
         NULLIFY(colloids)
         ALLOCATE(colloids)        
         coll_index   = 0
+        coll_integrate_type = &
+             control_get_integrate_colloid_type(this%ctrl,stat_info_sub)
         
         bcdef(:)        = 0
         shear_type(:)   = 1
@@ -930,10 +932,10 @@
              ALLOCATE(coll_m(num_colloid))
              ALLOCATE(coll_mmi(3,num_colloid))
              ALLOCATE(coll_x(num_dim,num_colloid))
-             ALLOCATE(coll_v(num_dim,num_colloid))
+             ALLOCATE(coll_v(num_dim,num_colloid,coll_integrate_type))
              ALLOCATE(coll_acc_vector(4,num_colloid))
              ALLOCATE(coll_theta(3,num_colloid))
-             ALLOCATE(coll_omega(3,num_colloid))
+             ALLOCATE(coll_omega(3,num_colloid,coll_integrate_type))
              
              coll_shape(:)     = 1
              coll_radius(:,:)  = 0.0_MK
@@ -941,12 +943,12 @@
              coll_m(:)         = 0.0_MK
              coll_mmi(:,:)     = 0.0_MK
              coll_x(:,:)       = 0.0_MK
-             coll_v(:,:)       = 0.0_MK
+             coll_v(:,:,:)    = 0.0_MK
+             coll_omega(:,:,:)= 0.0_MK      
              coll_acc_vector(:,:) = 0.0_MK
              coll_acc_vector(1,:) = 1.0_MK
              
              coll_theta(:,:)  = 0.0_MK
-             coll_omega(:,:)  = 0.0_MK
              
              coll_index   = 0
              shape_index  = 0
@@ -1200,7 +1202,7 @@
              v_index = v_index + 1
              
              READ(cvalue,*,IOSTAT=ios, ERR=200) &
-                  coll_v(1:num_dim,v_index)
+                  coll_v(1:num_dim,v_index,1)
 
           ELSE IF (carg == 'COLL_ROT_VECTOR' .AND. &
                num_species > 1 .AND. &
@@ -1233,7 +1235,7 @@
              omega_index = omega_index + 1
              
              READ(cvalue,*,IOSTAT=ios, ERR=200) &
-                  coll_omega(1:3,omega_index)
+                  coll_omega(1:3,omega_index,1)
              
              !#---------------------------------------------#
              !#---------------------------------------------#
@@ -1396,7 +1398,8 @@
               !----------------------------------------------
               
               CALL colloid_new(colloids,&
-                   num_dim,num_colloid,stat_info_sub)
+                   num_dim,num_colloid,&
+                   coll_integrate_type,stat_info_sub)
               CALL colloid_set_adapt_t_coef(colloids, &
                    coll_adapt_t_coef,stat_info_sub)
               CALL colloid_set_rho(colloids, &
@@ -1452,18 +1455,19 @@
               CALL colloid_set_x(colloids,&
                    coll_x(1:num_dim,1:num_colloid),stat_info_sub)
               CALL colloid_set_v(colloids,&
-                   coll_v(1:num_dim,1:num_colloid),stat_info_sub)
+                   coll_v(1:num_dim,1:num_colloid,1:coll_integrate_type),&
+                   stat_info_sub)
               
               !CALL colloid_set_rotation_vector(colloids,&
               !     coll_acc_vector(1:4,1:num_colloid),stat_info_sub)           
               CALL colloid_set_accumulation_vector(colloids,&
                    coll_acc_vector(1:4,1:num_colloid),stat_info_sub)           
-           
-                    
+              
               CALL colloid_set_theta(colloids,&
                    coll_theta(1:3,1:num_colloid),stat_info_sub)           
               CALL colloid_set_omega(colloids,&
-                   coll_omega(1:3,1:num_colloid),stat_info_sub)
+                   coll_omega(1:3,1:num_colloid,1:coll_integrate_type),&
+                   stat_info_sub)
               
               !----------------------------------------------
               ! Record some often used physics properties

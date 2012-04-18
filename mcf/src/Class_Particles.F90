@@ -238,7 +238,7 @@
            !----------------------------------------------------
            ! real :  real particles on local process;
            ! all  :  all particles including ghost;
-           ! ghost:  ghost particles.
+           ! ghost:  ghost particles around sub-domain.
            !
            ! all = real + ghost
            !
