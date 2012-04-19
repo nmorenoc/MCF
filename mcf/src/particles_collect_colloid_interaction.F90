@@ -35,10 +35,10 @@
         ! Arguments:
         !----------------------------------------------------
         
-        TYPE(Particles), INTENT(IN)     :: this
-        REAL(MK),DIMENSION(:,:),POINTER :: drag
-        REAL(MK),DIMENSION(:,:),POINTER :: torque
-        INTEGER, INTENT(OUT)            :: stat_info
+        TYPE(Particles), INTENT(IN)             :: this
+        REAL(MK),DIMENSION(:,:),INTENT(INOUT)   :: drag
+        REAL(MK),DIMENSION(:,:),INTENT(INOUT)   :: torque
+        INTEGER, INTENT(OUT)                    :: stat_info
 
         !----------------------------------------------------
         ! Local parameters: 
@@ -72,7 +72,9 @@
              physics_get_num_colloid(this%phys,stat_info_sub)
         
         IF ( num > 0 ) THEN
+           
            CALL physics_get_colloid(this%phys,colloids,stat_info_sub)
+           
         END IF
         
         
@@ -80,18 +82,7 @@
         ! Reset drag and torque.
         !----------------------------------------------------
         
-        IF (ASSOCIATED(drag)) THEN
-           DEALLOCATE(drag)
-        END IF
-        
-        ALLOCATE(drag(dim,num))
         drag(1:dim,1:num) = 0.0_MK
-        
-        IF (ASSOCIATED(torque)) THEN
-           DEALLOCATE(torque)
-        END IF
-        
-        ALLOCATE(torque(3,num))
         torque(1:3,1:num) = 0.0_MK
         
         

@@ -11,9 +11,9 @@
         !
         !
         !  Revision   : V0.2, 18.04.2012, 
-        !               Adams-Bashforth method
-        !               is implemented,
-        !               inlcuding 1, 2, 3, 4, and 5 order.
+        !               Adams-Bashforth method is 
+        !               implemented inlcuding 
+        !               1, 2, 3, 4, and 5 order accuracy.
         !
         !               V0.1  23.06.2009, original.
         !----------------------------------------------------
@@ -44,13 +44,17 @@
 #else
         
         !----------------------------------------------------
-        ! Select different accuracy oder for
-        ! When the step is smaller then integrator order,
-        ! a lower order (step) integrator is used.
-        ! When the step is bigger than or equal to integrator
-        ! order, the actual order (itype) is used.
+        ! Select different accuracy oder:
+        ! when the step is smaller then desired accuracy order,
+        ! a lower order (step) integrator is used, as we have
+        ! no more information about history.
+        ! For example, at 1st step using explicit Euler,
+        !
+        ! When the step is bigger than or equal to desired
+        ! accuracy order, the actual deisired order (itype) 
+        ! can be used and will be used.
         !----------------------------------------------------
-        
+       
         IF ( step < itype ) THEN
            order = step
         ELSE
@@ -70,7 +74,8 @@
               
               this%x(:,:) = &
                    this%x(:,:) + &
-                   ( 3.0_MK * this%v(:,:,1) - this%v(:,:,2)) * dt / 2.0_MK
+                   ( 3.0_MK * this%v(:,:,1) - &
+                   this%v(:,:,2) ) * dt / 2.0_MK
               
            CASE (3)
               

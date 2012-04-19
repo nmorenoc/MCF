@@ -28,7 +28,7 @@
         REAL(MK), INTENT(IN)            :: dt
         INTEGER, INTENT(OUT)            :: stat_info
         
-        INTEGER                         :: dim,i
+        INTEGER                         :: i
         INTEGER                         :: itype, order
         REAL(MK),DIMENSION(3)           :: axis
         REAL(MK)                        :: phi
@@ -38,20 +38,23 @@
         !----------------------------------------------------
         
         stat_info     = 0
-        dim           = this%num_dim
         itype         = this%integrate_type
         
 #if __PARTICLES_POSITION_FIXED
 #else        
 
         !----------------------------------------------------
-        ! Select different accuracy oder for
-        ! When the step is smaller then integrator order,
-        ! a lower order (step) integrator is used.
-        ! When the step is bigger than or equal to integrator
-        ! order, the actual order (itype) is used.
+        ! Select different accuracy oder:
+        ! when the step is smaller then desired accuracy order,
+        ! a lower order (step) integrator is used, as we have
+        ! no more information about history.
+        ! For example, at 1st step using explicit Euler,
+        !
+        ! When the step is bigger than or equal to desired
+        ! accuracy order, the actual deisired order (itype) 
+        ! can be used and will be used.
         !----------------------------------------------------
-    
+      
         IF ( step < itype ) THEN
            order = step
         ELSE
@@ -63,7 +66,7 @@
            DO i = 1, this%num_colloid
               
               !----------------------------------------------
-              ! Calculate the roation axis at this time
+              ! Calculate the roation axis at this time step.
               !----------------------------------------------
               
               SELECT CASE (order)
@@ -107,7 +110,7 @@
                  
               END SELECT ! order
               
-              !-----------------------------------------------
+              !----------------------------------------------
               ! Calculate the roation vector at this time
               ! step and normalize it.
               !----------------------------------------------
@@ -125,11 +128,12 @@
               this%rot_vector(1:3,i) = axis(1:3)
               this%rot_vector(4,i)   = phi
               
-              !-------------------------------------------
-              ! Only usefull for 2D,
-              ! since 3D roation angle can not be simply
+              !----------------------------------------------
+              ! Only usefull for 2D rotation, where rotated
+              ! angle can be added up linearly.
+              ! But in 3D, roation angle can not be simply
               ! added up for accumulating rotated angle.
-              !-------------------------------------------
+              !----------------------------------------------
               
               this%theta(3,i) = this%theta(3,i) + phi
               

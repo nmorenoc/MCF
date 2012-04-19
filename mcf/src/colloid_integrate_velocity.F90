@@ -5,19 +5,18 @@
         !----------------------------------------------------
         !
         ! Purpose     : Integrate translation velocity of 
-        !               centers of colloid, also
-        !               its rotation velocity.
+        !               centers of colloid.
         !
         ! Remark      : Colloid are modelled as rigid body.
         !               
         !
         ! Revision    : V0.3, 18.04.2012, 
-        !               Adams-Bashforth method
-        !               is implemented,
-        !               inlcuding 1, 2, 3, 4, and 5 order.
+        !               Adams-Bashforth method is 
+        !               implemented inlcuding 
+        !               1, 2, 3, 4, and 5 order accuracy.
         !
         !               V0.2 05.10.2009, including rotating
-        !               velocity.
+        !               velocity.(deleted 1.1.2012)
         !
         !               V0.1 23.06.2009,original version.
         !        
@@ -47,18 +46,22 @@
         INTEGER                         :: itype, order, i
 
         !----------------------------------------------------
-        ! Initialization of variables.
+        ! Initialization of variables:
         !----------------------------------------------------
         
         stat_info  = 0
-        itype = this%integrate_type
+        itype      = this%integrate_type
 
         !----------------------------------------------------
-        ! Select different accuracy oder for
-        ! When the step is smaller then integrator order,
-        ! a lower order (step) integrator is used.
-        ! When the step is bigger than or equal to integrator
-        ! order, the actual order (itype) is used.
+        ! Select different accuracy oder:
+        ! when the step is smaller then desired accuracy order,
+        ! a lower order (step) integrator is used, as we have
+        ! no more information about history.
+        ! For example, at 1st step using explicit Euler,
+        !
+        ! When the step is bigger than or equal to desired
+        ! accuracy order, the actual deisired order (itype) 
+        ! can be used and will be used.
         !----------------------------------------------------
            
         IF ( step < itype ) THEN
@@ -71,7 +74,8 @@
         IF ( this%translate ) THEN
         
            !-------------------------------------------------
-           ! Save the previous translational velocity.
+           ! Save the translational velocity at previous 
+           ! time steps.
            !-------------------------------------------------
 
            i = itype
@@ -80,7 +84,7 @@
            
               this%v(:,:,i)  =  this%v(:,:,i-1)
               
-              i = i-1              
+              i = i - 1              
               
            END DO
            
@@ -97,7 +101,7 @@
               this%v(:,:,1) = &
                    this%v(:,:,1) + &
                    ( 3.0_MK * this%f(:,:,1) - &
-                   this%f(:,:,2)) * dt / 2.0_MK
+                   this%f(:,:,2) ) * dt / 2.0_MK
               
            CASE (3)
               
@@ -141,16 +145,17 @@
         IF ( this%rotate ) THEN
            
            !-------------------------------------------------
-           ! Save the previous rotational velocity.
+           ! Save the rotational velocity at previous 
+           ! time steps.
            !-------------------------------------------------
            
            i = itype
            
            DO WHILE ( i >=  2 )
               
-           this%omega(:,:,i)  =  this%omega(:,:,i-1)
+              this%omega(:,:,i)  =  this%omega(:,:,i-1)
            
-           i = i -1
+              i = i -1
               
            END DO
            

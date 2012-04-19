@@ -98,6 +98,7 @@
            INTEGER                            :: num_colloid
            INTEGER                            :: integrate_type
            REAL(MK)                           :: adapt_t_coef
+           INTEGER                            :: sub_time_step
            REAL(MK)                           :: rho
            INTEGER                            :: rho_type
            LOGICAL                            :: translate

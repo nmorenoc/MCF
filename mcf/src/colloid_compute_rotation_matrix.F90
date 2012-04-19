@@ -3,8 +3,9 @@
         ! Subroutine  : colloid_compute_rotation_matrix
         !----------------------------------------------------
         !
-        ! Purpose     : Using current rotaiton vector to compute
-        !               current rotation matrix for colloid.
+        ! Purpose     : Using current rotaiton vector to 
+        !               compute current rotation matrix 
+        !               for colloids at this time step.
         !
         ! Referecen   : Chen et al. 
         !               Physics of Fluids, 18, 103605, 2006.
@@ -36,11 +37,10 @@
         stat_info_sub = 0        
         dim           = this%num_dim
         
-        
         IF ( this%rotate ) THEN
            
            DO i = 1, this%num_colloid
-           
+              
               rot_matrix(:,:) = 0.0_MK
               
               CALL tool_rotation_matrix(this%tool,&
@@ -48,8 +48,8 @@
                    rot_matrix(1:3,1:3),stat_info_sub)
               
               IF ( stat_info_sub /= 0 ) THEN
-                 PRINT *, "colloid_compute_rotation_matrix ; ", &
-                      "Using tool_rotation_matrix failed ! "
+                 PRINT *, "colloid_compute_rotation_matrix: ", &
+                      "Using tool_rotation_matrix failed! "
                  stat_info = -1
                  GOTO 9999                 
               END IF

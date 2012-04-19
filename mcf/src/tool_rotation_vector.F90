@@ -53,24 +53,24 @@
         stat_info = 0
         
         IF ( dim /=2 .AND. dim /=3 ) THEN
-           PRINT *, "tool_rotation_vector : ", &
-                "Dimension should be either 2 or 3 !"
+           PRINT *, "tool_rotation_vector: ", &
+                "Dimension should be either 2 or 3!"
            stat_info = -1
            GOTO 9999
         END IF
         
         dim1 = SIZE(rm,1)
         IF ( dim1 /= 3 ) THEN
-           PRINT *, "tool_rotation_vector : ", &
-                "dimension of rotation matrix does not match !"
+           PRINT *, "tool_rotation_vector: ", &
+                "dimension of rotation matrix does not match!"
            stat_info = -1
            GOTO 9999
         END IF
         
         dim1 = SIZE(axis,1)
         IF ( dim1 /= 3 ) THEN
-           PRINT *, "tool_rotation_vector : ", &
-                "rotation axis should be 3D !"
+           PRINT *, "tool_rotation_vector: ", &
+                "rotation axis should be 3D!"
            stat_info = -1
            GOTO 9999
         END IF
@@ -80,7 +80,6 @@
         axis(1) = ( rm(3,2) - rm(2,3) ) / (2.0_MK * SIN(phi))
         axis(2) = ( rm(1,3) - rm(3,1) ) / (2.0_MK * SIN(phi))
         axis(3) = ( rm(2,1) - rm(1,2) ) / (2.0_MK * SIN(phi))
-        
         
         !----------------------------------------------------
         ! Return.

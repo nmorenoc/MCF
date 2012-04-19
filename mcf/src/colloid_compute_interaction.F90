@@ -1,5 +1,5 @@
       SUBROUTINE colloid_compute_interaction(this,&
-           comm,MPI_PREC,FB,stat_info)
+           comm,MPI_PREC,drag,torque,FB,stat_info)
         !----------------------------------------------------
         ! Subroutine  : colloid_compute_interaction
         !----------------------------------------------------
@@ -38,12 +38,13 @@
         TYPE(Colloid), INTENT(OUT)              :: this
         INTEGER, INTENT(IN)                     :: comm
         INTEGER, INTENT(IN)                     :: MPI_PREC
+        REAL(MK), DIMENSION(:,:), INTENT(IN)    :: drag
+        REAL(MK), DIMENSION(:,:), INTENT(IN)    :: torque
         REAL(MK), DIMENSION(:,:), INTENT(OUT)   :: FB
         INTEGER, INTENT(OUT)                    :: stat_info
         
         !----------------------------------------------------
         ! Local variables.
-        !
         !----------------------------------------------------
         
         INTEGER                                 :: stat_info_sub
@@ -101,6 +102,14 @@
         dim2  = dim * 2
         num   = this%num_colloid
 
+        !----------------------------------------------------
+        ! Set drag and torque of all colloids to zero
+        ! before any operations.
+        !----------------------------------------------------
+        
+        this%drag(1:dim,1:num) = 0.0_MK
+        this%torque(1:3,1:num) = 0.0_MK
+    
         IF ( SIZE(FB,1) /= dim ) THEN
            PRINT *, "colloid_compute_interaction : ",&
                 "FB dimension do not match ! "
@@ -750,7 +759,7 @@
            !-------------------------------------------------
            
            this%drag(1:dim,1:num) = &
-                this%drag(1:dim, 1:num) + F(1:dim,1:num)
+                drag(1:dim, 1:num) + F(1:dim,1:num)
 
            !-------------------------------------------------
            ! In MPI context, collect all contributions 
@@ -766,7 +775,7 @@
            !-------------------------------------------------
            
            this%torque(1:3,1:num) = &
-                this%torque(1:3, 1:num) + T(1:3,1:num)
+                torque(1:3, 1:num) + T(1:3,1:num)
 #else
            
            !-------------------------------------------------
@@ -775,10 +784,10 @@
            !-------------------------------------------------
            
            this%drag(1:dim,1:num) = &
-                this%drag(1:dim, 1:num) + F_t(1:dim,1:num)
+                drag(1:dim, 1:num) + F_t(1:dim,1:num)
            
            this%torque(1:3,1:num) = &
-                this%torque(1:3, 1:num) + T_t(1:3,1:num)
+                torque(1:3, 1:num) + T_t(1:3,1:num)
         
 #endif
            

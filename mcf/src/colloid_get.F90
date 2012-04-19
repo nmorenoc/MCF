@@ -50,6 +50,22 @@
         RETURN
         
       END FUNCTION colloid_get_num_colloid
+
+      
+      INTEGER FUNCTION colloid_get_sub_time_step(this, stat_info)
+        !----------------------------------------------------
+        ! Return the number of sub-time step
+        !----------------------------------------------------
+
+        TYPE(Colloid), INTENT(IN)       :: this
+        INTEGER, INTENT(OUT)            :: stat_info
+        
+        stat_info = 0
+        colloid_get_sub_time_step = this%sub_time_step
+        
+        RETURN
+        
+      END FUNCTION colloid_get_sub_time_step
       
       
       REAL(MK) FUNCTION colloid_get_adapt_t_coef(this, stat_info)

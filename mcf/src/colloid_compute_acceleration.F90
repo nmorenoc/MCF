@@ -4,7 +4,7 @@
         !----------------------------------------------------
         !
         ! Purpose     : Compute colloid accelerations,
-        !               i.e., translation and rotation.
+        !               both translation and rotation.
         !               
         !
         ! Routines    :
@@ -15,7 +15,9 @@
         !
         ! Revisions   : V0.2 21.11.2011, include 3D
         !               ellipsoid and dicolloid, where
-        !               torque needs to be decomposed.
+        !               torque needs to be decomposed,
+        !               as momentum of inertia is different
+        !               at different rotating orientation.
         !
         !               V0.1 19.11.2010, original version.
         !----------------------------------------------------
@@ -27,7 +29,7 @@
         ! Faculty of Mechanical Engineering,
         ! Technische Universitaet Muenchen, Germany.
         !----------------------------------------------------
-    
+        
         !----------------------------------------------------
         ! Arguments
         !----------------------------------------------------
@@ -71,7 +73,7 @@
 #else
         
         !----------------------------------------------------
-        ! Save the previous accelerations.
+        ! Save the accelerations at previous time steps.
         !----------------------------------------------------
         
         i = itype 
@@ -86,7 +88,8 @@
         END DO
         
         !----------------------------------------------------
-        ! Calculate current translating accelerations.
+        ! Calculate current translating accelerations,
+        ! set zero if no translation.
         !----------------------------------------------------
     
         IF( this%translate ) THEN
@@ -112,16 +115,29 @@
            
            IF ( dim == 2 ) THEN
               
+              !----------------------------------------------
+              ! For 2D rotation, no difference for different
+              ! shapes, as they all move with z-xis.
+              !----------------------------------------------              
+              
               this%alpha(3,1:num,1) = &
                    this%torque(3,1:num) / this%mmi(3,1:num)
               
            ELSE IF ( dim == 3 )  THEN
+              
+              !----------------------------------------------
+              ! For dD rotation, differences for different
+              ! shapes have to be taken care, 
+              ! as momentum of inertia is different for
+              ! different shapes at different orientations.
+              !----------------------------------------------              
               
               DO i = 1, num
                  
                  SELECT CASE( this%shape(i) )
                     
                  CASE ( mcf_colloid_shape_sphere )
+                    
                     !----------------------------------------
                     ! For sphere, moment of inertia tensor
                     ! is diagonal with same element,
@@ -133,6 +149,7 @@
                     
                  CASE ( mcf_colloid_shape_ellipsoid, &
                       mcf_colloid_shape_dicolloid )
+                    
                     !----------------------------------------
                     ! transfer the angular velocity and torque
                     ! into body attached frame oxyz.
@@ -159,8 +176,9 @@
                          alpha1(1:3))
                     
                  CASE ( mcf_colloid_shape_star )
+                    
                     PRINT *, "colloid_compute_accelerate: ", &
-                         "star shape is not available in 3D !"
+                         "star shape is not available in 3D!"
                     stat_info = -1
                     GOTO 9999
                     
@@ -205,7 +223,6 @@
         END DO ! i = 1, dim
         
 #endif        
-        
         
 9999    CONTINUE
         

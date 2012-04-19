@@ -76,15 +76,17 @@
      	!----------------------------------------------------
         
         INTEGER                         :: num_species
-        INTEGER                         :: num_dim
+        INTEGER                         :: num_dim, i
         INTEGER                         :: step_start
 
         LOGICAL                         :: eigen_dynamics
         
         INTEGER                         :: num_colloid
+        INTEGER                         :: coll_sub_time_step
+        REAL(MK)                        :: dt_sub_time_step        
         TYPE(Colloid), POINTER          :: colloids
-        REAL(MK),DIMENSION(:,:),POINTER :: coll_drag
-        REAL(MK),DIMENSION(:,:),POINTER :: coll_torque
+        REAL(MK), ALLOCATABLE, DIMENSION(:,:)   :: coll_drag
+        REAL(MK), ALLOCATABLE, DIMENSION(:,:)   :: coll_torque
         
         INTEGER, DIMENSION(:), POINTER  :: bcdef
         TYPE(Boundary), POINTER         :: tboundary
@@ -143,9 +145,7 @@
         
         num_colloid = 0
         NULLIFY(colloids)
-        NULLIFY(coll_drag)
-        NULLIFY(coll_torque)
-        
+         
         NULLIFY(bcdef)
         NULLIFY(tboundary)
         wall_drag_p(:,:) = 0.0_MK
@@ -155,6 +155,7 @@
         wall_drag_pv(:,:) = 0.0_MK
         wall_drag_pr(:,:) = 0.0_MK
 #endif
+        
         NULLIFY(t_x)
         
         !----------------------------------------------------
@@ -206,6 +207,13 @@
         IF ( num_colloid > 0 ) THEN           
            
            CALL physics_get_colloid(this%phys,colloids,stat_info_sub)
+        
+           coll_sub_time_step = &
+                colloid_get_sub_time_step(colloids,stat_info_sub)
+           dt_sub_time_step   = dt / coll_sub_time_step
+           
+            ALLOCATE(coll_drag(num_dim,num_colloid))
+            ALLOCATE(coll_torque(3,num_colloid))
            
         END IF
         
@@ -433,96 +441,177 @@
 
         IF ( num_colloid > 0 ) THEN           
            
+
            !-------------------------------------------------
-           ! Compute the rotation vector using rotating
-           ! velocity, using desired order.
+           ! Sum up the force of solvent particles on 
+           ! parts of colloids from local processor.
            !-------------------------------------------------
-        
-           CALL colloid_compute_rotation_vector(colloids,&
-                step-step_start, dt,stat_info_sub)
            
-           IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_integrate_VV: ", &
-                   "Computing rotation vector of colloids failed !"
+           CALL particles_collect_colloid_interaction(&
+                this%particles,coll_drag,coll_torque,stat_info_sub)
+           
+           IF( stat_info_sub /=0 ) THEN
+              PRINT *, "marching_integrate_VV: ",&
+                   "Summing up interaction on colloid locally has problem!"
               stat_info = -1
               GOTO 9999
            END IF
-
+           
            !-------------------------------------------------
-           ! Compute rotation matrix from rotation vector.
+           ! Sum up force/torque of solvent partilces
+           ! exerted on colloids from all processes.
            !-------------------------------------------------
            
-           CALL colloid_compute_rotation_matrix(colloids,stat_info_sub)
-           CALL colloid_compute_accumulation_matrix(colloids,stat_info_sub)
-           CALL colloid_compute_accumulation_vector(colloids,stat_info_sub)
-        
-           IF ( stat_info_sub /=0 ) THEN
+           CALL colloid_collect_particles_interaction(colloids,&
+                comm,MPI_PREC,coll_drag,coll_torque,stat_info_sub)
+           
+           IF( stat_info_sub /=0 ) THEN
+              PRINT *, "marching_integrate_VV: ",&
+                   "Summing up interaction on colloid globally has problem!"
+              stat_info = -1
+              GOTO 9999
+           END IF
+           
+           
+           DO i = 1, coll_sub_time_step
               
-              PRINT *, "marching_integrate_VV: ", &
-                   "Computing rotaiton matrix failed "
-              stat_info = -1
-              GOTO 9999
-           END IF
+              !----------------------------------------------
+              ! Compute the rotation vector using rotating
+              ! velocity, using desired order.
+              !----------------------------------------------
+        
+              CALL colloid_compute_rotation_vector(colloids,&
+                   step-1+i-step_start,dt_sub_time_step,stat_info_sub)
+              
+              IF ( stat_info_sub /= 0 ) THEN
+                 PRINT *, "marching_integrate_VV: ", &
+                      "Computing rotation vector of colloids failed!"
+                 stat_info = -1
+                 GOTO 9999
+              END IF
+              
+              !----------------------------------------------
+              ! Compute rotation matrix from rotation vector.
+              !----------------------------------------------
            
-           !-------------------------------------------------
-           ! Compute colloid boundary particle's new relative
-           ! position to the colloid center after rotation.
-           !-------------------------------------------------
-          
-           CALL particles_compute_colloid_relative_position(&
-                this%particles,stat_info_sub)
+              CALL colloid_compute_rotation_matrix(colloids,stat_info_sub)
+              CALL colloid_compute_accumulation_matrix(colloids,stat_info_sub)
+              CALL colloid_compute_accumulation_vector(colloids,stat_info_sub)
+              
+              IF ( stat_info_sub /=0 ) THEN
+                 
+                 PRINT *, "marching_integrate_VV: ", &
+                      "Computing rotaiton matrix failed! "
+                 stat_info = -1
+                 GOTO 9999
+              END IF
+              
+              !----------------------------------------------
+              ! Compute colloid boundary particle's new relative
+              ! position to the colloid center after rotation.
+              !----------------------------------------------
+              
+              CALL particles_compute_colloid_relative_position(&
+                   this%particles,stat_info_sub)
+              
+              IF ( stat_info_sub /= 0 ) THEN
+                 PRINT *, "marching_integrate_VV: ", &
+                      "Computing boundary particles relative position failed!"
+                 stat_info = -1
+                 GOTO 9999
+              END IF
+              
+              !----------------------------------------------
+              ! Integrate the positions of all colloids'
+              ! centers using desired order.
+              !----------------------------------------------
+              
+              CALL colloid_integrate_position(colloids,&
+                   step-1+i-step_start,dt_sub_time_step,stat_info_sub)
+              
+              IF ( stat_info_sub /= 0 ) THEN
+                 PRINT *, "marching_integrate_VV: ", &
+                      "Integrating colloids position failed!"
+                 stat_info = -1
+                 GOTO 9999
+              END IF
+              
+              
+              !----------------------------------------------
+              ! Compute colloid boundary particle's new
+              ! absolute position after the colloid center
+              ! is updated.
+              !----------------------------------------------
+              
+              CALL particles_compute_colloid_absolute_position(&
+                   this%particles,stat_info_sub)
+              
+              IF ( stat_info_sub /= 0 ) THEN
+                 PRINT *, "marching_integrate_VV: ", &
+                      "Computing boundary particles absolute position failed!"
+                 stat_info = -1
+                 GOTO 9999
+              END IF
            
-           IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_integrate_VV: ", &
-                   "Computing boundary particles relative position failed!"
-              stat_info = -1
-              GOTO 9999
-           END IF
+              !-------------------------------------------------
+              ! Integrate velocity using desired accuracy order.
+              !-------------------------------------------------
+              
+              CALL colloid_integrate_velocity(colloids,&
+                   step-1+i-step_start,dt_sub_time_step,stat_info_sub)
+              
+              IF ( stat_info_sub /= 0 ) THEN
+                 PRINT *, "marching_integrate_VV: ", &
+                      "Integrating colloids velocity failed!"
+                 stat_info = -1
+                 GOTO 9999
+              END IF
+              
+              !----------------------------------------------
+              ! Add up force/torque from colloid-colloid and
+              ! colloid-wall interactions.
+              !----------------------------------------------
+              
+              CALL colloid_compute_interaction(colloids,comm, &
+                   MPI_PREC,coll_drag,coll_torque, &
+                   wall_drag_c(1:num_dim,1:num_dim*2),stat_info_sub)
+              
+              IF( stat_info_sub /=0 ) THEN
+                 PRINT *, "marching_integrate_VV: ",&
+                      "c-c or c-w interaction has problem!"
+                 stat_info = -1
+                 GOTO 9999
+              END IF
+              
+              !----------------------------------------------
+              ! Apply body force on colloids.
+              !----------------------------------------------
+              
+              CALL colloid_apply_body_force(colloids,stat_info_sub)
+              
+              IF( stat_info_sub /=0 ) THEN
+                 PRINT *, "marching_integrate_VV: ", &
+                      "Applying body force on colloids has problem!"
+                 stat_info = -1
+                 GOTO 9999
+              END IF
+              
+              !----------------------------------------------
+              ! Compute colloids accelerations, i.e.,
+              ! translation and rotation.
+              !----------------------------------------------
            
-           !-------------------------------------------------
-           ! Integrate the positions of all colloids' centers,
-           ! using desired order.
-           !-------------------------------------------------
-         
-           CALL colloid_integrate_position(colloids,&
-                step-step_start,dt,stat_info_sub)
+              CALL colloid_compute_acceleration(colloids,stat_info_sub)
+              
+              IF( stat_info_sub /=0 ) THEN
+                 PRINT *, "marching_integrate_VV: ",&
+                      "Computing colloids accelerations has problem!"
+                 stat_info = -1
+                 GOTO 9999
+              END IF
+              
+           END DO ! i = 1, coll_sub_time_step
            
-           IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_integrate_VV: ", &
-                   "Integrating colloids position failed !"
-              stat_info = -1
-              GOTO 9999
-           END IF
-                      
-
-           !-------------------------------------------------
-           ! Compute colloid boundary particle's new absolute
-           ! position after the colloid center is updated.
-           !-------------------------------------------------
-           
-           CALL particles_compute_colloid_absolute_position(&
-                this%particles,stat_info_sub)
-           
-           IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_integrate_VV: ", &
-                   "Computing boundary particles absolute position failed !"
-              stat_info = -1
-              GOTO 9999
-           END IF
-           
-           !----------------------------------------------------
-           ! Integrate velocity using desired accuracy order.
-           !----------------------------------------------------
-           
-           CALL colloid_integrate_velocity(colloids,&
-                step-step_start,dt,stat_info_sub)
-           
-           IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_integrate_VV: ", &
-                   "Integrating colloids velocity failed !"
-              stat_info = -1
-              GOTO 9999
-           END IF
            !-------------------------------------------------
            ! In case colloids centers go out of physical
            ! boundary, adjust them according to boundary
@@ -685,7 +774,7 @@
         
         IF ( stat_info_sub /= 0 ) THEN
            PRINT *,"marching_integrate_VV : ", &
-                "Creating ghosts failed !"
+                "Creating ghosts failed!"
            stat_info = -1     
            GOTO 9999
         END IF
@@ -711,7 +800,7 @@
         
         IF ( stat_info_sub /= 0 ) THEN
            PRINT *, "marching_integrate_VV: ", &
-                "Setting boundary ghosts ID failed !"
+                "Setting boundary ghosts ID failed!"
            stat_info = -1
            GOTO 9999
         END IF
@@ -1298,7 +1387,7 @@
            
         END IF ! non-Newtonian
         
-        
+#if 0        
         !----------------------------------------------------
         ! Since paire-wise interaction/force have been
         ! calculated, sum up the force on colloids,
@@ -1398,7 +1487,7 @@
            END IF
            
         END IF !  num_colloid > 0
-        
+#endif
         
         !----------------------------------------------------
         ! If there is wall using symmetry, solid boundary
@@ -1644,14 +1733,6 @@
         !----------------------------------------------------
         ! Release dynamic memories.
 	!----------------------------------------------------
-        
-        IF(ASSOCIATED(coll_drag)) THEN
-           DEALLOCATE(coll_drag)
-        END IF
-        
-        IF(ASSOCIATED(coll_torque)) THEN
-           DEALLOCATE(coll_torque)
-        END IF
         
         IF (ASSOCIATED(bcdef)) THEN
            DEALLOCATE(bcdef)

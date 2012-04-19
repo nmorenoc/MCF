@@ -50,6 +50,7 @@
         
         this%integrate_type = 1
         this%adapt_t_coef   = 1.0_MK
+        this%sub_time_step  = 1
         this%rho         = 1.e3_MK
         this%rho_type    = 0
         this%translate   = .FALSE.
@@ -273,13 +274,14 @@
         this%num_colloid    = d_num_colloid
         this%integrate_type = d_integrate_type
         
-        this%adapt_t_coef= 1.0_MK
-        this%rho         = 1.e3_MK
-        this%rho_type    = 0
-        this%translate   = .FALSE.
-        this%rotate      = .FALSE.
-        this%place       = 1
-        this%noslip_type = 1
+        this%adapt_t_coef   = 1.0_MK
+        this%sub_time_step  = 1
+        this%rho            = 1.e3_MK
+        this%rho_type       = 0
+        this%translate      = .FALSE.
+        this%rotate         = .FALSE.
+        this%place          = 1
+        this%noslip_type    = 1
         this%body_force_type = 0
         NULLIFY(this%body_force)
         ALLOCATE(this%body_force(d_num_dim))
@@ -503,6 +505,7 @@
         PRINT *, "num_colloid        : ", this%num_colloid
         PRINT *, "integrate_type     : ", this%integrate_type
         PRINT *, "adapt_t_coef       : ", this%adapt_t_coef
+        PRINT *, "sub_time_step      : ", this%sub_time_step
         PRINT *, "rho                : ", this%rho
         PRINT *, "rho type           : ", this%rho_type
         PRINT *, "translate          : ", this%translate

@@ -126,9 +126,9 @@
         LOGICAL                         :: coll_rotate
         REAL(MK),DIMENSION(:,:,:),POINTER:: coll_v
         REAL(MK),DIMENSION(:,:,:),POINTER:: coll_omega
-        REAL(MK),DIMENSION(:,:),POINTER :: coll_drag
-        REAL(MK),DIMENSION(:,:),POINTER :: coll_torque
-        REAL(MK),DIMENSION(:,:,:),POINTER:: coll_reset
+        REAL(MK), ALLOCATABLE, DIMENSION(:,:)   :: coll_drag
+        REAL(MK), ALLOCATABLE, DIMENSION(:,:)   :: coll_torque
+         REAL(MK),DIMENSION(:,:,:),POINTER:: coll_reset
         REAL(MK)                        :: coll_k
         REAL(MK), DIMENSION(3)          :: coll_mom        
         
@@ -213,8 +213,6 @@
         
         NULLIFY(coll_v)
         NULLIFY(coll_omega)
-        NULLIFY(coll_drag)
-        NULLIFY(coll_torque)
         NULLIFY(coll_reset)
 
         coll_k      = 0.0_MK
@@ -419,6 +417,9 @@
                 coll_reset(1:3,1:num_colloid,1:integrate_colloid_type),&
                 stat_info_sub)
            
+           ALLOCATE(coll_drag(num_dim,num_colloid))
+           ALLOCATE(coll_torque(3,num_colloid))
+      
         END IF ! num_colloid > 0
         
         
@@ -475,8 +476,8 @@
                 0.0_MK,0.0_MK,stat_info_sub)
            
            IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_relax : ", &
-                   "boundary updating boundary failed !"
+              PRINT *, "marching_relax: ", &
+                   "boundary updating boundary failed!"
               stat_info = -1           
               GOTO 9999           
            END IF
@@ -504,8 +505,8 @@
              l_map_id = .TRUE., stat_info=stat_info_sub)
         
         IF ( stat_info_sub /= 0 ) THEN
-           PRINT *, "marching_relax : ", &
-                "Creating ghosts with x, m, IDs failed !"
+           PRINT *, "marching_relax: ", &
+                "Creating ghosts with x, m, IDs failed!"
            stat_info = -1           
            GOTO 9999           
         END IF
@@ -520,8 +521,8 @@
              stat_info_sub)
         
         IF ( stat_info_sub /= 0 ) THEN
-           PRINT *, "marching_relax : ", &
-                "Setting boundary ghosts ID failed !"
+           PRINT *, "marching_relax: ", &
+                "Setting boundary ghosts ID failed!"
            stat_info = -1
            GOTO 9999
         END IF
@@ -555,9 +556,9 @@
         CALL technique_build_list(this%tech,t_x, &
              num_part_all,symmetry,stat_info_sub)
         
-        IF (stat_info_sub /= 0) THEN
-           PRINT *,"marching_relax : ", &
-                "Building neighbour list failed !"
+        IF ( stat_info_sub /= 0 ) THEN
+           PRINT *,"marching_relax: ", &
+                "Building neighbour list failed!"
            stat_info = -1
            GOTO 9999
         END IF
@@ -571,8 +572,8 @@
              stat_info_sub)
         
         IF( stat_info_sub /=0 ) THEN           
-           PRINT *, "marching_relax : ", &
-                "Computing density failed !"
+           PRINT *, "marching_relax: ", &
+                "Computing density failed!"
            stat_info = -1
            GOTO 9999
         END IF
@@ -598,9 +599,9 @@
                 l_map_x = .TRUE., l_map_rho = .TRUE., &
                 stat_info=stat_info_sub)
            
-           IF (stat_info_sub /= 0) THEN           
-              PRINT *, "marching_relax : ",&
-                   "Receiveing contribution from ghosts failed !"
+           IF ( stat_info_sub /= 0 ) THEN           
+              PRINT *, "marching_relax: ",&
+                   "Receiveing contribution from ghosts failed!"
               stat_info = -1
               GOTO 9999           
            END IF
@@ -617,8 +618,8 @@
            CALL particles_set_colloid_velocity(this%particles,stat_info_sub)
            
            IF (stat_info_sub /= 0) THEN
-              PRINT *, 'marching_relax : ',&
-                   'Setting colloid velocity failed !'
+              PRINT *, 'marching_relax: ',&
+                   'Setting colloid velocity failed!'
               stat_info = -1
               GOTO 9999
            END IF
@@ -631,8 +632,8 @@
                 stat_info_sub)
            
            IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_relax : ", &
-                   "particles setting boundary failed !"
+              PRINT *, "marching_relax: ", &
+                   "particles setting boundary failed!"
               stat_info = -1           
               GOTO 9999           
            END IF
@@ -661,9 +662,9 @@
              l_map_ct = (.NOT. Newtonian), &
              stat_info=stat_info_sub)
         
-        IF (stat_info_sub /= 0) THEN           
-           PRINT *, 'marching_relax : ', &
-                'Updating ghosts with x, rho, v failed !'
+        IF ( stat_info_sub /= 0 ) THEN           
+           PRINT *, 'marching_relax: ', &
+                'Updating ghosts with x, rho, v failed!'
            stat_info = -1           
            GOTO 9999           
         END IF
@@ -691,9 +692,9 @@
         CALL particles_set_boundary_ghost_velocity(this%particles, &
              stat_info_sub)
         
-        IF (stat_info_sub /= 0) THEN           
+        IF ( stat_info_sub /= 0 ) THEN           
            PRINT *, "marching_relax : ", &
-                "Setting boundary ghosts velocity failed !"
+                "Setting boundary ghosts velocity failed!"
            stat_info = -1
            GOTO 9999           
         END IF
@@ -710,9 +711,9 @@
            CALL particles_find_density_extreme(this%particles, &
                 comm, MPI_PREC, stat_info_sub)
            
-           IF(stat_info_sub /=0) THEN
-              PRINT *, "marching_relax : ", &
-                   "Finding density extrem failed !"
+           IF ( stat_info_sub /=0 ) THEN
+              PRINT *, "marching_relax: ", &
+                   "Finding density extrem failed!"
               stat_info = -1
               GOTO 9999
            END IF
@@ -720,9 +721,9 @@
            CALL particles_set_stateEquation_rho_ref(this%particles, &
                 stat_info_sub)
            
-           IF(stat_info_sub /=0) THEN
-              PRINT *, "marching_relax : ", &
-                   "Setting density extreme failed !"
+           IF ( stat_info_sub /=0 ) THEN
+              PRINT *, "marching_relax: ", &
+                   "Setting density extreme failed!"
               stat_info = -1
               GOTO 9999
            END IF
@@ -739,9 +740,9 @@
         CALL particles_compute_pressure(this%particles,&
              num_part_all,stat_info_sub)
         
-        IF(stat_info_sub /=0 ) THEN
-           PRINT *, "marching_relax : ", &
-                "Computing pressure failed !"
+        IF ( stat_info_sub /=0 ) THEN
+           PRINT *, "marching_relax: ", &
+                "Computing pressure failed!"
            stat_info = -1
            GOTO 9999     
         END IF
@@ -755,9 +756,9 @@
         CALL particles_compute_interaction(this%particles, &
              stat_info_sub)
         
-        IF(stat_info_sub /=0 ) THEN
-           PRINT *, "marching_relax : ", &
-                "Computing interaction failed !"
+        IF ( stat_info_sub /=0 ) THEN
+           PRINT *, "marching_relax: ", &
+                "Computing interaction failed!"
            stat_info = -1
            GOTO 9999
         END IF
@@ -797,8 +798,8 @@
                 stat_info = stat_info_sub)
 !#endif
            IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, 'marching_relax : ',&
-                   'Receiving force(au) from ghosts failed !'
+              PRINT *, 'marching_relax: ',&
+                   'Receiving force(au) from ghosts failed!'
               stat_info = -1
               GOTO 9999
            END IF
@@ -826,7 +827,7 @@
            
            IF( stat_info_sub /=0 ) THEN
               PRINT *, "marching_relax: ",&
-                   "Summing up interaction on colloid locally has problem !"
+                   "Summing up interaction on colloid locally has problem!"
               stat_info = -1
               GOTO 9999
            END IF
@@ -840,8 +841,8 @@
                 comm,MPI_PREC,coll_drag,coll_torque,stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_relax : ",&
-                   "Summing up interaction on colloid globally has problem !"
+              PRINT *, "marching_relax: ",&
+                   "Summing up interaction on colloid globally has problem!"
               stat_info = -1
               GOTO 9999
            END IF
@@ -852,12 +853,13 @@
            !-------------------------------------------------
            
            CALL colloid_compute_interaction(colloids,comm,&
-                MPI_PREC, wall_drag_c(1:num_dim,1:num_dim*2),&
+                MPI_PREC, coll_drag, coll_torque,&
+                wall_drag_c(1:num_dim,1:num_dim*2),&
                 stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_relax : ",&
-                   "c-c or c-w interaction has problem !"
+              PRINT *, "marching_relax: ",&
+                   "c-c or c-w interaction has problem!"
               stat_info = -1
               GOTO 9999
            END IF
@@ -871,7 +873,7 @@
            
            IF( stat_info_sub /=0 ) THEN
               PRINT *, "marching_relax: ",&
-                   "Computing colloids accelerations has problem !"
+                   "Computing colloids accelerations has problem!"
               stat_info = -1
               GOTO 9999
            END IF
@@ -890,8 +892,8 @@
                 stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_relax : ",&
-                   "Resetting boundary particles interaction failed !"
+              PRINT *, "marching_relax: ",&
+                   "Resetting boundary particles interaction failed!"
               stat_info = -1
               GOTO 9999
            END IF
@@ -900,8 +902,8 @@
                 stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_relax : ",&
-                   "Resetting boundary ghost particles interaction failed !"
+              PRINT *, "marching_relax: ",&
+                   "Resetting boundary ghost particles interaction failed!"
               stat_info = -1
               GOTO 9999
            END IF
@@ -917,8 +919,8 @@
              stat_info_sub)
         
         IF( stat_info_sub /=0 ) THEN              
-           PRINT *, "marching_relax : ",&
-                "Computing disorder failed !"
+           PRINT *, "marching_relax: ",&
+                "Computing disorder failed!"
            stat_info = -1
            GOTO 9999
         END IF
@@ -928,8 +930,8 @@
              stat_info_sub)
         
         IF( stat_info_sub /=0 ) THEN              
-           PRINT *, "marching_relax : ",&
-                "Computing statistic failed !"
+           PRINT *, "marching_relax: ",&
+                "Computing statistic failed!"
            stat_info = -1
            GOTO 9999
         END IF
@@ -939,8 +941,8 @@
            CALL io_open_statistic_relax(this%io,rank,stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_relax : ",&
-                   "Opening statistic_relax file failed !"
+              PRINT *, "marching_relax: ",&
+                   "Opening statistic_relax file failed!"
               stat_info = -1
               GOTO 9999
            END IF
@@ -950,8 +952,8 @@
                 this%statis,stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_relax : ",&
-                   "Writting statistic_relax file failed !"
+              PRINT *, "marching_relax: ",&
+                   "Writting statistic_relax file failed!"
               stat_info = -1
               GOTO 9999
            END IF
@@ -967,8 +969,8 @@
              num_part_real, stat_info_sub)
         
         IF( stat_info_sub /=0 ) THEN
-           PRINT *, "marching_relax : ",&
-                "Writting particles_relax file failed !"
+           PRINT *, "marching_relax: ",&
+                "Writting particles_relax file failed!"
            stat_info = -1
            GOTO 9999
         END IF
@@ -989,8 +991,8 @@
                 time_current,dt_relax,stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN              
-              PRINT *, "marching_relax : ",&
-                   "Integrating failed !"
+              PRINT *, "marching_relax: ",&
+                   "Integrating failed!"
               stat_info = -1
               GOTO 9999
            END IF
@@ -1001,7 +1003,7 @@
 
            step_current = step_current + 1
            time_current = time_current + dt_relax
-         
+           
            IF ( MOD(step_current,output_particles_freq_step) == 0 ) THEN
               
               num_part_real = &
@@ -1011,9 +1013,9 @@
                    step_current,this%particles, &
                    num_part_real, stat_info_sub)
               
-              IF( stat_info_sub /=0 ) THEN
-                 PRINT *, "marching_relax : ",&
-                      "Writting particles_relax file failed !"
+              IF ( stat_info_sub /=0 ) THEN
+                 PRINT *, "marching_relax: ",&
+                      "Writting particles_relax file failed!"
                  stat_info = -1
                  GOTO 9999
               END IF
@@ -1027,9 +1029,9 @@
                 statistic_get_disorder_square_root(this%statis, &
                 stat_info_sub)
            
-           IF( stat_info_sub /=0 ) THEN              
-              PRINT *, "marching_relax : ",&
-                   "Computing disorder failed !"
+           IF ( stat_info_sub /=0 ) THEN
+              PRINT *, "marching_relax: ",&
+                   "Computing disorder failed!"
               stat_info = -1
               GOTO 9999
            END IF
@@ -1040,9 +1042,9 @@
                    this%particles,coll_k,coll_mom(1:num_dim), &
                    stat_info_sub)
               
-              IF( stat_info_sub /=0 ) THEN              
-                 PRINT *, "marching_relax : ",&
-                      "Computing statistic failed !"
+              IF ( stat_info_sub /=0 ) THEN              
+                 PRINT *, "marching_relax: ",&
+                      "Computing statistic failed!"
                  stat_info = -1
                  GOTO 9999
               END IF
@@ -1135,9 +1137,9 @@
                    step_current,this%particles, &
                    num_part_real, stat_info_sub)
               
-              IF( stat_info_sub /=0 ) THEN
-                 PRINT *, "marching_relax : ",&
-                      "Writting particles_relax file failed !"
+              IF ( stat_info_sub /=0 ) THEN
+                 PRINT *, "marching_relax: ",&
+                      "Writting particles_relax file failed!"
                  stat_info = -1
                  GOTO 9999
               END IF
@@ -1151,9 +1153,9 @@
                 statistic_get_disorder_square_root(this%statis, &
                 stat_info_sub)
            
-           IF( stat_info_sub /=0 ) THEN              
-              PRINT *, "marching_relax : ",&
-                   "Computing disorder failed !"
+           IF ( stat_info_sub /=0 ) THEN              
+              PRINT *, "marching_relax: ",&
+                   "Computing disorder failed!"
               stat_info = -1
               GOTO 9999
            END IF
@@ -1164,9 +1166,9 @@
                    this%particles,coll_k,coll_mom(1:num_dim), &
                    stat_info_sub)
               
-              IF( stat_info_sub /=0 ) THEN              
-                 PRINT *, "marching_relax : ",&
-                      "Computing statistic failed !"
+              IF ( stat_info_sub /=0 ) THEN              
+                 PRINT *, "marching_relax: ",&
+                      "Computing statistic failed!"
                  stat_info = -1
                  GOTO 9999
               END IF
@@ -1195,9 +1197,9 @@
                       step_current,time_current, &
                       this%statis,stat_info_sub)
                  
-                 IF( stat_info_sub /=0 ) THEN
-                    PRINT *, "marching_relax : ",&
-                         "Writting statistic_relax file failed !"
+                 IF ( stat_info_sub /=0 ) THEN
+                    PRINT *, "marching_relax: ",&
+                         "Writting statistic_relax file failed!"
                     stat_info = -1
                     GOTO 9999
                  END IF
@@ -1225,9 +1227,9 @@
                 step_current,this%particles, &
                 num_part_real, stat_info_sub)
            
-           IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_relax : ",&
-                   "Writting particles_relax file failed !"
+           IF ( stat_info_sub /=0 ) THEN
+              PRINT *, "marching_relax: ",&
+                   "Writting particles_relax file failed!"
               stat_info = -1
               GOTO 9999
            END IF
@@ -1241,9 +1243,9 @@
                 this%particles, coll_k,coll_mom(1:num_dim), &
                 stat_info_sub)
            
-           IF( stat_info_sub /=0 ) THEN              
-              PRINT *, "marching_relax : ",&
-                   "Computing statistic failed !"
+           IF ( stat_info_sub /=0 ) THEN              
+              PRINT *, "marching_relax: ",&
+                   "Computing statistic failed!"
               stat_info = -1
               GOTO 9999
            END IF
@@ -1251,9 +1253,9 @@
            CALL statistic_compute_disorder(this%statis, &
                 this%particles,dx,stat_info_sub)
            
-           IF( stat_info_sub /=0 ) THEN              
-              PRINT *, "marching_relax : ",&
-                   "Computing disorder failed !"
+           IF ( stat_info_sub /=0 ) THEN              
+              PRINT *, "marching_relax: ",&
+                   "Computing disorder failed!"
               stat_info = -1
               GOTO 9999
            END IF
@@ -1279,9 +1281,9 @@
                    step_current,time_current, &
                    this%statis,stat_info_sub)
               
-              IF( stat_info_sub /=0 ) THEN
-                 PRINT *, "marching_relax : ",&
-                      "Writting statistic_relax file failed !"
+              IF ( stat_info_sub /=0 ) THEN
+                 PRINT *, "marching_relax: ",&
+                      "Writting statistic_relax file failed!"
                  stat_info = -1
                  GOTO 9999
               END IF
@@ -1309,9 +1311,9 @@
              step_current,this%particles, &
              num_part_real, stat_info_sub)
         
-        IF( stat_info_sub /=0 ) THEN
-           PRINT *, "marching_relax : ",&
-                "Writting restart_particles_relax file failed !"
+        IF ( stat_info_sub /=0 ) THEN
+           PRINT *, "marching_relax: ",&
+                "Writting restart_particles_relax file failed!"
            stat_info = -1
            GOTO 9999
         END IF
@@ -1386,9 +1388,9 @@
         
         CALL io_close_statistic_relax(this%io,stat_info_sub)
         
-        IF(stat_info_sub /=0 ) THEN
-           PRINT *,"marching_marching : ",&
-                "Closing statistic_relax files failed !"
+        IF (stat_info_sub /=0 ) THEN
+           PRINT *,"marching_marching: ",&
+                "Closing statistic_relax files failed!"
            stat_info = -1
         END IF
         
@@ -1412,14 +1414,6 @@
            DEALLOCATE(coll_omega)
         END IF
         
-        IF(ASSOCIATED(coll_drag)) THEN
-           DEALLOCATE(coll_drag)
-        END IF
-
-        IF(ASSOCIATED(coll_torque)) THEN
-           DEALLOCATE(coll_torque)
-        END IF
-      
         IF(ASSOCIATED(coll_reset)) THEN
            DEALLOCATE(coll_reset)
         END IF
@@ -1443,7 +1437,7 @@
 #ifdef __DEBUG        
         IF(debug_flag == 3 ) THEN
            CALL debug_substop(global_debug,rank, &
-                'marching_relax :', &
+                'marching_relax:', &
                 time_routine_start, stat_info_sub)
         END IF 
 #endif

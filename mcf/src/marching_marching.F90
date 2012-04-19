@@ -7,9 +7,10 @@
         !               and finalizing routine.
         !
         !               Initial calculation of density, 
-        !               interaction(force, etc) and iteration/
-        !               evolution of step/time for integrating
-        !               in time are done here; 
+        !               interaction(force, velocity gradient, etc)
+        !               are done here;
+        !               iteration/evolution of step/time 
+        !               for integrating in time are done here; 
         !               Initial output and final output are 
         !               done here as well.
         !
@@ -130,9 +131,8 @@
         
         INTEGER                         :: num_colloid
         TYPE(Colloid), POINTER          :: colloids
-        REAL(MK),DIMENSION(:,:),POINTER :: coll_drag
-        REAL(MK),DIMENSION(:,:),POINTER :: coll_torque
-        
+        REAL(MK), ALLOCATABLE, DIMENSION(:,:)   :: coll_drag
+        REAL(MK), ALLOCATABLE, DIMENSION(:,:)   :: coll_torque
         REAL(MK)                        :: coll_k
         REAL(MK), DIMENSION(:), POINTER :: coll_mom        
         
@@ -226,8 +226,6 @@
        
         num_colloid = 0
         NULLIFY(colloids)
-        NULLIFY(coll_drag)
-        NULLIFY(coll_torque)
         coll_k  = 0.0_MK
         NULLIFY(coll_mom)
         
@@ -373,6 +371,9 @@
            
            CALL physics_get_colloid(this%phys,&
                 colloids,stat_info_sub)
+       
+           ALLOCATE(coll_drag(num_dim,num_colloid))
+           ALLOCATE(coll_torque(3,num_colloid))
            
         END IF
         
@@ -408,7 +409,7 @@
                 time_current,time_current,stat_info_sub)
            
            IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_marching : ", &
+              PRINT *, "marching_marching: ", &
                    "boundary updating boundary failed !"
               stat_info = -1           
               GOTO 9999           
@@ -460,7 +461,7 @@
            CALL particles_set_flow_developed(this%particles,stat_info_sub)
            
            IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_marching : ", &
+              PRINT *, "marching_marching: ", &
                    "Setting particles flow developed failed !"
               stat_info = -1
               GOTO 9999
@@ -471,7 +472,7 @@
               !CALL colloid_set_flow_developed(colloids,stat_info_sub)
               
               IF ( stat_info_sub /= 0 ) THEN
-                 PRINT *, "marching_marching : ", &
+                 PRINT *, "marching_marching: ", &
                       "Setting colloid flow developed failed !"
                  stat_info = -1
                  GOTO 9999
@@ -481,7 +482,8 @@
         
         END IF ! read_external
         
-#endif        
+#endif
+        
         !----------------------------------------------------
       	! Create ghost particles on righ-inner(-up)
         ! boundaries (symmetry) or all boundaries 
@@ -499,7 +501,7 @@
              l_map_id = .TRUE., stat_info=stat_info_sub)
         
         IF ( stat_info_sub /= 0 ) THEN
-           PRINT *, "marching_marching : ", &
+           PRINT *, "marching_marching: ", &
                 "Creating ghosts with x, m, IDs failed !"
            stat_info = -1
            GOTO 9999
@@ -515,7 +517,7 @@
              stat_info_sub)
         
         IF ( stat_info_sub /= 0 ) THEN
-           PRINT *, "marching_marching : ", &
+           PRINT *, "marching_marching: ", &
                 "Setting boundary ghost ID failed !"
            stat_info = -1
            GOTO 9999
@@ -551,7 +553,7 @@
              num_part_all,symmetry,stat_info_sub)
         
         IF (stat_info_sub /= 0) THEN
-           PRINT *,"marching_marching : ", &
+           PRINT *,"marching_marching: ", &
                 "Building neighbour list failed !"
            stat_info = -1
            GOTO 9999
@@ -564,8 +566,8 @@
         
         CALL particles_compute_density(this%particles,stat_info_sub)
         
-        IF( stat_info_sub /=0 ) THEN           
-           PRINT *, "marching_marching : ", &
+        IF( stat_info_sub /=0 ) THEN
+           PRINT *, "marching_marching: ", &
                 "Computing density failed !"
            stat_info = -1
            GOTO 9999
@@ -593,8 +595,8 @@
                 l_map_x = .TRUE., l_map_rho = .TRUE., &
                 stat_info=stat_info_sub)
            
-           IF (stat_info_sub /= 0) THEN           
-              PRINT *, "marching_marching : ",&
+           IF (stat_info_sub /= 0) THEN
+              PRINT *, "marching_marching: ",&
                    "Receiveing contribution from ghosts failed !"
               stat_info = -1
               GOTO 9999           
@@ -608,7 +610,7 @@
            CALL particles_set_colloid_velocity(this%particles,stat_info_sub)
            
            IF (stat_info_sub /= 0) THEN
-              PRINT *, 'marching_marching : ',&
+              PRINT *, 'marching_marching: ',&
                    'Setting colloid velocity failed !'
               stat_info = -1
               GOTO 9999
@@ -622,7 +624,7 @@
                 stat_info_sub)
            
            IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_marching : ", &
+              PRINT *, "marching_marching: ", &
                    "particles setting boundary failed !"
               stat_info = -1           
               GOTO 9999           
@@ -652,8 +654,8 @@
              l_map_ct =(.NOT. Newtonian), &
              stat_info=stat_info_sub)
         
-        IF (stat_info_sub /= 0) THEN
-           PRINT *, 'marching_marching : ', &
+        IF ( stat_info_sub /= 0) THEN
+           PRINT *, 'marching_marching: ', &
                 'Updating ghosts with x, rho, v failed !'
            stat_info = -1
            GOTO 9999
@@ -681,8 +683,8 @@
         CALL particles_set_boundary_ghost_velocity(this%particles, &
              stat_info_sub)
         
-        IF (stat_info_sub /= 0) THEN           
-           PRINT *, "marching_marching : ", &
+        IF ( stat_info_sub /= 0 ) THEN
+           PRINT *, "marching_marching: ", &
                 "Setting boundary ghosts velocity failed !"
            stat_info = -1
            GOTO 9999           
@@ -700,8 +702,8 @@
            CALL particles_find_density_extreme(this%particles, &
                 comm, MPI_PREC, stat_info_sub)
            
-           IF(stat_info_sub /=0) THEN
-              PRINT *, "marching_marching : ", &
+           IF ( stat_info_sub /=0 ) THEN
+              PRINT *, "marching_marching: ", &
                    "Finding density extrem failed !"
               stat_info = -1
               GOTO 9999
@@ -710,8 +712,8 @@
            CALL particles_set_stateEquation_rho_ref(this%particles, &
                 stat_info_sub)
            
-           IF(stat_info_sub /=0) THEN
-              PRINT *, "marching_marching : ", &
+           IF ( stat_info_sub /=0 ) THEN
+              PRINT *, "marching_marching: ", &
                    "Setting density extreme failed !"
               stat_info = -1
               GOTO 9999
@@ -744,8 +746,8 @@
         CALL particles_compute_pressure(this%particles,&
              num_part_all,stat_info_sub)
         
-        IF(stat_info_sub /=0) THEN
-           PRINT *, "marching_marching : ", &
+        IF ( stat_info_sub /=0 ) THEN
+           PRINT *, "marching_marching: ", &
                 "Computing pressure failed !"
            stat_info = -1
            GOTO 9999
@@ -761,8 +763,8 @@
            CALL particles_compute_pressure_tensor(this%particles,&
                 num_part_all,stat_info_sub)
            
-           IF(stat_info_sub /=0) THEN
-              PRINT *, "marching_marching : ", &
+           IF ( stat_info_sub /=0 ) THEN
+              PRINT *, "marching_marching: ", &
                    "Computing pressure tensor failed !"
               stat_info = -1
               GOTO 9999
@@ -780,8 +782,8 @@
         CALL particles_compute_interaction(this%particles, &
              stat_info_sub)
         
-        IF(stat_info_sub /=0 ) THEN
-           PRINT *, "marching_marching : ", &
+        IF ( stat_info_sub /=0 ) THEN
+           PRINT *, "marching_marching: ", &
                 "Computing interaction failed !"
            stat_info = -1
            GOTO 9999
@@ -834,7 +836,7 @@
 #endif
 
            IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, 'marching_marching : ',&
+              PRINT *, 'marching_marching: ',&
                    'Receiving force(stress, vgt,au) from ghosts failed !'
               stat_info = -1
               GOTO 9999
@@ -879,8 +881,8 @@
         CALL particles_apply_body_force(this%particles,&
              num_part_real,stat_info_sub)
         
-        IF(stat_info_sub /=0 ) THEN
-           PRINT *, "marching_marching : ",&
+        IF ( stat_info_sub /=0 ) THEN
+           PRINT *, "marching_marching: ",&
                 "Applying body force failed !"
            stat_info = -1
            GOTO 9999
@@ -891,7 +893,7 @@
         ! we use Oldroyd-B model.
         !----------------------------------------------------
         
-        IF( .NOT. Newtonian ) THEN
+        IF ( .NOT. Newtonian ) THEN
            
            !-------------------------------------------------
            ! In case of egenvector dynamics,
@@ -917,9 +919,9 @@
               CALL particles_compute_aeval(this%particles,&
                    num_part_real,stat_info_sub)
               
-              IF (stat_info_sub /= 0 ) THEN
+              IF ( stat_info_sub /= 0 ) THEN
                  PRINT *, &
-                      "marching_marching : ",&
+                      "marching_marching: ",&
                       "Computing aeval failed !"
                  stat_info = -1
                  GOTO 9999
@@ -932,9 +934,9 @@
               CALL particles_compute_aevec(this%particles,&
                    num_part_real,stat_info_sub)
               
-              IF (stat_info_sub /= 0 ) THEN
+              IF ( stat_info_sub /= 0 ) THEN
                  PRINT *,&
-                      "marching_marching : ",&
+                      "marching_marching: ",&
                       "Computing aevec failed !"
                  stat_info = -1
                  GOTO 9999
@@ -950,8 +952,8 @@
               CALL particles_compute_act(this%particles,&
                    num_part_real,stat_info_sub)
               
-              IF (stat_info_sub /= 0 ) THEN
-                 PRINT *, "marching_marching : ",&
+              IF ( stat_info_sub /= 0 ) THEN
+                 PRINT *, "marching_marching: ",&
                       "Computing act failed !"
                  stat_info = -1
                  GOTO 9999
@@ -981,7 +983,7 @@
                 coll_drag,coll_torque,stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_marching : ",&
+              PRINT *, "marching_marching: ",&
                    "Summing up interaction on colloid locally has problem !"
               stat_info = -1
               GOTO 9999
@@ -996,7 +998,7 @@
                 comm,MPI_PREC,coll_drag,coll_torque,stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_marching : ",&
+              PRINT *, "marching_marching: ",&
                    "Summing up interaction on colloid globally has problem !"
               stat_info = -1
               GOTO 9999
@@ -1008,11 +1010,12 @@
            !-------------------------------------------------
            
            CALL colloid_compute_interaction(colloids,comm,&
-                MPI_PREC,wall_drag_c(1:num_dim,1:num_dim*2),&
+                MPI_PREC,coll_drag, coll_torque, &
+                wall_drag_c(1:num_dim,1:num_dim*2),&
                 stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_marching : ",&
+              PRINT *, "marching_marching: ",&
                    "c-c or c-w interaction has problem !"
               stat_info = -1
               GOTO 9999
@@ -1024,8 +1027,8 @@
            
            CALL colloid_apply_body_force(colloids,stat_info_sub)
            
-           IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_marching : ",&
+           IF ( stat_info_sub /=0 ) THEN
+              PRINT *, "marching_marching: ",&
                    "Applying body force on colloids has problem !"
               stat_info = -1
               GOTO 9999
@@ -1038,8 +1041,8 @@
            
            CALL colloid_compute_acceleration(colloids,stat_info_sub)
            
-           IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_marching : ",&
+           IF ( stat_info_sub /=0 ) THEN
+              PRINT *, "marching_marching: ",&
                    "Computing colloids accelerations has problem !"
               stat_info = -1
               GOTO 9999
@@ -1060,8 +1063,8 @@
         CALL statistic_compute_statistic(this%statis, &
              this%particles,coll_k,coll_mom,stat_info_sub)
         
-        IF( stat_info_sub /=0 ) THEN
-           PRINT *, "marching_marching : ",&
+        IF ( stat_info_sub /=0 ) THEN
+           PRINT *, "marching_marching: ",&
                 "Computing statistics failed !"
            stat_info = -1
            GOTO 9999
@@ -1077,7 +1080,7 @@
            CALL marching_adjust_flow_v(this,stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN              
-              PRINT *, "marching_marching : ",&
+              PRINT *, "marching_marching: ",&
                    "Adjusting flow velocity failed !"
               stat_info = -1
               GOTO 9999
@@ -1109,8 +1112,8 @@
 
 #endif
            
-           IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_marching : ",&
+           IF ( stat_info_sub /=0 ) THEN
+              PRINT *, "marching_marching: ",&
                    "Summing up interaction on boundary locally has problem !"
               stat_info = -1
               GOTO 9999
@@ -1130,8 +1133,8 @@
                 stat_info=stat_info_sub)
 #endif
            
-           IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_marching : ",&
+           IF ( stat_info_sub /=0 ) THEN
+              PRINT *, "marching_marching: ",&
                    "Summing up particles contribution on boundary has problem !"
               stat_info = -1
               GOTO 9999
@@ -1141,7 +1144,7 @@
                 MPI_PREC, wall_drag_c(1:num_dim,1:num_dim*2),stat_info_sub)
            
            IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_marching : ",&
+              PRINT *, "marching_marching: ",&
                    "Summing up colloids contribution on boundary has problem !"
               stat_info = -1
               GOTO 9999
@@ -1155,8 +1158,8 @@
            CALL particles_reset_boundary_interaction(this%particles, &
                 stat_info_sub)
            
-           IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_marching : ",&
+           IF ( stat_info_sub /=0 ) THEN
+              PRINT *, "marching_marching: ",&
                    "Resetting boundary particles interaction failed !"
               stat_info = -1
               GOTO 9999
@@ -1165,8 +1168,8 @@
            CALL particles_reset_boundary_ghost_interaction(this%particles, &
                 stat_info_sub)
            
-           IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_marching : ",&
+           IF ( stat_info_sub /=0 ) THEN
+              PRINT *, "marching_marching: ",&
                    "Resetting boundary ghost particles interaction failed !"
               stat_info = -1
               GOTO 9999
@@ -1184,8 +1187,8 @@
            CALL io_open(this%io,rank,&
                 1,num_shear,stat_info_sub)
            
-           IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_marching : ",&
+           IF ( stat_info_sub /=0 ) THEN
+              PRINT *, "marching_marching: ",&
                    "Opening (s,b) files failed !"
               stat_info = -1
               GOTO 9999
@@ -1208,8 +1211,8 @@
              this%particles,num_part_real,&
              this%statis,stat_info_sub)
         
-        IF( stat_info_sub /=0 ) THEN              
-           PRINT *, "marching_marching : ",&
+        IF ( stat_info_sub /=0 ) THEN
+           PRINT *, "marching_marching: ",&
                 "Initial writing failed !"
            stat_info = -1
            GOTO 9999
@@ -1229,7 +1232,7 @@
            CALL debug_open_time(global_debug,rank,stat_info_sub)
            
            IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_marching : ", &
+              PRINT *, "marching_marching: ", &
                    "debug_open_time has problem ! "
               stat_info_sub = -1
               GOTO 9999
@@ -1326,8 +1329,8 @@
            CALL marching_integrate(this,step_current,time_current,dt,&
                 stat_info_sub)
            
-           IF( stat_info_sub /=0 ) THEN              
-              PRINT *, "marching_marching : ",&
+           IF ( stat_info_sub /=0 ) THEN
+              PRINT *, "marching_marching: ",&
                    "Integrating failed!"
               stat_info = -1
               GOTO 9999
@@ -1342,8 +1345,8 @@
               
               CALL colloid_compute_image(colloids,stat_info_sub)
               
-              IF( stat_info_sub /=0 ) THEN              
-                 PRINT *, "marching_marching : ",&
+              IF ( stat_info_sub /=0 ) THEN
+                 PRINT *, "marching_marching: ",&
                       "colloid computing image failed!"
                  stat_info = -1
                  GOTO 9999
@@ -1373,8 +1376,8 @@
                 write_statistic=l_write_statistic,&
                 stat_info=stat_info_sub)
            
-           IF(stat_info_sub /=0 ) THEN              
-              PRINT *,"marching_marching : ",&
+           IF (stat_info_sub /=0 ) THEN
+              PRINT *,"marching_marching: ",&
                    "Checking writing conditions failed!"              
               stat_info = -1
               GOTO 9999
@@ -1405,8 +1408,8 @@
               CALL statistic_compute_statistic(this%statis, &
                    this%particles,coll_k,coll_mom,stat_info_sub)
               
-              IF(stat_info_sub /=0 ) THEN
-                 PRINT *, "marching_marching : ", &
+              IF (stat_info_sub /=0 ) THEN
+                 PRINT *, "marching_marching: ", &
                       "Computing statistics failed !"
                  stat_info = -1
                  GOTO 9999
@@ -1440,8 +1443,8 @@
                 this%particles,num_part_real,&
                 this%statis,stat_info_sub)
            
-           IF( stat_info_sub /=0 ) THEN              
-              PRINT *, "marching_marching : ",&
+           IF ( stat_info_sub /=0 ) THEN
+              PRINT *, "marching_marching: ",&
                    "Step writing failed !"
               stat_info = -1
               GOTO 9999
@@ -1457,8 +1460,8 @@
               
               CALL marching_adjust_flow_v(this,stat_info_sub)
               
-              IF( stat_info_sub /=0 ) THEN              
-                 PRINT *, "marching_marching : ",&
+              IF( stat_info_sub /=0 ) THEN
+                 PRINT *, "marching_marching: ",&
                       "Adjusting flow velocity failed !"
                  stat_info = -1
                  GOTO 9999
@@ -1484,7 +1487,7 @@
            CALL debug_close_time(global_debug,rank,stat_info_sub)
            
            IF ( stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_marching : ", &
+              PRINT *, "marching_marching: ", &
                    "debug_close_time has problem ! "
               stat_info_sub = -1
               GOTO 9999
@@ -1575,8 +1578,8 @@
              this%particles,num_part_real,&
              this%statis,stat_info_sub)
         
-        IF( stat_info_sub /=0 ) THEN              
-           PRINT *, "marching_marching : ",&
+        IF ( stat_info_sub /=0 ) THEN              
+           PRINT *, "marching_marching: ",&
                 "Final writing failed !"
            stat_info = -1
            GOTO 9999
@@ -1591,8 +1594,8 @@
         
         CALL io_close(this%io,1,num_shear,stat_info_sub)
 
-        IF( stat_info_sub /=0 ) THEN           
-           PRINT *,"marching_marching : ",&
+        IF ( stat_info_sub /=0 ) THEN
+           PRINT *,"marching_marching: ",&
                 "Closing (s,b,c) files failed !"
            stat_info = -1           
         END IF
@@ -1601,31 +1604,23 @@
         ! Release all dynamics memories.
         !----------------------------------------------------
         
-        IF(ASSOCIATED(body_force)) THEN
+        IF (ASSOCIATED(body_force)) THEN
            DEALLOCATE(body_force)
         END IF
 
-        IF(ASSOCIATED(body_force_d)) THEN
+        IF (ASSOCIATED(body_force_d)) THEN
            DEALLOCATE(body_force_d)
         END IF
         
-        IF(ASSOCIATED(coll_mom)) THEN
+        IF (ASSOCIATED(coll_mom)) THEN
            DEALLOCATE(coll_mom)
         END IF
         
-        IF(ASSOCIATED(coll_drag)) THEN
-           DEALLOCATE(coll_drag)
-        END IF
-
-        IF(ASSOCIATED(coll_torque)) THEN
-           DEALLOCATE(coll_torque)
-        END IF
-        
-        IF(ASSOCIATED(bcdef)) THEN
+        IF (ASSOCIATED(bcdef)) THEN
            DEALLOCATE(bcdef)
         END IF
       
-        IF(ASSOCIATED(t_x)) THEN
+        IF (ASSOCIATED(t_x)) THEN
            DEALLOCATE(t_x)
         END IF
         
@@ -1634,26 +1629,25 @@
         
         IF( debug_flag == 2) THEN
            CALL debug_substop(global_debug,rank, &
-                'marching_marching :', &
+                'marching_marching:', &
                 time_routine_start, stat_info_sub)
         END IF 
 
-        IF(ASSOCIATED(t_rho)) THEN
+        IF (ASSOCIATED(t_rho)) THEN
            DEALLOCATE(t_rho)
         END IF
 
-        IF(ASSOCIATED(t_f)) THEN
+        IF (ASSOCIATED(t_f)) THEN
            DEALLOCATE(t_f)
         END IF
         
-        IF(ASSOCIATED(t_id)) THEN
+        IF (ASSOCIATED(t_id)) THEN
            DEALLOCATE(t_id)
         END IF
         
 #endif
         
         RETURN
-        
         
       END SUBROUTINE marching_marching
       

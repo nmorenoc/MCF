@@ -50,8 +50,8 @@
                    axis(1:3),phi,stat_info_sub)
               
               IF ( stat_info_sub /= 0 ) THEN
-                 PRINT *, "colloid_compute_accumulation_vector ; ", &
-                      "Using tool_rotation_vector failed ! "
+                 PRINT *, "colloid_compute_accumulation_vector: ", &
+                      "Using tool_rotation_vector failed! "
                  stat_info = -1
                  GOTO 9999
               END IF

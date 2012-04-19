@@ -31,11 +31,11 @@
         ! Arguments
         !----------------------------------------------------
         
-        TYPE(Colloid), INTENT(OUT)              :: this
+        TYPE(Colloid), INTENT(IN)               :: this
         INTEGER, INTENT(IN)                     :: comm
         INTEGER, INTENT(IN)                     :: MPI_PREC
-        REAL(MK), DIMENSION(:,:), INTENT(IN)    :: drag
-        REAL(MK), DIMENSION(:,:), INTENT(IN)    :: torque
+        REAL(MK), DIMENSION(:,:), INTENT(INOUT) :: drag
+        REAL(MK), DIMENSION(:,:), INTENT(INOUT) :: torque
         INTEGER, INTENT(OUT)                    :: stat_info
         
         !----------------------------------------------------
@@ -47,8 +47,8 @@
         
         INTEGER                                 :: stat_info_sub
         INTEGER                                 :: dim,num
-        REAL(MK), DIMENSION(:,:),POINTER        :: t_drag
-        REAL(MK), DIMENSION(:,:),POINTER        :: t_torque
+        REAL(MK), ALLOCATABLE, DIMENSION(:,:)   :: t_drag
+        REAL(MK), ALLOCATABLE, DIMENSION(:,:)   :: t_torque
 
         
         !----------------------------------------------------
@@ -62,44 +62,33 @@
         num = this%num_colloid
         
         IF ( SIZE(drag,1) /= dim ) THEN
-           PRINT *, "colloid_collect_particles_interaction : ", &
-                "input drag dimension does not match !"
+           PRINT *, "colloid_collect_particles_interaction: ", &
+                "input drag dimension does not match!"
            stat_info = -1
            GOTO 9999
         END IF
         
         IF ( SIZE(drag,2) /= num ) THEN
-           PRINT *, "colloid_collect_particles_interaction : ", &
-                "input drag number does not match !"
+           PRINT *, "colloid_collect_particles_interaction: ", &
+                "input drag number does not match!"
            stat_info = -1
            GOTO 9999
         END IF
         
         IF ( SIZE(torque,1) /= 3 ) THEN
-           PRINT *, "colloid_collect_particles_interaction : ", &
-                "input torque dimension does not match !"
+           PRINT *, "colloid_collect_particles_interaction: ", &
+                "input torque dimension does not match!"
            stat_info = -1
            GOTO 9999
         END IF
         
         IF ( SIZE(torque,2) /= num ) THEN
-           PRINT *, "colloid_collect_particles_interaction : ", &
-                "input drag number does not match !"
+           PRINT *, "colloid_collect_particles_interaction: ", &
+                "input drag number does not match!"
            stat_info = -1
            GOTO 9999
         END IF
         
-        !----------------------------------------------------
-        ! Set drag and torque of all colloids to zero
-        ! before any operations.
-        !----------------------------------------------------
-        
-        this%drag(1:dim,1:num) = 0.0_MK
-        this%torque(1:3,1:num) = 0.0_MK
-        
-        NULLIFY(t_drag)
-        NULLIFY(t_torque)
-
         !----------------------------------------------------
         ! collect boundary particles' contribution of
         ! total drag and torque on colloids.
@@ -130,7 +119,7 @@
            GOTO 9999
         END IF
            
-        this%drag(1:dim,1:num) = t_drag(1:dim,1:num)
+        drag(1:dim,1:num) = t_drag(1:dim,1:num)
         
         CALL MPI_ALLREDUCE (torque(:,:),t_torque(:,:), &
              SIZE(t_torque),MPI_PREC,MPI_SUM,comm,stat_info_sub)
@@ -142,26 +131,17 @@
            GOTO 9999
         END IF
         
-        this%torque(1:3,1:num) = t_torque(1:3,1:num)
+        torque(1:3,1:num) = t_torque(1:3,1:num)
 
 #else
         
-        this%drag(1:dim,1:num) = drag(1:dim,1:num)
-        this%torque(1:3,1:num) = torque(1:3,1:num)
+        ! For single processor, nothing needs to be done!
         
 #endif
         
         
 9999    CONTINUE
         
-        IF(ASSOCIATED(t_drag)) THEN
-           DEALLOCATE(t_drag)
-        END IF
-        
-        IF(ASSOCIATED(t_torque)) THEN
-           DEALLOCATE(t_torque)
-        END IF
-
         RETURN          
         
       END SUBROUTINE colloid_collect_particles_interaction
