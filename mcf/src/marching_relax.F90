@@ -986,6 +986,14 @@
         DO WHILE ( ( relax_type == 1 .AND. &
              step_current <  step_relax )  .OR.  &
              ( relax_type == 2 .AND. disorder > disorder_level ) )
+         
+  
+           !-------------------------------------------------
+           ! Update current step and time.
+           !-------------------------------------------------
+
+           step_current = step_current + 1
+           time_current = time_current + dt_relax
            
            CALL marching_integrate(this,step_current,&
                 time_current,dt_relax,stat_info_sub)
@@ -996,13 +1004,6 @@
               stat_info = -1
               GOTO 9999
            END IF
-           
-           !-------------------------------------------------
-           ! Update current step and time.
-           !-------------------------------------------------
-
-           step_current = step_current + 1
-           time_current = time_current + dt_relax
            
            IF ( MOD(step_current,output_particles_freq_step) == 0 ) THEN
               
