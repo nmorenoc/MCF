@@ -1147,20 +1147,17 @@ there are more columns
 \textit{NNN} represent the number of steps in the simulation for this output file.
 This file contains the fundamental quantities of each particle
 at the end of step \textit{NNN}.
-\textbf{$[x, y(, z), v_x, v_y(, v_z), rho, m, p_{id}, s_{id}]$}.
-Note that \textbf{$rho$} can be number density or mass density,
-depending on the \textbf{rhs\_density\_type}.
-Both \textbf{$p_{id}$} and \textbf{$s_{id}$} are integer numbers.
-\textbf{$p_{id}$} is particle ID and
-unique for each particle.
-\textbf{$s_{id}$} is species ID.
+\textbf{$[x, y; p_{id}; 
+vgt_{xx}, vgt_{xy}, vgt_{yx}, vgt_{yy}; 
+ct_{xx}, ct_{xy}, ct_{yx}, ct_{yy}; 
+pt_{xx}, pt_{xy}, pt_{yx}, pt_{yy}]$}.
 
-For solvent particle \textbf{$s_{id}$}=\textit{0}.
-For colloidal boundary particle \textbf{$s_{id}$}=\textit{1...\textit{MM}}.
-\textit{MM} is the total number of colloids
-in the simulation.
-For wall boundary particle \textbf{$s_{id}$}=\textit{-1, -2, -3, -4,( -5, -6)},
-denpending on which wall it belongs to.
+Note that 
+\textbf{$p_{id}$} is particle ID and
+unique for each particle;
+\textbf{$vgt$} is velocity gradient tensor;
+\textbf{$ct$} is conformation tensor;
+\textbf{$pt$} is pressure tensor.
 
 
 \subsection{\textbf{statistic\_relax\_file}\\

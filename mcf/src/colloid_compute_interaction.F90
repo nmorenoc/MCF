@@ -60,28 +60,28 @@
         REAL(MK), DIMENSION(3)                  :: max_sub_o
         
         LOGICAL                                 :: out        
-        REAL(MK),DIMENSION(:,:),POINTER         :: x_t
-        INTEGER, DIMENSION(:),  POINTER         :: sid_t
+        REAL(MK), ALLOCATABLE, DIMENSION(:,:)   :: x_t
+        INTEGER, ALLOCATABLE, DIMENSION(:)      :: sid_t
         INTEGER                                 :: num_t
         
-        REAL(MK),DIMENSION(:,:),POINTER         :: x_ghost
-        INTEGER, DIMENSION(:),  POINTER         :: sid_ghost
+        REAL(MK), ALLOCATABLE, DIMENSION(:,:)   :: x_ghost
+        INTEGER, ALLOCATABLE, DIMENSION(:)      :: sid_ghost
         INTEGER                                 :: num_g
         INTEGER                                 :: num_ghost
         
         LOGICAL                                 :: in
-        REAL(MK),DIMENSION(:,:),POINTER         :: x_p
-        INTEGER, DIMENSION(:), POINTER          :: sid_p
+        REAL(MK), ALLOCATABLE, DIMENSION(:,:)   :: x_p
+        INTEGER, ALLOCATABLE, DIMENSION(:)      :: sid_p
         REAL(MK),DIMENSION(3)                   :: F_ij
         REAL(MK),DIMENSION(3)                   :: F_i,F_j
         REAL(MK),DIMENSION(3)                   :: T_i,T_j
-        REAL(MK),DIMENSION(:,:),POINTER         :: F, T
-        REAL(MK),DIMENSION(:,:),POINTER         :: F_p, T_p
-        REAL(MK),DIMENSION(:,:),POINTER         :: F_t, T_t
+        REAL(MK), ALLOCATABLE, DIMENSION(:,:)   :: F, T
+        REAL(MK), ALLOCATABLE, DIMENSION(:,:)   :: F_p, T_p
+        REAL(MK), ALLOCATABLE, DIMENSION(:,:)   :: F_t, T_t
         INTEGER                                 :: num_p
         
-        REAL(MK),DIMENSION(:,:), POINTER        :: x_p_ghost
-        INTEGER, DIMENSION(:), POINTER          :: sid_p_ghost
+        REAL(MK), ALLOCATABLE, DIMENSION(:,:)   :: x_p_ghost
+        INTEGER, ALLOCATABLE, DIMENSION(:)      :: sid_p_ghost
         INTEGER                                 :: num_p_ghost
 
         REAL(MK), DIMENSION(3)                  :: length
@@ -101,7 +101,7 @@
         dim   = this%num_dim
         dim2  = dim * 2
         num   = this%num_colloid
-
+        
         !----------------------------------------------------
         ! Set drag and torque of all colloids to zero
         ! before any operations.
@@ -129,25 +129,6 @@
         NULLIFY(min_sub)
         NULLIFY(max_sub)
         
-        NULLIFY(x_t)
-        NULLIFY(sid_t)
-        
-        NULLIFY(x_ghost)
-        NULLIFY(sid_ghost)
-        
-        NULLIFY(x_p)
-        NULLIFY(sid_p)
-        
-        NULLIFY(F)        
-        NULLIFY(F_p)
-        NULLIFY(F_t)
-        
-        NULLIFY(T)        
-        NULLIFY(T_p)
-        NULLIFY(T_t)
-      
-        NULLIFY(x_p_ghost)
-        NULLIFY(sid_ghost)
         
         length(1:dim) = &
              this%max_phys(1:dim) - this%min_phys(1:dim)
@@ -155,6 +136,7 @@
         num_wall_solid = &
              boundary_get_num_wall_solid(this%boundary,stat_info_sub)
         
+        num_p = 0
         !----------------------------------------------------
         ! A : consider colloid-colloid lubrication correction
         !     contribution of total drag on colloids.
@@ -192,7 +174,6 @@
            
            ALLOCATE(x_p(dim,num))
            ALLOCATE(sid_p(num))
-           num_p = 0
            
            DO j = 1, num
               
@@ -231,15 +212,16 @@
            END DO ! j = 1, num
            
            !-------------------------------------------------
-           ! Allocate force/torque memory of local real colloids.
+           ! Allocate force/torque memory of 
+           ! local real colloids.
            !-------------------------------------------------
            
            ALLOCATE(F_p(dim,num_p))
            F_p(1:dim,1:num_p) = 0.0_MK
-
+           
            ALLOCATE(T_p(3,num_p))
            T_p(1:3,1:num_p) = 0.0_MK
-
+           
            !-------------------------------------------------
            ! 1: If lubrication correction is required to amend
            !    forces between colloids, pair-wise forces
@@ -625,8 +607,8 @@
                     END IF
                     
                  END DO ! j = 1, num_p_ghost
-                  
-             END DO ! i = 1, num_p
+                 
+              END DO ! i = 1, num_p
               
            END IF ! cc_lub_type == 1 OR cc_repul_type == 1
            
@@ -717,81 +699,83 @@
               FB(1:dim,1:dim2) = &
                    FB_lub(1:dim,1:dim2) + FB_repul(1:dim,1:dim2)
               
-           END IF ! cw_lub OR cw_repul
+           END IF ! num_wall_solid > 0
            
-
-           !-------------------------------------------------
-           ! Map the forces/torque on the correct colloids.
-           ! sid_p(:) are indices for this procedure.
-           !-------------------------------------------------
-           
-           ALLOCATE(F(dim,num))
-           F(1:dim,1:num) = 0.0_MK
-           ALLOCATE(F_t(dim,num))
-           F_t(1:dim,1:num) = 0.0_MK
-           
-           DO i = 1, num_p
-              F_t(1:dim, sid_p(i)) = F_p(1:dim,i)
-           END DO
-           
-           ALLOCATE(T(3,num))
-           T(1:3,1:num) = 0.0_MK
-           ALLOCATE(T_t(3,num))
-           T_t(1:3,1:num) = 0.0_MK
+        END IF ! cc_lub OR cc_repul OR cw_lub OR cw_repul
         
-           DO i = 1, num_p
-              T_t(1:3, sid_p(i)) = T_p(1:3,i)
-           END DO
-           
+        
+        !-------------------------------------------------
+        ! Map the forces/torque on the correct colloids.
+        ! sid_p(:) are indices for this procedure.
+        !-------------------------------------------------
+        
+        ALLOCATE(F(dim,num))
+        F(1:dim,1:num) = 0.0_MK
+        ALLOCATE(F_t(dim,num))
+        F_t(1:dim,1:num) = 0.0_MK
+        
+        DO i = 1, num_p
+           F_t(1:dim, sid_p(i)) = F_p(1:dim,i)
+        END DO
+        
+        ALLOCATE(T(3,num))
+        T(1:3,1:num) = 0.0_MK
+        ALLOCATE(T_t(3,num))
+        T_t(1:3,1:num) = 0.0_MK
+        
+        DO i = 1, num_p
+           T_t(1:3, sid_p(i)) = T_p(1:3,i)
+        END DO
+        
+        
 #ifdef __MPI
-           
-           !-------------------------------------------------
-           ! In MPI context, collect all contributions 
-           ! from each process.
-           !-------------------------------------------------
-           
-           CALL MPI_ALLREDUCE (F_t(:,:),F(:,:), &
-                SIZE(F),MPI_PREC,MPI_SUM,comm,stat_info_sub)
-           
-           !-------------------------------------------------
-           ! Put colloid-colloid interactions on the total
-           ! drag globally.
-           !-------------------------------------------------
-           
-           this%drag(1:dim,1:num) = &
-                drag(1:dim, 1:num) + F(1:dim,1:num)
-
-           !-------------------------------------------------
-           ! In MPI context, collect all contributions 
-           ! from each process.
-           !-------------------------------------------------
-           
-           CALL MPI_ALLREDUCE (T_t(:,:),T(:,:), &
-                SIZE(T),MPI_PREC,MPI_SUM,comm,stat_info_sub)
-           
-           !-------------------------------------------------
-           ! Put colloid-colloid interactions on the total
-           ! torque globally.
-           !-------------------------------------------------
-           
-           this%torque(1:3,1:num) = &
-                torque(1:3, 1:num) + T(1:3,1:num)
+        
+        !----------------------------------------------------
+        ! In MPI context, collect all contributions 
+        ! from each process.
+        !----------------------------------------------------
+        
+        CALL MPI_ALLREDUCE (F_t(:,:),F(:,:), &
+             SIZE(F),MPI_PREC,MPI_SUM,comm,stat_info_sub)
+        
+        !----------------------------------------------------
+        ! Put colloid-colloid interactions on the total
+        ! drag globally.
+        !----------------------------------------------------
+        
+        this%drag(1:dim,1:num) = &
+             drag(1:dim, 1:num) + F(1:dim,1:num)
+        
+        !----------------------------------------------------
+        ! In MPI context, collect all contributions 
+        ! from each process.
+        !----------------------------------------------------
+        
+        CALL MPI_ALLREDUCE (T_t(:,:),T(:,:), &
+             SIZE(T),MPI_PREC,MPI_SUM,comm,stat_info_sub)
+        
+        !----------------------------------------------------
+        ! Put colloid-colloid interactions on the total
+        ! torque globally.
+        !----------------------------------------------------
+        
+        this%torque(1:3,1:num) = &
+             torque(1:3, 1:num) + T(1:3,1:num)
 #else
-           
-           !-------------------------------------------------
-           ! Put colloid-colloid interactions on the total
-           ! drag globally.
-           !-------------------------------------------------
-           
-           this%drag(1:dim,1:num) = &
-                drag(1:dim, 1:num) + F_t(1:dim,1:num)
-           
-           this%torque(1:3,1:num) = &
-                torque(1:3, 1:num) + T_t(1:3,1:num)
+        
+        !----------------------------------------------------
+        ! Put colloid-colloid interactions on the total
+        ! drag globally.
+        !----------------------------------------------------
+        
+        this%drag(1:dim,1:num) = &
+             drag(1:dim, 1:num) + F_t(1:dim,1:num)
+        
+        this%torque(1:3,1:num) = &
+             torque(1:3, 1:num) + T_t(1:3,1:num)
         
 #endif
            
-        END IF ! cc_lub OR cc_repul OR cw_lub OR cw_repul
         
         
 9999    CONTINUE
@@ -803,62 +787,6 @@
         
         IF(ASSOCIATED(max_sub)) THEN
            DEALLOCATE(max_sub)
-        END IF
-        
-        IF(ASSOCIATED(x_t)) THEN
-           DEALLOCATE(x_t)
-        END IF
-        
-        IF(ASSOCIATED(sid_t)) THEN
-           DEALLOCATE(sid_t)
-        END IF
-        
-        IF(ASSOCIATED(x_ghost)) THEN
-           DEALLOCATE(x_ghost)
-        END IF
-        
-        IF(ASSOCIATED(sid_ghost)) THEN
-           DEALLOCATE(sid_ghost)
-        END IF
-                
-        IF(ASSOCIATED(x_p)) THEN
-           DEALLOCATE(x_p)
-        END IF
-        
-        IF(ASSOCIATED(sid_p)) THEN
-           DEALLOCATE(sid_p)
-        END IF
-        
-        IF(ASSOCIATED(F)) THEN
-           DEALLOCATE(F)
-        END IF
-
-        IF(ASSOCIATED(F_p)) THEN
-           DEALLOCATE(F_p)
-        END IF
-
-        IF(ASSOCIATED(F_t)) THEN
-           DEALLOCATE(F_t)
-        END IF
-
-        IF(ASSOCIATED(T)) THEN
-           DEALLOCATE(T)
-        END IF
-
-        IF(ASSOCIATED(T_p)) THEN
-           DEALLOCATE(T_p)
-        END IF
-
-        IF(ASSOCIATED(T_t)) THEN
-           DEALLOCATE(T_t)
-        END IF
-        
-        IF(ASSOCIATED(x_p_ghost)) THEN
-           DEALLOCATE(x_p_ghost)
-        END IF
-        
-        IF(ASSOCIATED(sid_p_ghost)) THEN
-           DEALLOCATE(sid_p_ghost)
         END IF
         
         RETURN          

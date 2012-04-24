@@ -449,7 +449,7 @@
            
            CALL particles_collect_colloid_interaction(&
                 this%particles,coll_drag,coll_torque,stat_info_sub)
-           
+          
            IF( stat_info_sub /=0 ) THEN
               PRINT *, "marching_integrate_VV: ",&
                    "Summing up interaction on colloid locally has problem!"
