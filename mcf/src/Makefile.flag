@@ -86,6 +86,12 @@ then SDPD/SPH is kind of Euler method without moving
 particles in Lagrangian framework.
 
 #************************************************************
+-D__PARTICLES_V_AVERAGE:
+#************************************************************
+
+calculate average velocity of particles in certain region.
+
+#************************************************************
 -D__PARTICLES_FORCE_SEPARATE :
 #************************************************************
 
@@ -248,4 +254,10 @@ different parts of stress MAY be written in statistic files
 note:
 1) -D__PARTICLES_STRESS_SEPARATE must be set to enable
 calculation of different parts of stress separately.
+
+#************************************************************
+-D__IO_STATISTIC_V_AVERAGE:
+#************************************************************
+
+write average velocity at certain region into mcf_statistic.dat.
 
