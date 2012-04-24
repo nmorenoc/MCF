@@ -1080,10 +1080,25 @@
            
            IF( stat_info_sub /=0 ) THEN              
               PRINT *, "marching_marching: ",&
-                   "Adjusting flow velocity failed !"
+                   "Adjusting flow velocity failed!"
               stat_info = -1
               GOTO 9999
            END IF
+           
+        ELSE
+           
+#ifdef __PARTICLES_V_AVERAGE
+           
+           CALL statistic_compute_v_average(this%statis, &
+                this%particles,stat_info_sub)
+           
+           IF( stat_info_sub /=0 ) THEN              
+              PRINT *, "marching_marching: ",&
+                   "Computing average flow velocity failed!"
+              stat_info = -1
+              GOTO 9999
+           END IF
+#endif
            
         END IF
         
@@ -1414,6 +1429,20 @@
                  GOTO 9999
               END IF
               
+#ifdef __PARTICLES_V_AVERAGE
+              
+              CALL statistic_compute_v_average(this%statis, &
+                   this%particles,stat_info_sub)
+              
+              IF( stat_info_sub /=0 ) THEN              
+                 PRINT *, "marching_marching: ",&
+                      "Computing average flow velocity failed!"
+                 stat_info = -1
+                 GOTO 9999
+              END IF
+              
+#endif
+              
               IF ( dynamic_density_ref ) THEN
                  
                  rho_min = particles_get_rho_min(this%particles, &
@@ -1427,6 +1456,25 @@
                  CALL statistic_set_rho_max(this%statis,rho_max, &
                       stat_info_sub)
            
+              END IF
+              
+           END IF
+           
+           !-------------------------------------------------
+           ! Check if we need to adapt body force to get
+           ! desired flow velocity.
+           !-------------------------------------------------
+           
+           IF( flow_v_fixed .AND. &
+                MOD(step_current,flow_adjust_freq)==0 ) THEN
+              
+              CALL marching_adjust_flow_v(this,stat_info_sub)
+              
+              IF( stat_info_sub /=0 ) THEN
+                 PRINT *, "marching_marching: ",&
+                      "Adjusting flow velocity failed !"
+                 stat_info = -1
+                 GOTO 9999
               END IF
               
            END IF
@@ -1447,25 +1495,6 @@
                    "Step writing failed !"
               stat_info = -1
               GOTO 9999
-           END IF
-           
-           !-------------------------------------------------
-           ! Check if we need to adapt body force to get
-           ! desired flow velocity.
-           !-------------------------------------------------
-           
-           IF( flow_v_fixed .AND. &
-                MOD(step_current,flow_adjust_freq)==0 ) THEN
-              
-              CALL marching_adjust_flow_v(this,stat_info_sub)
-              
-              IF( stat_info_sub /=0 ) THEN
-                 PRINT *, "marching_marching: ",&
-                      "Adjusting flow velocity failed !"
-                 stat_info = -1
-                 GOTO 9999
-              END IF
-              
            END IF
            
         END DO ! time_current < time_end

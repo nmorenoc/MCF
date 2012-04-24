@@ -136,6 +136,18 @@
            data(num_data+1:num_data+num_dim) = &
                 v_aver(1:num_dim)
            num_data = num_data + num_dim
+
+        else
+
+#ifdef __IO_STATISTIC_V_AVERAGE
+           
+           CALL  statistic_get_v_average(d_statistic, &
+                v_aver,stat_info_sub)
+           
+           data(num_data+1:num_data+num_dim) = &
+                v_aver(1:num_dim)
+           num_data = num_data + num_dim           
+#endif
            
         END IF
         

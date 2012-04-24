@@ -52,6 +52,8 @@
         
         TYPE(Physics), POINTER                  :: phys
         INTEGER                                 :: num_dim, j
+        REAL(MK), DIMENSION(:), POINTER         :: max_phys
+        REAL(MK), DIMENSION(:), POINTER         :: min_phys
         INTEGER                                 :: fd
         REAl(MK)                                :: fw
         
@@ -95,6 +97,8 @@
         
         NULLIFY(phys)
         num_dim = this%num_dim
+        NULLIFY(max_phys)
+        NULLIFY(min_phys)      
         
         
         NULLIFY(x)
@@ -114,6 +118,9 @@
         !----------------------------------------------------
         
         CALL particles_get_phys(d_particles,phys,stat_info_sub)
+        CALL physics_get_max_phys(phys,max_phys,stat_info_sub)
+        CALL physics_get_min_phys(phys,min_phys,stat_info_sub)
+        
         fd  = &
              physics_get_flow_direction(phys,stat_info_sub)
         fw  = &
@@ -160,7 +167,8 @@
               ! Count only fluid particles in certain width.
               !----------------------------------------------
               
-              IF( x(fd,j) < fw  ) THEN
+              IF( x(fd,j) < min_phys(fd) + fw .OR. &
+                   x(fd,j) > max_phys(fd) - fw ) THEN
                  
                  !-------------------------------------------
                  ! Count mass particles which are involved 
@@ -259,6 +267,14 @@
         !----------------------------------------------------
         ! Release the memory pointed by potiners.
         !----------------------------------------------------
+
+        IF(ASSOCIATED(max_phys)) THEN
+           DEALLOCATE(max_phys)
+        END IF
+        
+        IF(ASSOCIATED(min_phys)) THEN
+           DEALLOCATE(min_phys)
+        END IF
         
         IF(ASSOCIATED(x)) THEN
            DEALLOCATE(x)
