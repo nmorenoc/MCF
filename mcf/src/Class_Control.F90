@@ -61,6 +61,8 @@
            LOGICAL                    :: flow_v_fixed
            INTEGER                    :: integrate_type
            INTEGER                    :: integrate_colloid_type
+           INTEGER                    :: integrate_colloid_RK
+           INTEGER                    :: integrate_colloid_AB
            INTEGER                    :: adaptive_dt
            INTEGER                    :: write_output
            INTEGER                    :: write_restart

@@ -66,6 +66,8 @@
         this%flow_v_fixed        = .FALSE.
         this%integrate_type      = 1
         this%integrate_colloid_type = 1
+        this%integrate_colloid_RK = 1
+        this%integrate_colloid_AB = 1
         this%adaptive_dt         = 0
         this%write_output        = 1
         this%write_restart       = 0
@@ -221,13 +223,35 @@
         END SELECT
         
         SELECT CASE(this%integrate_colloid_type)
-        CASE (1:5)
-           PRINT *, "integrate_colloid_type:  ", &
-                "Adams-Bashforth order", &
-                this%integrate_colloid_type
+        CASE (1)
+           PRINT *, "integrate_colloid_type: ", &
+                "single step method"
+        CASE (2)
+           PRINT *, "integrate_colloid_type: ", &
+                "multiple steps method"
         CASE DEFAULT
-           PRINT *, "integrate_colloid_type : ", &
+           PRINT *, "integrate_colloid_type: ", &
                 this%integrate_colloid_type, " not available"
+        END SELECT
+        
+        SELECT CASE(this%integrate_colloid_RK)
+        CASE (1:4)
+           PRINT *, "integrate_colloid_RK:  ", &
+                "Runge-Kutta order", &
+                this%integrate_colloid_RK
+        CASE DEFAULT
+           PRINT *, "integrate_colloid_RK: ", &
+                this%integrate_colloid_RK, " not available"
+        END SELECT
+        
+        SELECT CASE(this%integrate_colloid_AB)
+        CASE (1:5)
+           PRINT *, "integrate_colloid_AB:  ", &
+                "Adams-Bashforth order", &
+                this%integrate_colloid_AB
+        CASE DEFAULT
+           PRINT *, "integrate_colloid_AB: ", &
+                this%integrate_colloid_AB, " not available"
         END SELECT
         
         PRINT *, "adaptive dt        : ", this%adaptive_dt

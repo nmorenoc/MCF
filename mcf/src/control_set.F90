@@ -393,12 +393,44 @@
         stat_info = 0
         
         this%integrate_colloid_type = d_integrate_type
-       
+        
         RETURN
         
       END SUBROUTINE control_set_integrate_colloid_type
 
+      
+      SUBROUTINE control_set_integrate_colloid_RK(this,&
+           d_integrate_RK,stat_info)
+        
+        TYPE(Control), INTENT(INOUT)             :: this
+        INTEGER, INTENT(IN)                      :: d_integrate_RK
+        INTEGER, INTENT(out)                     :: stat_info
+       
+        stat_info = 0
+        
+        this%integrate_colloid_RK = d_integrate_RK
+       
+        RETURN
+        
+      END SUBROUTINE control_set_integrate_colloid_RK
 
+      
+      SUBROUTINE control_set_integrate_colloid_AB(this,&
+           d_integrate_AB,stat_info)
+        
+        TYPE(Control), INTENT(INOUT)             :: this
+        INTEGER, INTENT(IN)                      :: d_integrate_AB
+        INTEGER, INTENT(out)                     :: stat_info
+       
+        stat_info = 0
+        
+        this%integrate_colloid_AB = d_integrate_AB
+       
+        RETURN
+        
+      END SUBROUTINE control_set_integrate_colloid_AB
+      
+      
       SUBROUTINE control_set_adaptive_dt(this,d_adaptive_dt,stat_info)
         
         TYPE(Control), INTENT(INOUT)             :: this

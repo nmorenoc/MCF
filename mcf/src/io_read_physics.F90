@@ -101,6 +101,8 @@
         
         INTEGER                                 :: num_colloid
         INTEGER                                 :: coll_integrate_type
+        INTEGER                                 :: coll_integrate_RK
+        INTEGER                                 :: coll_integrate_AB
         REAL(MK)                                :: coll_adapt_t_coef
         INTEGER                                 :: coll_sub_time_step
         REAL(MK)                                :: coll_rho
@@ -197,7 +199,11 @@
         coll_index   = 0
         coll_integrate_type = &
              control_get_integrate_colloid_type(this%ctrl,stat_info_sub)
-        
+        coll_integrate_RK   = &
+             control_get_integrate_colloid_RK(this%ctrl,stat_info_sub)
+        coll_integrate_AB   = &
+             control_get_integrate_colloid_AB(this%ctrl,stat_info_sub)
+       
         bcdef(:)        = 0
         shear_type(:)   = 1
         shear_rate(:,:) = 0.0_MK
@@ -934,10 +940,20 @@
              ALLOCATE(coll_m(num_colloid))
              ALLOCATE(coll_mmi(3,num_colloid))
              ALLOCATE(coll_x(num_dim,num_colloid))
-             ALLOCATE(coll_v(num_dim,num_colloid,coll_integrate_type))
+             SELECT CASE(coll_integrate_type)
+             CASE (1)
+                ALLOCATE(coll_v(num_dim,num_colloid,coll_integrate_type))
+             CASE (2)
+                ALLOCATE(coll_v(num_dim,num_colloid,coll_integrate_AB))
+             END SELECT
              ALLOCATE(coll_acc_vector(4,num_colloid))
              ALLOCATE(coll_theta(3,num_colloid))
-             ALLOCATE(coll_omega(3,num_colloid,coll_integrate_type))
+             SELECT CASE(coll_integrate_type)
+             CASE (1)
+                ALLOCATE(coll_omega(3,num_colloid,coll_integrate_type))
+             CASE (2)
+                ALLOCATE(coll_omega(3,num_colloid,coll_integrate_AB))
+             END SELECT
              
              coll_shape(:)     = 1
              coll_radius(:,:)  = 0.0_MK
@@ -1413,7 +1429,9 @@
               
               CALL colloid_new(colloids,&
                    num_dim,num_colloid,&
-                   coll_integrate_type,stat_info_sub)
+                   coll_integrate_type,&
+                   coll_integrate_RK,&
+                   coll_integrate_AB, stat_info_sub)
               CALL colloid_set_adapt_t_coef(colloids, &
                    coll_adapt_t_coef,stat_info_sub)
               CALL colloid_set_sub_time_step(colloids, &

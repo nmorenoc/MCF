@@ -336,6 +336,34 @@
        
       END FUNCTION control_get_integrate_colloid_type
 
+
+      INTEGER FUNCTION control_get_integrate_colloid_RK(this,stat_info)
+        
+        TYPE(Control), INTENT(IN)                :: this
+        INTEGER, INTENT(out)                     :: stat_info
+       
+        stat_info = 0
+        
+        control_get_integrate_colloid_RK = this%integrate_colloid_RK
+       
+        RETURN
+       
+      END FUNCTION control_get_integrate_colloid_RK
+
+
+      INTEGER FUNCTION control_get_integrate_colloid_AB(this,stat_info)
+        
+        TYPE(Control), INTENT(IN)                :: this
+        INTEGER, INTENT(out)                     :: stat_info
+       
+        stat_info = 0
+        
+        control_get_integrate_colloid_AB = this%integrate_colloid_AB
+       
+        RETURN
+       
+      END FUNCTION control_get_integrate_colloid_AB
+
       
       INTEGER FUNCTION control_get_adaptive_dt(this,stat_info)
         

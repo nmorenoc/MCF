@@ -219,7 +219,9 @@
         INTEGER, DIMENSION(:), POINTER        :: bcdef
         INTEGER                               :: num_colloid
         INTEGER                               :: comm
-        
+        REAL(MK), DIMENSION(2,2)              :: A
+        REAL(MK), DIMENSION(2,1)              :: B
+        INTEGER, DIMENSION(2)                 :: IPIV
         
 #if __DEBUG
         !----------------------------------------------------
@@ -228,7 +230,20 @@
         ! starting time of mcf.
         !----------------------------------------------------
         REAL(MK)    :: time_start
-#endif        
+#endif  
+#if 0
+        A(1,1)=2
+        A(1,2)=3
+        A(2,1)=4
+        A(2,2)=9
+        B(1,1)=6
+        B(2,1)=15
+        PRINT *, "A, B:", A(:,:),B(:,:)
+        CALL DGESV(2,1,A,2,IPIV(:), B,2,stat_info_sub)
+        PRINT *, "X: ", B(:,:)
+        PRINT *, "IPIV: ", IPIV(:)
+        STOP
+#endif
         !----------------------------------------------------
         ! By default, we use all the processes given as 
         ! in the same group.

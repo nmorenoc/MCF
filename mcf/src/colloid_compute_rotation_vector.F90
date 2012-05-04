@@ -38,7 +38,7 @@
         !----------------------------------------------------
         
         stat_info     = 0
-        itype         = this%integrate_type
+        itype         = this%integrate_AB
         
 #if __PARTICLES_POSITION_FIXED
 #else        

@@ -64,6 +64,8 @@
         LOGICAL                         :: flow_v_fixed
         INTEGER                         :: integrate_type
         INTEGER                         :: integrate_colloid_type
+        INTEGER                         :: integrate_colloid_RK
+        INTEGER                         :: integrate_colloid_AB
         INTEGER                         :: adaptive_dt
         INTEGER                         :: write_output
         INTEGER                         :: write_restart
@@ -397,6 +399,18 @@
              CALL control_set_integrate_colloid_type(ctrl,&
                   integrate_colloid_type,stat_info_sub)
              
+          ELSE IF (carg == 'INTEGRATE_COLLOID_RK') THEN
+             
+             READ(cvalue,*,IOSTAT=ios,ERR=200) integrate_colloid_RK
+             CALL control_set_integrate_colloid_RK(ctrl,&
+                  integrate_colloid_RK,stat_info_sub)
+      
+          ELSE IF (carg == 'INTEGRATE_COLLOID_AB') THEN
+             
+             READ(cvalue,*,IOSTAT=ios,ERR=200) integrate_colloid_AB
+             CALL control_set_integrate_colloid_AB(ctrl,&
+                  integrate_colloid_AB,stat_info_sub)
+      
           ELSE IF (carg == 'ADAPTIVE_DT') THEN
              
              READ(cvalue,*,IOSTAT=ios,ERR=200) adaptive_dt

@@ -83,7 +83,24 @@
            IF(ASSOCIATED(this%v))THEN
               DEALLOCATE(this%v)
            END IF
-           ALLOCATE(this%v(d_dim,num,this%integrate_type))
+           
+           SELECT CASE(this%integrate_type)
+           CASE (1)
+              ALLOCATE(this%v(d_dim,num,this%integrate_type))
+           CASE (2)
+              ALLOCATE(this%v(d_dim,num,this%integrate_AB))
+           END SELECT
+
+           IF(ASSOCIATED(this%omega))THEN
+              DEALLOCATE(this%omega)
+           END IF
+           
+           SELECT CASE(this%integrate_type)
+           CASE (1)
+              ALLOCATE(this%omega(3,num,this%integrate_type))
+           CASE (2)
+              ALLOCATE(this%omega(3,num,this%integrate_AB))
+           END SELECT
            
 #if __DRAG_PART
            IF(ASSOCIATED(this%drag_lub))THEN
@@ -109,7 +126,24 @@
            IF(ASSOCIATED(this%f))THEN
               DEALLOCATE(this%f)
            END IF
-           ALLOCATE(this%f(d_dim,num,this%integrate_type))   
+ 
+           SELECT CASE(this%integrate_type)
+           CASE (1)
+              ALLOCATE(this%f(d_dim,num,this%integrate_type))
+           CASE (2)
+              ALLOCATE(this%f(d_dim,num,this%integrate_AB))
+           END SELECT
+           
+           IF(ASSOCIATED(this%alpha))THEN
+              DEALLOCATE(this%alpha)
+           END IF
+           
+           SELECT CASE(this%integrate_type)
+           CASE (1)
+              ALLOCATE(this%alpha(3,num,this%integrate_type))
+           CASE (2)
+              ALLOCATE(this%alpha(3,num,this%integrate_AB))
+           END SELECT
            
            IF(ASSOCIATED(this%mom))THEN
               DEALLOCATE(this%mom)

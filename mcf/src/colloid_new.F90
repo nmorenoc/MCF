@@ -49,6 +49,8 @@
         this%num_colloid = num
         
         this%integrate_type = 1
+        this%integrate_RK = 1
+        this%integrate_AB = 1
         this%adapt_t_coef   = 1.0_MK
         this%sub_time_step  = 1
         this%rho         = 1.e3_MK
@@ -106,8 +108,14 @@
         this%x(:,1) = 0.05_MK
         
         NULLIFY(this%v)
-        ALLOCATE(this%v(dim,num,this%integrate_type))
+        SELECT CASE (this%integrate_type)
+        CASE (1)
+           ALLOCATE(this%v(dim,num,this%integrate_RK))
+        CASE (2)
+           ALLOCATE(this%v(dim,num,this%integrate_AB))
+        END SELECT
         this%v(:,:,:) = 0.0_MK
+
         
 #if __DRAG_PART
         NULLIFY(this%drag_lub)
@@ -147,7 +155,12 @@
         this%theta(:,:) = 0.0_MK
     
         NULLIFY(this%omega)
-        ALLOCATE(this%omega(3,num,this%integrate_type))
+        SELECT CASE (this%integrate_type)
+        CASE (1)
+           ALLOCATE(this%omega(3,num,this%integrate_RK))
+        CASE (2)
+           ALLOCATE(this%omega(3,num,this%integrate_AB))
+        END SELECT
         this%omega(:,:,:) = 0.0_MK
         
         NULLIFY(this%torque)
@@ -163,14 +176,24 @@
         this%num_numerical_part(:)  = 0
          
         NULLIFY(this%f)
-        ALLOCATE(this%f(dim,num,this%integrate_type))
+        SELECT CASE (this%integrate_type)
+        CASE (1)
+           ALLOCATE(this%f(dim,num,this%integrate_RK))
+        CASE (2)
+           ALLOCATE(this%f(dim,num,this%integrate_AB))
+        END SELECT
         this%f(:,:,:) = 0.0_MK
         
         this%fa_min = 0.0_MK
         this%fa_max = 0.0_MK
 
         NULLIFY(this%alpha)
-        ALLOCATE(this%alpha(3,num,this%integrate_type))
+        SELECT CASE (this%integrate_type)
+        CASE (1)
+           ALLOCATE(this%alpha(3,num,this%integrate_RK))
+        CASE (2)
+           ALLOCATE(this%alpha(3,num,this%integrate_AB))
+        END SELECT
         this%alpha(:,:,:) = 0.0_MK
         
         NULLIFY(this%k_energy)
@@ -230,7 +253,11 @@
       
       
       SUBROUTINE colloid_init(this,&
-           d_num_dim,d_num_colloid,d_integrate_type,stat_info)
+           d_dim,d_num,&
+           d_integrate_type,&
+           d_integrate_RK,&
+           d_integrate_AB,&
+           stat_info)
         !----------------------------------------------------
         ! Subroutine  : colloid_init
         !----------------------------------------------------
@@ -254,9 +281,11 @@
         !----------------------------------------------------
         
         TYPE(Colloid),INTENT(OUT)       :: this
-        INTEGER, INTENT(IN)             :: d_num_dim
-        INTEGER, INTENT(IN)             :: d_num_colloid
-        INTEGER, INTENT(IN)             :: d_integrate_type        
+        INTEGER, INTENT(IN)             :: d_dim
+        INTEGER, INTENT(IN)             :: d_num
+        INTEGER, INTENT(IN)             :: d_integrate_type
+        INTEGER, INTENT(IN)             :: d_integrate_RK
+        INTEGER, INTENT(IN)             :: d_integrate_AB
         INTEGER,INTENT(OUT)             :: stat_info
         
         INTEGER                         :: stat_info_sub
@@ -267,12 +296,14 @@
 
         stat_info     = 0
         stat_info_sub = 0
-
+        
         NULLIFY(this%tech)
-
-        this%num_dim        = d_num_dim
-        this%num_colloid    = d_num_colloid
+        
+        this%num_dim        = d_dim
+        this%num_colloid    = d_num
         this%integrate_type = d_integrate_type
+        this%integrate_RK   = d_integrate_RK
+        this%integrate_AB   = d_integrate_AB
         
         this%adapt_t_coef   = 1.0_MK
         this%sub_time_step  = 1
@@ -284,9 +315,9 @@
         this%noslip_type    = 1
         this%body_force_type = 0
         NULLIFY(this%body_force)
-        ALLOCATE(this%body_force(d_num_dim))
+        ALLOCATE(this%body_force(d_dim))
         this%body_force(:) = 0.0_MK
-      
+        
         this%cc_lub_type = 0
         this%cc_lub_cut_off = 0.0_MK
         this%cc_lub_cut_on  = 0.0_MK
@@ -311,111 +342,132 @@
         !----------------------------------------------------
         ! Default shape is sphereical.
         !----------------------------------------------------
-
+        
         NULLIFY(this%shape)
-        ALLOCATE(this%shape(d_num_colloid))
+        ALLOCATE(this%shape(d_num))
         this%shape(:) = 1
         
         NULLIFY(this%radius)
-        ALLOCATE(this%radius(d_num_dim,d_num_colloid))
+        ALLOCATE(this%radius(d_dim,d_num))
         this%radius(:,:) = 0.0_MK
         
         NULLIFY(this%freq)
-        ALLOCATE(this%freq(d_num_colloid))
+        ALLOCATE(this%freq(d_num))
         this%freq(:) = 0
         
         NULLIFY(this%m)
-        ALLOCATE(this%m(d_num_colloid))
+        ALLOCATE(this%m(d_num))
         this%m(:) = 0.0_MK
 
         NULLIFY(this%mmi)
-        ALLOCATE(this%mmi(3,d_num_colloid))
+        ALLOCATE(this%mmi(3,d_num))
         this%mmi(:,:) = 0.0_MK
         
         NULLIFY(this%x)
-        ALLOCATE(this%x(d_num_dim,d_num_colloid))
+        ALLOCATE(this%x(d_dim,d_num))
         this%x(:,:) = 0.0_MK
         
         NULLIFY(this%v)
-        ALLOCATE(this%v(d_num_dim,d_num_colloid,d_integrate_type))
+        SELECT CASE (this%integrate_type)
+        CASE (1)
+           ALLOCATE(this%v(d_dim,d_num,d_integrate_RK))
+        CASE (2)
+           ALLOCATE(this%v(d_dim,d_num,d_integrate_AB))
+        END SELECT
         this%v(:,:,:) = 0.0_MK
         
 #if __DRAG_PART
         NULLIFY(this%drag_lub)
-        ALLOCATE(this%drag_lub(d_num_dim,d_num_colloid))
+        ALLOCATE(this%drag_lub(d_dim,d_num))
         this%drag_lub(:,:) = 0.0_MK
         
         NULLIFY(this%drag_repul)
-        ALLOCATE(this%drag_repul(d_num_dim,d_num_colloid))
+        ALLOCATE(this%drag_repul(d_dim,d_num))
         this%drag_repul(:,:) = 0.0_MK
 #endif
 
         NULLIFY(this%drag)
-        ALLOCATE(this%drag(d_num_dim,d_num_colloid))
+        ALLOCATE(this%drag(d_dim,d_num))
         this%drag(:,:) = 0.0_MK
         
         NULLIFY(this%rot_vector)
-        ALLOCATE(this%rot_vector(4,d_num_colloid))
+        ALLOCATE(this%rot_vector(4,d_num))
         this%rot_vector(:,:) = 0.0_MK
-    
+        
         NULLIFY(this%acc_vector)
-        ALLOCATE(this%acc_vector(4,d_num_colloid))
+        ALLOCATE(this%acc_vector(4,d_num))
         this%acc_vector(:,:) = 0.0_MK
-    
+        
         NULLIFY(this%rot_matrix)
-        ALLOCATE(this%rot_matrix(3,3,d_num_colloid))
+        ALLOCATE(this%rot_matrix(3,3,d_num))
         this%rot_matrix(:,:,:) = 0.0_MK
         
         NULLIFY(this%acc_matrix)
-        ALLOCATE(this%acc_matrix(3,3,d_num_colloid))
+        ALLOCATE(this%acc_matrix(3,3,d_num))
         this%acc_matrix(:,:,:) = 0.0_MK
         
         NULLIFY(this%theta)
-        ALLOCATE(this%theta(3,d_num_colloid))
+        ALLOCATE(this%theta(3,d_num))
         this%theta(:,:) = 0.0_MK
-    
+        
         NULLIFY(this%omega)
-        ALLOCATE(this%omega(3,d_num_colloid,d_integrate_type))
+        SELECT CASE (this%integrate_type)
+        CASE (1)
+           ALLOCATE(this%omega(3,d_num,d_integrate_RK))
+        CASE (2)
+           ALLOCATE(this%omega(3,d_num,d_integrate_AB))
+        END SELECT
         this%omega(:,:,:) = 0.0_MK
         
         NULLIFY(this%torque)
-        ALLOCATE(this%torque(3,d_num_colloid))
+        ALLOCATE(this%torque(3,d_num))
         this%torque(:,:) = 0.0_MK
         
         NULLIFY(this%num_physical_part)
-        ALLOCATE(this%num_physical_part(d_num_colloid))
+        ALLOCATE(this%num_physical_part(d_num))
         this%num_physical_part(:)  = 0
         
         NULLIFY(this%num_numerical_part)
-        ALLOCATE(this%num_numerical_part(d_num_colloid))
+        ALLOCATE(this%num_numerical_part(d_num))
         this%num_numerical_part(:)  = 0
-         
-
+        
+        
         !----------------------------------------------------
         ! Derived quantities.                               
         !----------------------------------------------------
         
         NULLIFY(this%f)
-        ALLOCATE(this%f(d_num_dim,d_num_colloid,d_integrate_type))
+        ALLOCATE(this%f(d_dim,d_num,d_integrate_type))
+        SELECT CASE (this%integrate_type)
+        CASE (1)
+           ALLOCATE(this%f(d_dim,d_num,d_integrate_RK))
+        CASE (2)
+           ALLOCATE(this%f(d_dim,d_num,d_integrate_AB))
+        END SELECT
         this%f(:,:,:) = 0.0_MK
         
         this%fa_min = 0.0_MK
         this%fa_max = 0.0_MK
         
         NULLIFY(this%alpha)
-        ALLOCATE(this%alpha(3,d_num_colloid,d_integrate_type))
+        SELECT CASE (this%integrate_type)
+        CASE (1)
+           ALLOCATE(this%alpha(3,d_num,d_integrate_RK))
+        CASE (2)
+           ALLOCATE(this%alpha(3,d_num,d_integrate_AB))
+        END SELECT
         this%alpha(:,:,:) = 0.0_MK
         
         NULLIFY(this%k_energy)
-        ALLOCATE(this%k_energy(d_num_colloid))
+        ALLOCATE(this%k_energy(d_num))
         this%k_energy(:) = 0.0_MK
 
         NULLIFY(this%mom)
-        ALLOCATE(this%mom(d_num_dim,d_num_colloid))
+        ALLOCATE(this%mom(d_dim,d_num))
         this%mom(:,:) = 0.0_MK
         
         NULLIFY(this%mom_tot)
-        ALLOCATE(this%mom_tot(d_num_dim))
+        ALLOCATE(this%mom_tot(d_dim))
         this%mom_tot(:) = 0.0_MK
         
         this%num_physical_part_tot = 0
@@ -426,23 +478,23 @@
         !----------------------------------------------------
         
         NULLIFY(this%min_phys)
-        ALLOCATE(this%min_phys(d_num_dim))
+        ALLOCATE(this%min_phys(d_dim))
         this%min_phys(:) = 0.0_MK
         
         NULLIFY(this%max_phys)
-        ALLOCATE(this%max_phys(d_num_dim))
+        ALLOCATE(this%max_phys(d_dim))
         this%max_phys(:) = 0.0_MK
         
         NULLIFY(this%min_phys_t)
-        ALLOCATE(this%min_phys_t(d_num_dim))
+        ALLOCATE(this%min_phys_t(d_dim))
         this%min_phys_t(:) = 0.0_MK
         
         NULLIFY(this%max_phys_t)
-        ALLOCATE(this%max_phys_t(d_num_dim))
+        ALLOCATE(this%max_phys_t(d_dim))
         this%max_phys_t(:) = 0.0_MK
         
         NULLIFY(this%bcdef)
-        ALLOCATE(this%bcdef(2*d_num_dim))
+        ALLOCATE(this%bcdef(2*d_dim))
         this%bcdef(:)  = ppm_param_bcdef_periodic
         NULLIFY(this%boundary)
 
@@ -504,6 +556,8 @@
         
         PRINT *, "num_colloid        : ", this%num_colloid
         PRINT *, "integrate_type     : ", this%integrate_type
+        PRINT *, "integrate_RK       : ", this%integrate_RK
+        PRINT *, "integrate_AB       : ", this%integrate_AB
         PRINT *, "adapt_t_coef       : ", this%adapt_t_coef
         PRINT *, "sub_time_step      : ", this%sub_time_step
         PRINT *, "rho                : ", this%rho

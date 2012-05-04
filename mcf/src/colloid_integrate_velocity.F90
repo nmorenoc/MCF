@@ -50,7 +50,7 @@
         !----------------------------------------------------
         
         stat_info  = 0
-        itype      = this%integrate_type
+        itype      = this%integrate_AB
 
         !----------------------------------------------------
         ! Select different accuracy oder:

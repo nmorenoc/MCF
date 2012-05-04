@@ -41,5 +41,6 @@
 #include "tool_cross_product.F90"
 #include "tool_rotation_matrix.F90"
 #include "tool_rotation_vector.F90"
+#include "tool_solve_linear_equations.F90"
         
       END MODULE Class_Tool

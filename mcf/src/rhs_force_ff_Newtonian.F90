@@ -173,16 +173,16 @@
         CASE DEFAULT
            
            PRINT *, "rhs_force_ff_Newtonian : ", & 
-                "4-> Not existing formulation !"
+                "4-> Not existing formulation!"
            stat_info = -1
            GOTO 9999
            
-        END SELECT
+        END SELECT ! rhs_force_type
         
         
         IF( stat_info_sub /= 0 ) THEN
            PRINT *, "rhs_force_ff_Newtonian :", &
-                "rhs_force_ff_formulation has some problem !"
+                "rhs_force_ff_formulation has some problem!"
            stat_info = -1
            GOTO 9999
         END IF

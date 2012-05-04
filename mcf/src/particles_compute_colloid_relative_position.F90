@@ -89,7 +89,7 @@
               
               IF ( stat_info_sub /= 0 ) THEN
                  PRINT *, "particles_integrate_colloid_position : " ,&
-                      "Getting colloid rot_matrix failed !"
+                      "Getting colloid rot_matrix failed!"
                  stat_info = -1
                  GOTO 9999
               END IF

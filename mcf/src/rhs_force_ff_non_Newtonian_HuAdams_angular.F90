@@ -81,10 +81,10 @@
         
         num_dim = this%num_dim
         
-        dt   = this%dt
-        eta  = this%eta
+        dt        = this%dt
+        eta       = this%eta
         eta_coef  = this%eta_coef
-        kt   = this%kt
+        kt        = this%kt
         
         !----------------------------------------------------
         ! Check if any denominator is non-positive.
@@ -165,7 +165,7 @@
 	! per unit mass(from viscosity).
   	!----------------------------------------------------
         
-        f_d =  eta_coef* eta * (1.0_MK/numi**2.0_MK + &
+        f_d =  eta_coef * eta * (1.0_MK/numi**2.0_MK + &
              1.0_MK/numj**2.0_MK) * gradw * ev / dij
         
         fi(1:num_dim) = fi(1:num_dim) + &
