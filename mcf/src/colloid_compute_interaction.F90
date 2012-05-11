@@ -647,9 +647,6 @@
                  
                  IF ( this%cw_lub_type > mcf_cw_lub_type_no ) THEN
                     
-                    PRINT *, "colloid_compute_interaction: ", &
-                         "calling lubrication_cw !"
-                    
                     CALL colloid_compute_lubrication_cw(this,&
                          x_p(1:dim,i),this%v(1:dim,sid_p(i),1),sid_p(i),&
                          F_i(1:dim),FB(1:dim,1:dim2),stat_info_sub)

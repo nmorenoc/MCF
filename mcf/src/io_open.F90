@@ -68,7 +68,7 @@
            
            IF ( stat_info_sub /= 0) THEN
               PRINT *, "io_open : ", &
-                   "Opening statistic file has problem !"
+                   "opening statistic file has problem !"
               stat_info = -1
               GOTO 9999
            END IF
@@ -93,7 +93,7 @@
            
            IF ( stat_info_sub /= 0) THEN
               PRINT *, "io_open : ", &
-                   "Opening colloid file has problem !"
+                   "opening colloid file has problem !"
               stat_info = -1
               GOTO 9999
            END IF
@@ -112,7 +112,7 @@
            
            IF ( stat_info_sub /= 0) THEN
               PRINT *, "io_open : ", &
-                   "Opening boundary file has problem !"
+                   "opening boundary file has problem !"
               stat_info = -1
               GOTO 9999
            END IF
@@ -192,12 +192,12 @@
               OPEN(UNIT=this%statistic_unit,FILE=this%statistic_file,&
                    STATUS="OLD",FORM=this%statistic_fmt,ACTION="WRITE", &
                    POSITION="APPEND",IOSTAT=stat_info_sub)
-              PRINT *,"Exisiting statistic file ", &
+              PRINT *,"exisiting statistic file ", &
                    TRIM(this%statistic_file), &
                    " being appended !"  
            ELSE
               PRINT *,"io_open_statistic : "
-              PRINT *,"Old statistic file ", &
+              PRINT *,"old statistic file ", &
                    TRIM(this%statistic_file), &
                    " is still there !"
               stat_info = -1
@@ -207,7 +207,7 @@
            OPEN(UNIT=this%statistic_unit,FILE=this%statistic_file,&
                 STATUS="NEW",FORM=this%statistic_fmt,ACTION="WRITE", &
                 IOSTAT=stat_info_sub)
-           PRINT *,"New statistic file ", &
+           PRINT *,"new statistic file ", &
                 TRIM(this%statistic_file), " being created !"
         END IF
         
@@ -279,7 +279,7 @@
              control_get_read_external(this%ctrl,stat_info_sub)
         
         IF( rank /= 0) THEN
-           PRINT *,"io_open_statistic_relax : "
+           PRINT *,"io_open_statistic_relax: "
            PRINT *, "statistic_relax file can only be opened by root process!"
            stat_info = -1
            GOTO 9999
@@ -305,9 +305,9 @@
               
            ELSE
               PRINT *,"io_open_statistic_relax : "
-              PRINT *,"Old statistic _relax file ", &
+              PRINT *,"old statistic_relax file ", &
                    TRIM(this%statistic_relax_file), &
-                   " is still there !"
+                   " is still there!"
               stat_info = -1
               GOTO 9999
            END IF
@@ -321,7 +321,7 @@
                 ACTION="WRITE", &
                 IOSTAT=stat_info_sub)
            
-           PRINT *,"New statistic_relax file ", &
+           PRINT *,"new statistic_relax file ", &
                 TRIM(this%statistic_relax_file), &
                 " being created !"
            

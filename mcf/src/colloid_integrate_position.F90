@@ -37,8 +37,8 @@
         ! Initialization of variables.
         !----------------------------------------------------
         
-        stat_info     = 0
-        itype = this%integrate_AB
+        stat_info = 0
+        itype     = this%integrate_AB
         
 #ifdef __PARTICLES_POSITION_FIXED
 #else

@@ -222,36 +222,69 @@
                 this%integrate_type, " not available"
         END SELECT
         
+        
         SELECT CASE(this%integrate_colloid_type)
+           
+        CASE (-2)
+           
+           PRINT *, "integrate_colloid_type: ", &
+                "implicit for pairwise colloids"
+           
+        CASE (-1)
+           
+           PRINT *, "integrate_colloid_type: ", &
+                "implicit for all colloids"
+       
         CASE (1)
+           
            PRINT *, "integrate_colloid_type: ", &
                 "single step method"
+           
+           SELECT CASE(this%integrate_colloid_RK)
+              
+           CASE (1:4)
+              PRINT *, "integrate_colloid_RK:  ", &
+                   "Runge-Kutta order", &
+                   this%integrate_colloid_RK
+              
+           CASE DEFAULT
+              
+              PRINT *, "integrate_colloid_RK: ", &
+                   this%integrate_colloid_RK, " not available"
+              stat_info = -1
+              GOTO 9999
+              
+           END SELECT
+           
         CASE (2)
+           
            PRINT *, "integrate_colloid_type: ", &
                 "multiple steps method"
+           
+           SELECT CASE(this%integrate_colloid_AB)
+              
+           CASE (1:5)
+              
+              PRINT *, "integrate_colloid_AB:  ", &
+                   "Adams-Bashforth order", &
+                   this%integrate_colloid_AB
+              
+           CASE DEFAULT
+              
+              PRINT *, "integrate_colloid_AB: ", &
+                   this%integrate_colloid_AB, " not available"
+              stat_info = -1
+              GOTO 9999
+              
+           END SELECT
+           
         CASE DEFAULT
+           
            PRINT *, "integrate_colloid_type: ", &
                 this%integrate_colloid_type, " not available"
-        END SELECT
-        
-        SELECT CASE(this%integrate_colloid_RK)
-        CASE (1:4)
-           PRINT *, "integrate_colloid_RK:  ", &
-                "Runge-Kutta order", &
-                this%integrate_colloid_RK
-        CASE DEFAULT
-           PRINT *, "integrate_colloid_RK: ", &
-                this%integrate_colloid_RK, " not available"
-        END SELECT
-        
-        SELECT CASE(this%integrate_colloid_AB)
-        CASE (1:5)
-           PRINT *, "integrate_colloid_AB:  ", &
-                "Adams-Bashforth order", &
-                this%integrate_colloid_AB
-        CASE DEFAULT
-           PRINT *, "integrate_colloid_AB: ", &
-                this%integrate_colloid_AB, " not available"
+           stat_info = -1
+           GOTO 9999
+           
         END SELECT
         
         PRINT *, "adaptive dt        : ", this%adaptive_dt

@@ -42,6 +42,7 @@
         INTEGER, INTENT(OUT)            :: stat_info
         
         INTEGER                         :: num
+        INTEGER                         :: integrate_num
 
         num = this%num_colloid
         stat_info = 0
@@ -80,34 +81,53 @@
            END IF
            ALLOCATE(this%x(d_dim,num))
            
+           SELECT CASE (this%integrate_type)
+              
+           CASE (-2)
+           
+              integrate_num = 1
+    
+           CASE (-1)
+              
+              integrate_num = 1
+              
+           CASE (1)
+              
+              integrate_num = 1
+              
+           CASE (2)
+              
+              integrate_num = this%integrate_AB
+              
+           CASE DEFAULT
+              
+              PRINT *, __FILE__, __LINE__, &
+                   "no such integration!"
+              stat_info = -1
+              GOTO 9999
+              
+           END SELECT
+           
            IF(ASSOCIATED(this%v))THEN
               DEALLOCATE(this%v)
            END IF
            
-           SELECT CASE(this%integrate_type)
-           CASE (1)
-              ALLOCATE(this%v(d_dim,num,this%integrate_type))
-           CASE (2)
-              ALLOCATE(this%v(d_dim,num,this%integrate_AB))
-           END SELECT
-
+           ALLOCATE(this%v(d_dim,num,integrate_num))
+           
+           
            IF(ASSOCIATED(this%omega))THEN
               DEALLOCATE(this%omega)
            END IF
            
-           SELECT CASE(this%integrate_type)
-           CASE (1)
-              ALLOCATE(this%omega(3,num,this%integrate_type))
-           CASE (2)
-              ALLOCATE(this%omega(3,num,this%integrate_AB))
-           END SELECT
+           ALLOCATE(this%omega(3,num,integrate_num))
+           
            
 #if __DRAG_PART
            IF(ASSOCIATED(this%drag_lub))THEN
               DEALLOCATE(this%drag_lub)
            END IF
            ALLOCATE(this%drag_lub(d_dim,num))
-
+           
            IF(ASSOCIATED(this%drag_repul))THEN
               DEALLOCATE(this%drag_repul)
            END IF
@@ -127,23 +147,13 @@
               DEALLOCATE(this%f)
            END IF
  
-           SELECT CASE(this%integrate_type)
-           CASE (1)
-              ALLOCATE(this%f(d_dim,num,this%integrate_type))
-           CASE (2)
-              ALLOCATE(this%f(d_dim,num,this%integrate_AB))
-           END SELECT
+           ALLOCATE(this%f(d_dim,num,integrate_num))
            
            IF(ASSOCIATED(this%alpha))THEN
               DEALLOCATE(this%alpha)
            END IF
            
-           SELECT CASE(this%integrate_type)
-           CASE (1)
-              ALLOCATE(this%alpha(3,num,this%integrate_type))
-           CASE (2)
-              ALLOCATE(this%alpha(3,num,this%integrate_AB))
-           END SELECT
+           ALLOCATE(this%alpha(3,num,integrate_num))
            
            IF(ASSOCIATED(this%mom))THEN
               DEALLOCATE(this%mom)
@@ -194,7 +204,8 @@
         INTEGER, INTENT(OUT)            :: stat_info
         
         INTEGER                         :: dim
-        
+        INTEGER                         :: integrate_num
+
         
         stat_info = 0
         
@@ -285,12 +296,40 @@
               DEALLOCATE(this%theta)
            END IF           
            ALLOCATE(this%theta(3,d_num))
-        
+           
+           
+           SELECT CASE (this%integrate_type)
+              
+           CASE (-2)
+           
+           integrate_num = 1
+    
+           CASE (-1)
+              
+              integrate_num = 1
+              
+           CASE (1)
+              
+              integrate_num = 1
+              
+           CASE (2)
+              
+              integrate_num = this%integrate_AB
+              
+           CASE DEFAULT
+              
+              PRINT *, __FILE__, __LINE__, &
+                   "no such integration!"
+              stat_info = -1
+              GOTO 9999
+              
+           END SELECT
+           
            IF(ASSOCIATED(this%omega))THEN
               DEALLOCATE(this%omega)
            END IF
            
-           ALLOCATE(this%omega(3,d_num,this%integrate_type))
+           ALLOCATE(this%omega(3,d_num,integrate_num))
            
            IF(ASSOCIATED(this%torque))THEN
               DEALLOCATE(this%torque)
@@ -314,12 +353,12 @@
            IF(ASSOCIATED(this%f))THEN
               DEALLOCATE(this%f)
            END IF
-           ALLOCATE(this%f(dim,d_num,this%integrate_type))
+           ALLOCATE(this%f(dim,d_num,integrate_num))
            
            IF(ASSOCIATED(this%alpha))THEN
               DEALLOCATE(this%alpha)
            END IF
-           ALLOCATE(this%alpha(3,d_num,this%integrate_type))
+           ALLOCATE(this%alpha(3,d_num,integrate_num))
           
            IF(ASSOCIATED(this%k_energy))THEN
               DEALLOCATE(this%k_energy)
@@ -386,8 +425,33 @@
         RETURN
         
       END SUBROUTINE colloid_set_sub_time_step
-      
 
+      
+      SUBROUTINE colloid_set_implicit_pair_num_sweep(this,d_num,stat_info)
+        !----------------------------------------------------
+        ! Set the number of sweep for pairwise implicit
+        ! splitting scheme.
+        !---------------------------------------------------
+        
+        TYPE(Colloid), INTENT(INOUT)    :: this
+        INTEGER, INTENT(IN)             :: d_num
+        INTEGER, INTENT(OUT)            :: stat_info
+
+        stat_info = 0
+
+        IF ( d_num < 1  ) THEN
+           PRINT *, "colloid_set_implicit_pair_num_sweep: ", &
+                "Wrong number of sweeps!"
+           stat_info = -1
+        END IF
+        
+        this%implicit_pair_num_sweep = d_num
+        
+        RETURN
+        
+      END SUBROUTINE colloid_set_implicit_pair_num_sweep
+      
+      
       SUBROUTINE colloid_set_rho(this,d_rho,stat_info)
         !-----------------------------------------
         ! Set the colloid density.
@@ -1119,6 +1183,7 @@
         
         INTEGER                                 :: dim
         INTEGER                                 :: num
+        INTEGER                                 :: integrate_num
         INTEGER                                 :: itype
 
         stat_info = 0
@@ -1132,19 +1197,50 @@
         num   = SIZE(d_v,2)
         itype = SIZE(d_v,3)
         
-        IF( dim /= this%num_dim) THEN
-           PRINT *, "colloid_set_v: ", "Wrong Dimension !"
+        SELECT CASE (this%integrate_type )
+           
+        CASE (-2)
+           
+           integrate_num = 1
+    
+        CASE (-1)
+           
+           integrate_num = 1
+           
+        CASE (1)
+           
+           integrate_num = 1
+           
+        CASE (2)
+           
+           integrate_num = this%integrate_AB
+           
+        CASE DEFAULT
+           
+           PRINT *, __FILE__, __LINE__, &
+                "no such integration!"
            stat_info = -1
            GOTO 9999
+           
+        END SELECT
+        
+        IF( dim /= this%num_dim) THEN
+           
+           PRINT *, "colloid_set_v: ", "Wrong Dimension!"
+           stat_info = -1
+           GOTO 9999
+           
         END IF
         
         IF( num /= this%num_colloid) THEN
-           PRINT *, "colloid_set_v: ", "Wrong number of colloids !"
+           
+           PRINT *, "colloid_set_v: ", "Wrong number of colloids!"
            stat_info = -1
            GOTO 9999
+           
         END IF
         
-        IF( itype /= this%integrate_type) THEN
+        IF( itype /= integrate_num) THEN
            PRINT *, "colloid_set_v: ", "Wrong integration type!"
            stat_info = -1
            GOTO 9999
@@ -1590,7 +1686,8 @@
         INTEGER                                 :: dim
         INTEGER                                 :: num
         INTEGER                                 :: itype
-        
+        INTEGER                                 :: integrate_num
+
         stat_info = 0
         
         !----------------------------------------------------
@@ -1601,20 +1698,47 @@
         num = SIZE(d_omega,2)
         itype = SIZE(d_omega,3)
         
-        IF( dim /= 3) THEN
-           PRINT *, "colloid_set_oemga : ", "Wrong Dimension!"
+        SELECT CASE (this%integrate_type )
+           
+        CASE (-2)
+           
+           integrate_num = 1
+    
+        CASE (-1)
+           
+           integrate_num = 1
+           
+        CASE (1)
+           
+           integrate_num = 1
+           
+        CASE (2)
+           
+           integrate_num = this%integrate_AB
+           
+        CASE DEFAULT
+           
+           PRINT *, __FILE__, __LINE__, &
+                "no such integration!"
+           stat_info = -1
+           GOTO 9999
+           
+        END SELECT
+        
+        IF( dim /= 3 ) THEN
+           PRINT *, "colloid_set_oemga: ", "Wrong Dimension!"
            stat_info = -1
            GOTO 9999
         END IF
         
         IF( num /= this%num_colloid) THEN
-           PRINT *, "colloid_set_omega : ", "Wrong number of colloids!"
+           PRINT *, "colloid_set_omega: ", "Wrong number of colloids!"
            stat_info = -1
            GOTO 9999
         END IF
 
-        IF( itype /= this%integrate_type) THEN
-           PRINT *, "colloid_set_omega : ", "Wrong integration type!"
+        IF( itype /= integrate_num) THEN
+           PRINT *, "colloid_set_omega: ", "Wrong integration type!"
            stat_info = -1
            GOTO 9999
         END IF

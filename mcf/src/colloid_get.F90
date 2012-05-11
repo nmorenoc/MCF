@@ -68,6 +68,22 @@
       END FUNCTION colloid_get_sub_time_step
       
       
+      INTEGER FUNCTION colloid_get_implicit_pair_num_sweep(this, stat_info)
+        !----------------------------------------------------
+        ! Return the number of implicit pair sweeps
+        !----------------------------------------------------
+
+        TYPE(Colloid), INTENT(IN)       :: this
+        INTEGER, INTENT(OUT)            :: stat_info
+        
+        stat_info = 0
+        colloid_get_implicit_pair_num_sweep = this%implicit_pair_num_sweep
+        
+        RETURN
+        
+      END FUNCTION colloid_get_implicit_pair_num_sweep
+      
+      
       REAL(MK) FUNCTION colloid_get_adapt_t_coef(this, stat_info)
         !----------------------------------------------------
         ! Return the coefficient of adaptive t.
@@ -624,18 +640,47 @@
         REAL(MK), DIMENSION(:,:,:), POINTER     :: d_v
         INTEGER, INTENT(OUT)                    :: stat_info
         
-        
+        INTEGER                                 :: integrate_num
+
         stat_info = 0
         
         IF(ASSOCIATED(d_v)) THEN           
            DEALLOCATE(d_v)
         END IF
         
-        ALLOCATE(d_v(this%num_dim,this%num_colloid,this%integrate_type))
+        SELECT CASE (this%integrate_type )
+           
+        CASE (-2)
+           
+           integrate_num = 1
+           
+        CASE (-1)
+           
+           integrate_num = 1
+      
+        CASE (1)
+           
+           integrate_num = 1
+           
+        CASE (2)
+           
+           integrate_num = this%integrate_AB
+           
+        CASE DEFAULT
+           
+           PRINT *, __FILE__, __LINE__, &
+                "no such integration!"
+           stat_info = -1
+           GOTO 9999
+           
+        END SELECT
+        
+        ALLOCATE(d_v(this%num_dim,this%num_colloid,integrate_num))
         
         d_v(:,:,:) = &
-             this%v(1:this%num_dim,1:this%num_colloid,1:this%integrate_type)
+             this%v(1:this%num_dim,1:this%num_colloid,1:integrate_num)
         
+9999    CONTINUE
         RETURN       
         
       END SUBROUTINE colloid_get_v
@@ -849,17 +894,47 @@
         TYPE(Colloid), INTENT(IN)               :: this
         REAL(MK), DIMENSION(:,:,:), POINTER     :: d_omega
         INTEGER, INTENT(OUT)                    :: stat_info
-        
+        INTEGER                                 :: integrate_num
+
         stat_info = 0
         
         IF(ASSOCIATED(d_omega)) THEN           
            DEALLOCATE(d_omega)
         END IF
         
-        ALLOCATE(d_omega(3,this%num_colloid,this%integrate_type))
+        SELECT CASE (this%integrate_type )
+           
+        CASE (-2)
+           
+           integrate_num = 1
+    
+        CASE (-1)
+           
+           integrate_num = 1
+           
+        CASE (1)
+           
+           integrate_num = 1
+           
+        CASE (2)
+           
+           integrate_num = this%integrate_AB
+           
+        CASE DEFAULT
+           
+           PRINT *, __FILE__, __LINE__, &
+                "no such integration!"
+           stat_info = -1
+           GOTO 9999
+           
+        END SELECT
         
-        d_omega(1:3,1:this%num_colloid,1:this%integrate_type) = &
-             this%omega(1:3,1:this%num_colloid,1:this%integrate_type)
+        ALLOCATE(d_omega(3,this%num_colloid,integrate_num))
+        
+        d_omega(1:3,1:this%num_colloid,1:integrate_num) = &
+             this%omega(1:3,1:this%num_colloid,1:integrate_num)
+        
+9999    CONTINUE
         
         RETURN       
         

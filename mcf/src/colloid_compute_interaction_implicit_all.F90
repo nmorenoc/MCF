@@ -1,14 +1,17 @@
       SUBROUTINE colloid_compute_interaction_implicit_all(this,&
-           comm,MPI_PREC,drag,torque,FB,stat_info)
+           comm,MPI_PREC,dt,drag,torque,FB,stat_info)
         !----------------------------------------------------
         ! Subroutine  : colloid_compute_interaction_implicit_all
         !----------------------------------------------------
         !
-        ! Purpose     : Compute colloid-colloid interactions
-        !               and update velocties using implicit 
-        !               scheme for all colloids at once.
-        !               Compute colloid-wall interactions and
-        !               update velocities using explict scheme.
+        ! Purpose     : Calculate updated velocties using 
+        !               old velocities by implicit scheme for 
+        !               all colloids at once.
+        !               
+        !               Afterwards, compute colloid-colloid
+        !               interactions using updated velocities.
+        !               In the end, compute colloid-wall
+        !               interactions.
         !
         !               The interactions may include:
         !               1)lubrication force correction,
@@ -21,9 +24,9 @@
         !
         ! References  :
         !
-        ! Remarks     :
+        ! Remarks     : Consider only serial run.
         !
-        ! Revisions   : V0.1 30.04.2012, original version.
+        ! Revisions   : V0.1 07.05.2012, original version.
         !----------------------------------------------------
         ! Author       : Xin Bian
         ! Contact      : xin.bian@aer.mw.tum.de
@@ -41,6 +44,7 @@
         TYPE(Colloid), INTENT(OUT)              :: this
         INTEGER, INTENT(IN)                     :: comm
         INTEGER, INTENT(IN)                     :: MPI_PREC
+        REAL(MK), INTENT(IN)                    :: dt
         REAL(MK), DIMENSION(:,:), INTENT(IN)    :: drag
         REAL(MK), DIMENSION(:,:), INTENT(IN)    :: torque
         REAL(MK), DIMENSION(:,:), INTENT(OUT)   :: FB
@@ -48,576 +52,259 @@
         
         !----------------------------------------------------
         ! Local variables.
+        ! dim : dimension
+        ! num : number of total colloids
+        ! ent : number of unknown entries in the left hand matrix.
+        ! ML  : left hand matrix
+        ! MR  : right hand matrix
         !----------------------------------------------------
-        
         INTEGER                                 :: stat_info_sub
-        INTEGER                                 :: dim,num, dim2
-        INTEGER                                 :: i,j        
-        REAL(MK)                                :: cut_off
-        REAL(MK)                                :: ghost_size
-        REAL(MK), DIMENSION(3)                  :: min_phys_i
-        REAL(MK), DIMENSION(3)                  :: max_phys_i
-        REAL(MK), DIMENSION(:), POINTER         :: min_sub
-        REAL(MK), DIMENSION(:), POINTER         :: max_sub
-        REAL(MK), DIMENSION(3)                  :: min_sub_o
-        REAL(MK), DIMENSION(3)                  :: max_sub_o
+        INTEGER                                 :: i, j, k, m
+        INTEGER                                 :: dim, num, ent
+        INTEGER                                 :: dim2
+        REAL(MK),DIMENSION(3)                   :: x_image, v_image        
+        REAL(MK), DIMENSION(:,:), ALLOCATABLE   :: ML, MR
+        REAL(MK), DIMENSION(3)                  :: rij, eij, vij
+        REAL(MK)                                :: r, h
+        REAL(MK)                                :: hn_l, hm_l
+        REAL(MK)                                :: hn_r, hm_r
+        LOGICAL                                 :: interact_l, interact_r
+        REAL(MK)                                :: F0, F1, F_rep
+        REAL(MK)                                :: ai, aj, aa, Aij, Bij
+        INTEGER, DIMENSION(:), ALLOCATABLE      :: IPIV
         
-        LOGICAL                                 :: out        
-        REAL(MK), ALLOCATABLE, DIMENSION(:,:)   :: x_t
-        INTEGER, ALLOCATABLE, DIMENSION(:)      :: sid_t
-        INTEGER                                 :: num_t
-        
-        REAL(MK), ALLOCATABLE, DIMENSION(:,:)   :: x_ghost
-        INTEGER, ALLOCATABLE, DIMENSION(:)      :: sid_ghost
-        INTEGER                                 :: num_g
-        INTEGER                                 :: num_ghost
-        
-        LOGICAL                                 :: in
-        REAL(MK), ALLOCATABLE, DIMENSION(:,:)   :: x_p
-        INTEGER, ALLOCATABLE, DIMENSION(:)      :: sid_p
-        REAL(MK),DIMENSION(3)                   :: F_ij
-        REAL(MK),DIMENSION(3)                   :: F_i,F_j
-        REAL(MK),DIMENSION(3)                   :: T_i,T_j
-        REAL(MK), ALLOCATABLE, DIMENSION(:,:)   :: F, T
-        REAL(MK), ALLOCATABLE, DIMENSION(:,:)   :: F_p, T_p
-        REAL(MK), ALLOCATABLE, DIMENSION(:,:)   :: F_t, T_t
-        INTEGER                                 :: num_p
-        
-        REAL(MK), ALLOCATABLE, DIMENSION(:,:)   :: x_p_ghost
-        INTEGER, ALLOCATABLE, DIMENSION(:)      :: sid_p_ghost
-        INTEGER                                 :: num_p_ghost
-
-        REAL(MK), DIMENSION(3)                  :: length
-        
+        REAL(MK),DIMENSION(3)                   :: F_i
         REAL(MK),DIMENSION(3,6)                 :: FB_lub
         REAL(MK),DIMENSION(3,6)                 :: FB_repul
-        
         INTEGER                                 :: num_wall_solid
-        
+      
         !----------------------------------------------------
-        ! Initialization of variables.
+        ! Initialization
         !----------------------------------------------------
-        
-        stat_info     = 0
-        stat_info_sub = 0
-        
-        dim   = this%num_dim
-        dim2  = dim * 2
-        num   = this%num_colloid
-        
-        !----------------------------------------------------
-        ! Set drag and torque of all colloids to zero
-        ! before any operations.
-        !----------------------------------------------------
-        
-        this%drag(1:dim,1:num) = 0.0_MK
-        this%torque(1:3,1:num) = 0.0_MK
-    
-        IF ( SIZE(FB,1) /= dim ) THEN
-           PRINT *, "colloid_compute_interaction : ",&
-                "FB dimension do not match ! "
-           stat_info = - 1
-           GOTO 9999           
-        END IF
 
-        IF ( SIZE(FB,2) /= dim2 ) THEN
-           PRINT *, "colloid_compute_interaction : ",&
-                "FB number do not match ! "
-           stat_info = - 1
-           GOTO 9999           
-        END IF
+        stat_info = 0
+        stat_info_sub = 0
+                
+        dim = this%num_dim
+        num = this%num_colloid
+        ent = dim * num
+        dim2 = dim * 2
+        hn_l  = this%cc_lub_cut_off
+        hm_l  = this%cc_lub_cut_on
+        hn_r  = this%cc_repul_cut_off
+        hm_r  = this%cc_repul_cut_on
+        F_rep = this%cc_repul_F0
         
-        FB(:,:) = 0
-        
-        NULLIFY(min_sub)
-        NULLIFY(max_sub)
-        
-        
-        length(1:dim) = &
-             this%max_phys(1:dim) - this%min_phys(1:dim)
+        ALLOCATE(ML(1:ent, 1:ent))
+        ALLOCATE(MR(1:ent, 1))
+        ALLOCATE(IPIV(1:ent))
+        ML(:,:) = 0.0_MK
+        MR(:,:) = 0.0_MK
+        IPIV(:) = 0
         
         num_wall_solid = &
              boundary_get_num_wall_solid(this%boundary,stat_info_sub)
         
-        num_p = 0
-        !----------------------------------------------------
-        ! A : consider colloid-colloid lubrication correction
-        !     contribution of total drag on colloids.
-        ! B : consider colloid-colloid repulsive force
-        !     (kind of contact force, or coating layer)
-        !     contribution of total drag on colloids.
-        ! 
-        !     They are done in the same way.
+        FB(:,:)       = 0.0_MK
         
-        ! C : consider wall-colloid lubrication correction.
-        ! D : consider wall-colloid repulsive force.
-        !
-        !     They are done in the same way.
+        !----------------------------------------------------
+        ! For now, we assume that each radius is the same.
         !----------------------------------------------------
         
-        IF ( this%cc_lub_type == mcf_cc_lub_type_first .OR. &
-             this%cc_repul_type >= mcf_cc_repul_type_Hookean .OR. &
-             this%cw_lub_type == mcf_cw_lub_type_first .OR. &
-             this%cw_repul_type >= mcf_cw_repul_type_Hookean ) THEN
+        ai = this%radius(1,1)
+        aj = ai
+        aa = ai+aj
+        
+        IF ( dim == 2 ) THEN
+           
+           F0  = 3.0_MK*mcf_pi*SQRT(2.0_MK)/4.0_MK
+           F1  = 231.0_MK*mcf_pi*SQRT(2.0_MK) / 80.0_MK
+           
+        ELSE
+           
+           PRINT *, __FILE__, __LINE__, "dimension not available!"
+           stat_info = -1
+           GOTO 9999
+           
+        END IF
+        
+        !----------------------------------------------------
+        ! Loop over each colloid and its interaction with 
+        ! other colloids and walls.
+        ! Build up the left hand matrix and right hand vector
+        ! for the system of linear equations
+        !----------------------------------------------------
+        
+        DO i = 1, num
            
            !-------------------------------------------------
-           ! If we need any operation on colloids,
-           ! we have to find which of them are in local
-           ! sub domain.
-           ! Get the boundary of this sub-domain.
+           ! Construct the right hand side
+           ! 1st contribution is the old velocity
+           ! 2nd contribution is from the SPH solvent force.
            !-------------------------------------------------
            
-           CALL technique_get_min_sub(this%tech,min_sub,stat_info_sub)
-           CALL technique_get_max_sub(this%tech,max_sub,stat_info_sub)
-      
-           !-------------------------------------------------
-           ! loop over each colloid in physics domain and
-           ! record the ones, which are in this subdomain.
-           !-------------------------------------------------
+           MR((i-1)*dim+1:i*dim,1) = &
+                this%v(1:dim,i,1) + drag(1:dim,i) * dt / this%m(i)
            
-           ALLOCATE(x_p(dim,num))
-           ALLOCATE(sid_p(num))
-           
+           !-------------------------------------------------
+           ! Construct the left hand side in the two loops.
+           !-------------------------------------------------
+
            DO j = 1, num
               
               !----------------------------------------------
-              ! Assuming every one is inside the sub-domain
-              ! first, but if one dimension is outside,
-              ! it means it is outside.
+              ! Two colloids are the same one.
               !----------------------------------------------
+              
+              IF ( j == i ) THEN
+                 
+                 DO k = 1, dim
+                    
+                    ML((i-1)*dim+k,(i-1)*dim+k) = 1.0_MK
+                    
+                 END DO
+                 
+                 !----------------------------------------------
+                 ! Two different colloids
+                 !----------------------------------------------
+                 
+              ELSE
 
-              in = .TRUE.
-              
-              DO i = 1, dim
                  
-                 IF ( this%x(i,j) <  min_sub(i) .OR. &
-                      this%x(i,j) >= max_sub(i) )  THEN
+                 !----------------------------------------------
+                 ! Calculate the gap and unit vector joining
+                 ! two colloids, images of colloids have to
+                 ! be considered.
+                 !----------------------------------------------
+
+                 CALL colloid_nearest_image(this,&
+                      this%x(1:dim,i),j, &
+                      x_image(1:dim),rij(1:dim), &
+                      v_image(1:dim),stat_info_sub)
+                 
+                 r  = SQRT(DOT_PRODUCT(rij(1:dim), rij(1:dim)))
+                 h  = r - aa
+                 eij(1:dim) = rij(1:dim) / r
+                 
+                 !-------------------------------------------
+                 ! If gap is smaller than hn_l, i.e., cut_off
+                 ! of lubrication correction,
+                 ! it needs lubrication correction.
+                 !-------------------------------------------
+                 
+                 IF ( h < hn_l ) THEN
                     
-                    in = .FALSE.
-                    EXIT
+                    !----------------------------------------
+                    ! If gap is smaller than minimal allowed
+                    ! gap, set it to the pre-set minimum.
+                    !----------------------------------------
                     
-                 END IF
+                    IF ( h < hm_l ) THEN
+                       
+                       h = hm_l
+                       
+                    END IF
                  
-              END DO
+                    Aij = -0.5_MK * this%eta * &
+                         ( (aa/h)**1.5_MK  * (F0 + h*F1/aa) -&
+                         (aa/hn_l)**1.5_MK * (F0 + hn_l*F1/aa) ) * &
+                         dt / this%m(i)
+                    
+                    
+                    DO k = 1, dim
+                       
+                       DO m = 1, dim
+                          
+                          ML((i-1)*dim+k,(i-1)*dim+m) = &
+                               ML((i-1)*dim+k,(i-1)*dim+m) - &
+                               Aij * eij(k) * eij(m)
+                          
+                          ML((i-1)*dim+k,(j-1)*dim+m) = &
+                               ML((i-1)*dim+k,(j-1)*dim+m) + &
+                               Aij * eij(k) * eij(m)
+                          
+                       END DO ! m
+                       
+                    END DO ! k
+                    
+                 END IF ! h < hn_l
+                 
+                 !-------------------------------------------
+                 ! If gap is smaller than hn_r, i.e., cut_off 
+                 ! of repulsive force.
+                 ! it needs repulsive force.
+                 !-------------------------------------------
+                 
+                 IF ( h < 5.0_MK * hn_r ) THEN
+                    
+                    SELECT CASE ( this%cc_repul_type )
+                       
+                    CASE ( mcf_cc_repul_type_Hookean )
+                       !-------------------------------------
+                       ! For linear spring force, it has clear 
+                       ! zero at hn_r.
+                       !-------------------------------------
+                       
+                       IF ( h < hn_r ) THEN
+                          
+                          !----------------------------------
+                          ! If gap smaller than minimal allowed 
+                          ! gap, set it to the pre-set minimum.
+                          !----------------------------------
+                          
+                          IF ( h < hm_r ) THEN
+                             
+                             h = hm_r
+                             
+                          END IF
+                          
+                          Bij = F_rep - F_rep*h/hn_r
+                          
+                       END IF ! h < hn_r
+                       
+                    CASE ( mcf_cc_repul_type_DLVO )
+                       
+                       !-------------------------------------
+                       ! For DLVO force, it does not have clear 
+                       ! zero at hn. But at 5*hn, its value 
+                       ! is smaller than F0/100.
+                       !-------------------------------------
+                       
+                       !-------------------------------------
+                       ! If gap smaller than minimal allowed 
+                       ! gap, set it to the pre-set minimum.
+                       !-------------------------------------
+                       
+                       IF ( h < hm_r ) THEN
+                          
+                          h = hm_r
+                          
+                       END IF
+                       
+                       Bij = F_rep / hn_r * &
+                            EXP(-h/hn_r) /(1.0_MK-EXP(-h/hn_r))
+                       
+                    END SELECT
+                    
+                    !----------------------------------------
+                    ! Construct the right hand side
+                    ! 3rd contribution is from the repulsion
+                    ! between colloid-colloid
+                    !----------------------------------------
+        
+                    MR((i-1)*dim+1:i*dim,1) = &
+                         MR((i-1)*dim+1:i*dim,1) + &
+                         Bij*dt*eij(1:dim)/this%m(i)
+                    
+                 END IF ! h < hn_r
               
-              !----------------------------------------------
-              ! Record the one in this sub domain.
-              !----------------------------------------------
-              
-              IF ( in ) THEN
-                 
-                 num_p            = num_p + 1
-                 x_p(1:dim,num_p) = this%x(1:dim,j)
-                 sid_p(num_p)     = j
-                 
-              END IF
+              END IF ! j == i and j /= i
               
            END DO ! j = 1, num
            
            !-------------------------------------------------
-           ! Allocate force/torque memory of 
-           ! local real colloids.
-           !-------------------------------------------------
-           
-           ALLOCATE(F_p(dim,num_p))
-           F_p(1:dim,1:num_p) = 0.0_MK
-           
-           ALLOCATE(T_p(3,num_p))
-           T_p(1:3,1:num_p) = 0.0_MK
-           
-           !-------------------------------------------------
-           ! 1: If lubrication correction is required to amend
-           !    forces between colloids, pair-wise forces
-           !    are introduced for gap smaller than 
-           !    cc_lub_cut_off.
-           !
-           ! 2D, 3D lurication theory formulations are different.
-           !
-           ! 2: if repusive force is needed,
-           !    add it up to prevent overlaps between colloids.   
-           !-------------------------------------------------
-           
-           IF ( this%cc_lub_type == mcf_cc_lub_type_first .OR. &
-                this%cc_repul_type >= mcf_cc_repul_type_Hookean ) THEN
-              
-              !----------------------------------------------
-              ! Set cut off, thereafter ghost zone size,
-              ! which is used for building ghost zone.
-              !----------------------------------------------
-              
-              cut_off = 0.0_MK
-              
-              IF ( this%cc_lub_type == mcf_cc_lub_type_first ) THEN
-                 
-                 cut_off = this%cc_lub_cut_off
-                 
-              END IF
-              
-              IF ( this%cc_repul_type >= mcf_cc_repul_type_Hookean .AND. &
-                   this%cc_repul_cut_off > cut_off) THEN
-                 
-                 cut_off = this%cc_repul_cut_off
-                 
-              END IF
-              
-              ghost_size = 2.0_MK*this%radius(1,1) + cut_off
-              
-              !----------------------------------------------
-              ! Set up the in-line box of physical domain
-              ! to search for colloids.
-              ! The ones outside the in-line box may have 
-              ! images as ghosts of certain sub-domains.
-              !
-              ! Note that currently only periodic boundary
-              ! is considered, not Lees-Edwards yet.
-              !----------------------------------------------
-              
-              min_phys_i(1:dim) = this%min_phys(1:dim)
-              max_phys_i(1:dim) = this%max_phys(1:dim)
-              
-              DO i = 1, dim
-                 
-                 IF ( this%bcdef(2*i-1) == ppm_param_bcdef_periodic) THEN
-                    
-                    min_phys_i(i) = min_phys_i(i) + ghost_size
-                    
-                 END IF
-                 
-                 IF ( this%bcdef(2*i) == ppm_param_bcdef_periodic) THEN
-                    
-                    max_phys_i(i) = max_phys_i(i) - ghost_size
-                    
-                 END IF
-                 
-              END DO ! i = 1, dim
-              
-              !----------------------------------------------
-              ! loop all colloids and find the ones outside
-              ! in-line box, of which images may be ghost
-              ! colloids of some sum-domains.
-              ! There are at most "num" of them.
-              !----------------------------------------------
-              
-              ALLOCATE(x_t(dim,num))
-              ALLOCATE(sid_t(num))
-              num_t = 0
-              
-              DO j = 1, num
-                 
-                 !-------------------------------------------
-                 ! Find the ones outside the in-line.
-                 ! Assuming it is not outside, and search
-                 ! each dimension coordinate, once found
-                 ! one dimension outside, it is outside.
-                 !-------------------------------------------
-                 
-                 out = .FALSE.
-                 
-                 DO i = 1, dim
-                    
-                    IF ( this%x(i,j) < min_phys_i(i) .OR. &
-                         this%x(i,j) >= max_phys_i(i) )  THEN
-                       
-                       out = .TRUE.
-                       EXIT
-                       
-                    END IF
-                    
-                 END DO ! i = 1, dim
-              
-                 !-------------------------------------------
-                 ! Record the one in this out-line zone.
-                 !-------------------------------------------
-                 
-                 IF ( out ) THEN
-                    
-                    num_t            = num_t + 1
-                    x_t(1:dim,num_t) = this%x(1:dim,j)
-                    sid_t(num_t)     = j
-                    
-                 END IF
-                 
-              END DO ! j = 1, num
-              
-              !----------------------------------------------
-              ! Create ghost colloids using x_t(:,:)
-              ! according to boundary conditions.
-              ! For 2D,
-              ! there are at most, num_t*2*2 of them.
-              ! For 3D,
-              ! there are at most, num_t*2*2*2 of them.
-              !----------------------------------------------
-           
-              ALLOCATE(x_ghost(1:dim,num_t*2**dim))
-              ALLOCATE(sid_ghost(num_t*2**dim))
-              num_ghost = 0
-              
-              DO i = 1, dim
-                 
-                 num_g = num_ghost
-                 
-                 DO j = 1, num_ghost
-                    
-                    IF ( x_ghost(i,j) < min_phys_i(i) ) THEN
-                       
-                       num_g                = num_g + 1
-                       x_ghost(1:dim,num_g) = x_ghost(1:dim,j)
-                       x_ghost(i,num_g)     = x_ghost(i,num_g) + length(i)
-                       sid_ghost(num_g)     = sid_ghost(j)
-                       
-                    ELSE IF ( x_ghost(i,j) >= max_phys_i(i) ) THEN
-                       
-                       num_g                = num_g + 1
-                       x_ghost(1:dim,num_g) = x_ghost(1:dim,j)
-                       x_ghost(i,num_g)     = x_ghost(i,num_g) - length(i)
-                       sid_ghost(num_g)     = sid_ghost(j)
-                       
-                    END IF
-                    
-                 END DO ! j = 1, num_ghost
-                 
-                 
-                 DO j = 1, num_t
-                    
-                    IF ( x_t(i,j) < min_phys_i(i)  ) THEN
-                       
-                       num_g                = num_g + 1
-                       x_ghost(1:dim,num_g) = x_t(1:dim,j)
-                       x_ghost(i,num_g)     = x_ghost(i,num_g) + length(i)
-                       sid_ghost(num_g)     = sid_t(j)
-                       
-                    ELSE IF ( x_t(i,j) >= max_phys_i(i)  ) THEN
-                       
-                       num_g                = num_g + 1
-                       x_ghost(1:dim,num_g) = x_t(1:dim,j)                    
-                       x_ghost(i,num_g)     = x_ghost(i,num_g) - length(i)
-                       sid_ghost(num_g)     = sid_t(j)
-                       
-                    END IF
-                    
-                 END DO ! j = 1, num_t
-                 
-                 num_ghost = num_g
-                 
-              END DO ! i = 1, dim
-              
-              !----------------------------------------------
-              ! colloid-colloid interactions only on local
-              ! process.
-              !----------------------------------------------
-              
-              !----------------------------------------------
-              ! Calculate its outside ghost zone boundary of
-              ! this sub-domain.
-              !----------------------------------------------
-           
-              min_sub_o(1:dim) = min_sub(1:dim) - ghost_size
-              max_sub_o(1:dim) = max_sub(1:dim) + ghost_size
-              
-              ALLOCATE(x_p_ghost(dim,num+num_ghost))
-              ALLOCATE(sid_p_ghost(num+num_ghost))
-              num_p_ghost = 0
-              
-              !----------------------------------------------
-              ! loop over each colloid in physics domain and
-              ! record the ones, which are in this subdomain
-              ! ghost zone.
-              !----------------------------------------------
-           
-              DO j = 1, num
-                 
-                 !-------------------------------------------
-                 ! Assuming every one is inside the subdomain+
-                 ! ghost zone, but if one dimension is outside,
-                 ! it means it is outside.
-                 !-------------------------------------------
-                 
-                 in = .TRUE.
-                 
-                 DO i = 1, dim
-                    
-                    IF ( this%x(i,j) <  min_sub_o(i) .OR. &
-                         this%x(i,j) >= max_sub_o(i) )  THEN
-                       
-                       in = .FALSE.
-                       EXIT
-                       
-                    END IF
-                    
-                 END DO
-              
-                 !----------------------------------------------
-                 ! Record the one in this sub-domain+ghost zone.
-                 !----------------------------------------------
-              
-                 IF ( in ) THEN
-                    
-                    out = .FALSE.
-                    
-                    DO i = 1, dim
-                       
-                       IF ( this%x(i,j) <  min_sub(i) .OR. &
-                            this%x(i,j) >= max_sub(i) )  THEN
-                          
-                          out = .TRUE.                          
-                          EXIT
-                          
-                       END IF
-                       
-                    END DO
-                    
-                    !----------------------------------------
-                    ! Record the one in ghost zone of
-                    ! this sub domain.
-                    !----------------------------------------
-                    
-                    IF ( out ) THEN
-                    
-                       num_p_ghost                  = num_p_ghost + 1
-                       x_p_ghost(1:dim,num_p_ghost) = this%x(1:dim,j)
-                       sid_p_ghost(num_p_ghost)     = j
-                       
-                    END IF
-                    
-                 END IF
-                 
-              END DO ! j = 1, num
-           
-              !----------------------------------------------
-              ! Find ghost colloids outside of physics domain,
-              ! (global ghosts colloids)
-              ! which are inside the sub-domain's ghost zone.
-              !----------------------------------------------
-           
-              DO j = 1, num_ghost
-                 
-                 !----------------------------------------------
-                 ! Assuming every one is inside the subdomain+
-                 ! ghost zone, but if one dimension is outside,
-                 ! it means it is outside.
-                 !----------------------------------------------
-                 
-                 in = .TRUE.
-                 
-                 DO i = 1, dim
-                    
-                    IF ( x_ghost(i,j) <  min_sub_o(i) .OR. &
-                         x_ghost(i,j) >= max_sub_o(i) )  THEN
-                       
-                       in = .FALSE.
-                       EXIT
-                       
-                    END IF
-                    
-                 END DO
-                 
-                 !----------------------------------------------
-                 ! Record the one in this ghost zone.
-                 ! (it can not be in the sub-domain anyway,
-                 ! since it is outside physical domain).
-                 !----------------------------------------------
-                 
-                 IF ( in ) THEN
-                    
-                    num_p_ghost                  = num_p_ghost + 1
-                    x_p_ghost(1:dim,num_p_ghost) = x_ghost(1:dim,j)
-                    sid_p_ghost(num_p_ghost)     = sid_ghost(j)
-                    
-                 END IF
-                 
-              END DO ! j = 1, num
-              
-                         
-              !----------------------------------------------
-              ! Loop each pair of real colloids.
-              !----------------------------------------------
-              
-              DO i = 1, num_p-1
-                 
-                 DO j = i+1, num_p
-                    
-                    IF ( this%cc_lub_type == mcf_cc_lub_type_first ) THEN
-                       
-                       CALL colloid_compute_lubrication_cc(this,&
-                            x_p(1:dim,i), x_p(1:dim,j),&
-                            this%v(1:dim,sid_p(i),1),&
-                            this%v(1:dim,sid_p(j),1),&
-                            this%omega(1:3,sid_p(i),1),&
-                            this%omega(1:3,sid_p(j),1),&
-                            sid_p(i), sid_p(j),&
-                            F_i(1:dim),F_j(1:dim),&
-                            T_i(1:3),T_j(1:3),stat_info_sub)
-                       
-                       F_p(1:dim,i) = F_p(1:dim,i) + F_i(1:dim)
-                       F_p(1:dim,j) = F_p(1:dim,j) + F_j(1:dim)
-                       
-                       T_p(1:3,i) = T_p(1:3,i) + T_i(1:3)
-                       T_p(1:3,j) = T_p(1:3,j) + T_j(1:3)
-                       
-                    END IF
-                    
-                    IF ( this%cc_repul_type >= mcf_cc_repul_type_Hookean ) THEN
-                       
-                       CALL colloid_compute_repulsion_cc(this,&
-                            x_p(1:dim,i),x_p(1:dim,j),&
-                            sid_p(i),sid_p(j),F_ij(1:dim),stat_info_sub)
-                       
-                       F_p(1:dim,i) = F_p(1:dim,i) + F_ij(1:dim)
-                       F_p(1:dim,j) = F_p(1:dim,j) - F_ij(1:dim)
-                       
-                    END IF
-                    
-                 END DO  ! j = i+1, num_p
-                 
-              END DO  ! i = 1, num_p -1
-              
-              !----------------------------------------------
-              ! Loop each pair of real colloids in this 
-              ! sub-domain and colloids in its ghost zone.
-              !----------------------------------------------
-              
-              DO i = 1, num_p
-                 
-                 DO j = 1, num_p_ghost
-                    
-                    IF ( this%cc_lub_type == mcf_cc_lub_type_first ) THEN
-                       
-                       CALL colloid_compute_lubrication_cc(this,&
-                            x_p(1:dim,i), x_p_ghost(1:dim,j),&
-                            this%v(1:dim,sid_p(i),1), &
-                            this%v(1:dim,sid_p_ghost(j),1),&
-                            this%omega(1:3,sid_p(i),1),&
-                            this%omega(1:3,sid_p_ghost(j),1),&
-                            sid_p(i), sid_p_ghost(j), &
-                            F_i(1:dim),F_j(1:dim),&
-                            T_i(1:3),T_j(1:3),stat_info_sub)
-                       
-                       F_p(1:dim,i) = F_p(1:dim,i) + F_i(1:dim)
-                       
-                       T_p(1:3,i) = T_p(1:3,i) + T_i(1:3)
-                       
-                    END IF
-                    
-                    IF ( this%cc_repul_type >= mcf_cc_repul_type_Hookean ) THEN
-                       
-                       CALL colloid_compute_repulsion_cc(this,&
-                            x_p(1:dim,i), x_p_ghost(1:dim,j),&
-                            sid_p(i),sid_p_ghost(j),&
-                            F_ij(1:dim),stat_info_sub)
-                       
-                       F_p(1:dim,i) = F_p(1:dim,i) + F_ij(1:dim)
-                       
-                    END IF
-                    
-                 END DO ! j = 1, num_p_ghost
-                 
-              END DO ! i = 1, num_p
-              
-           END IF ! cc_lub_type == 1 OR cc_repul_type == 1
-           
-           
-           !-------------------------------------------------
-           ! Consider colloid-wall interactions.
+           ! Compute interactions between colloid-wall and
+           ! put it in right hand side.
            !-------------------------------------------------
            
            IF ( num_wall_solid > 0 .AND. &
@@ -625,172 +312,126 @@
                 this%cw_repul_type > mcf_cw_repul_type_no) ) THEN
               
               !----------------------------------------------
-              ! Set total force from colloids on boundary
-              ! to zero.
+              ! If lubrication correction is required to 
+              ! amend forces between colloid and wall, 
+              ! forces are introduced for colloid-wall gap
+              ! smaller than cw_lub_cut_off.
+              !
+              ! 2D, 3D lurication theory formulations
+              ! are different.
               !----------------------------------------------
               
               FB_lub(:,:)   = 0.0_MK
               FB_repul(:,:) = 0.0_MK
               
-              !----------------------------------------------
-              ! Loop over each colloid on this sub-domain.
-              !----------------------------------------------
-              
-              DO i = 1, num_p
+              IF ( this%cw_lub_type > mcf_cw_lub_type_no ) THEN
                  
-                 !-------------------------------------------
-                 ! If lubrication correction is required to 
-                 ! amend forces between colloid and wall, 
-                 ! forces are introduced for colloid-wall gap
-                 ! smaller than cw_lub_cut_off.
-                 !
-                 ! 2D, 3D lurication theory formulations
-                 ! are different.
-                 !-------------------------------------------
+                 CALL colloid_compute_lubrication_cw(this,&
+                      this%x(1:dim,i),this%v(1:dim,i,1),i,&
+                      F_i(1:dim),FB_lub(1:dim,1:dim2),stat_info_sub)
                  
-                 IF ( this%cw_lub_type > mcf_cw_lub_type_no ) THEN
-                    
-                    PRINT *, "colloid_compute_interaction: ", &
-                         "calling lubrication_cw !"
-                    
-                    CALL colloid_compute_lubrication_cw(this,&
-                         x_p(1:dim,i),this%v(1:dim,sid_p(i),1),sid_p(i),&
-                         F_i(1:dim),FB(1:dim,1:dim2),stat_info_sub)
-                    
-                    IF ( stat_info_sub /= 0 ) THEN
-                       PRINT *, "colloid_compute_interaction : ", &
-                            "Computing lubrication cw failed !"
-                       stat_info = -1
-                       GOTO 9999
-                    END IF
-                    
-                    F_p(1:dim,i) = F_p(1:dim,i) + F_i(1:dim)
-                    
-                    FB_lub(1:dim,1:dim2) = &
-                         FB_lub(1:dim,1:dim2) + FB(1:dim,1:dim2)
-                    
-                 END IF ! cw_lub_type
-                 
-                 
-                 !-------------------------------------------
-                 ! Add up repulsive force to prevent overlaps
-                 ! between wall and colloid.
-                 !-------------------------------------------
-                 
-                 IF ( this%cw_repul_type > mcf_cw_repul_type_no ) THEN
-                    
-                    CALL colloid_compute_repulsion_cw(this,&
-                         x_p(1:dim,i),sid_p(i),F_i(1:dim),&
-                         FB(1:dim,1:dim2),stat_info_sub)
-                    
-                    IF ( stat_info_sub /= 0 ) THEN
-                       PRINT *, "colloid_compute_interaction : ", &
-                            "Computing repulsion cw failed !"
-                       stat_info = -1
-                       GOTO 9999
-                    END IF
-                    
-                    F_p(1:dim,i) = F_p(1:dim,i) + F_i(1:dim)
+                 IF ( stat_info_sub /= 0 ) THEN
+                    PRINT *, __FILE__, __LINE__, &
+                         "calling lubrication cw failed!"
+                    stat_info = -1
+                    GOTO 9999
+                 END IF
 
-                    FB_repul(1:dim,1:dim2) = &
-                         FB_repul(1:dim,1:dim2) + FB(1:dim,1:dim2)
-                    
-                 END IF ! cc_repul_type
+                 !-------------------------------------------
+                 ! Construct the right hand side
+                 ! 4th contribution is from the lubrication
+                 ! correction between colloid-wall.
+                 !-------------------------------------------
                  
-              END DO  ! i = 1, num_p
+                 MR((i-1)*dim+1:i*dim,1) = &
+                      MR((i-1)*dim+1:i*dim,1) + &
+                      dt*F_i(1:dim)/this%m(i)
+                 
+              END IF ! cw_lub_type
               
-              FB(1:dim,1:dim2) = &
+              !----------------------------------------------
+              ! Add up repulsive force to prevent overlaps
+              ! between wall and colloid.
+              !----------------------------------------------
+              
+              IF ( this%cw_repul_type > mcf_cw_repul_type_no ) THEN
+                 
+                 CALL colloid_compute_repulsion_cw(this,&
+                      this%x(1:dim,i),i,F_i(1:dim),&
+                      FB_repul(1:dim,1:dim2),stat_info_sub)
+                 
+                 IF ( stat_info_sub /= 0 ) THEN
+                    PRINT *, __FILE__, __LINE__, &
+                         "calling repulsion cw failed !"
+                    stat_info = -1
+                    GOTO 9999
+                 END IF
+        
+                 !-------------------------------------------
+                 ! Construct the right hand side
+                 ! 5th contribution is from the repulsion
+                 ! between colloid-wall.
+                 !-------------------------------------------
+                 
+                 MR((i-1)*dim+1:i*dim,1) = &
+                      MR((i-1)*dim+1:i*dim,1) + &
+                      dt*F_i(1:dim)/this%m(i)
+                 
+              END IF ! cc_repul_type              
+              
+              FB(1:dim,1:dim2) =  FB(1:dim,1:dim2) + &
                    FB_lub(1:dim,1:dim2) + FB_repul(1:dim,1:dim2)
               
            END IF ! num_wall_solid > 0
            
-        END IF ! cc_lub OR cc_repul OR cw_lub OR cw_repul
-        
-        
-        !-------------------------------------------------
-        ! Map the forces/torque on the correct colloids.
-        ! sid_p(:) are indices for this procedure.
-        !-------------------------------------------------
-        
-        ALLOCATE(F(dim,num))
-        F(1:dim,1:num) = 0.0_MK
-        ALLOCATE(F_t(dim,num))
-        F_t(1:dim,1:num) = 0.0_MK
-        
-        DO i = 1, num_p
-           F_t(1:dim, sid_p(i)) = F_p(1:dim,i)
-        END DO
-        
-        ALLOCATE(T(3,num))
-        T(1:3,1:num) = 0.0_MK
-        ALLOCATE(T_t(3,num))
-        T_t(1:3,1:num) = 0.0_MK
-        
-        DO i = 1, num_p
-           T_t(1:3, sid_p(i)) = T_p(1:3,i)
-        END DO
-        
-        
-#ifdef __MPI
+        END DO ! i = 1, num
         
         !----------------------------------------------------
-        ! In MPI context, collect all contributions 
-        ! from each process.
+        ! Solving system of linear equations
+        ! L*x=R,
+        ! where x is the solution for v^(n+1).
         !----------------------------------------------------
         
-        CALL MPI_ALLREDUCE (F_t(:,:),F(:,:), &
-             SIZE(F),MPI_PREC,MPI_SUM,comm,stat_info_sub)
-        
-        !----------------------------------------------------
-        ! Put colloid-colloid interactions on the total
-        ! drag globally.
-        !----------------------------------------------------
-        
-        this%drag(1:dim,1:num) = &
-             drag(1:dim, 1:num) + F(1:dim,1:num)
-        
-        !----------------------------------------------------
-        ! In MPI context, collect all contributions 
-        ! from each process.
-        !----------------------------------------------------
-        
-        CALL MPI_ALLREDUCE (T_t(:,:),T(:,:), &
-             SIZE(T),MPI_PREC,MPI_SUM,comm,stat_info_sub)
-        
-        !----------------------------------------------------
-        ! Put colloid-colloid interactions on the total
-        ! torque globally.
-        !----------------------------------------------------
-        
-        this%torque(1:3,1:num) = &
-             torque(1:3, 1:num) + T(1:3,1:num)
-#else
-        
-        !----------------------------------------------------
-        ! Put colloid-colloid interactions on the total
-        ! drag globally.
-        !----------------------------------------------------
-        
-        this%drag(1:dim,1:num) = &
-             drag(1:dim, 1:num) + F_t(1:dim,1:num)
-        
-        this%torque(1:3,1:num) = &
-             torque(1:3, 1:num) + T_t(1:3,1:num)
-        
-#endif
+        PRINT *, "ML, MR: ", ML(:,:), MR(:,1)
+        CALL tool_solve_linear_equations(this%tool, &
+             ent,1, ML, ent, IPIV, MR, ent,stat_info_sub)
+        PRINT *, "MR: ", MR(:,1)
+        !STOP
+        IF ( stat_info_sub /=0 ) THEN
            
+           PRINT *, "ML, MR: ", ML(:,:), MR(:,1)
+           PRINT *, __FILE__, __LINE__, &
+                "solving linear equations failed!"
+           stat_info = -1
+           GOTO 9999
+           
+        END IF
+
+        !----------------------------------------------------
+        ! Using updated velocity and old velocity to calcuate
+        ! the effective total force at this time step.
+        !----------------------------------------------------
+        
+        DO i = 1, num
+           
+           DO j = 1, dim
+              
+              k = (i-1)*dim+j
+              this%drag(j,i) = &
+                   this%m(i) * ( MR(k,1) - this%v(j,i,1)) / dt
+              
+           END DO
+           
+        END DO
+        
+        !----------------------------------------------------
+        ! Update total torque on each colloid
+        !----------------------------------------------------
+
+        this%torque(1:3,1:num) = torque(1:3,1:num)
         
         
 9999    CONTINUE
-        
-        
-        IF(ASSOCIATED(min_sub)) THEN
-           DEALLOCATE(min_sub)
-        END IF
-        
-        IF(ASSOCIATED(max_sub)) THEN
-           DEALLOCATE(max_sub)
-        END IF
         
         RETURN          
         

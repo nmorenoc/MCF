@@ -74,6 +74,8 @@
         LOGICAL                         :: Brownian
         LOGICAL                         :: p_energy
         INTEGER                         :: integrate_colloid_type
+        INTEGER                         :: integrate_colloid_AB
+        INTEGER                         :: integrate_num
         
         !----------------------------------------------------
         ! Physics parameters :
@@ -120,6 +122,8 @@
         
         INTEGER                         :: num_colloid
         TYPE(Colloid), POINTER          :: colloids
+        INTEGER                         :: coll_sub_time_step
+        REAL(MK)                        :: dt_sub_time_step  
         INTEGER                         :: coll_rho_type
         INTEGER                         :: coll_body_force_type
         LOGICAL                         :: coll_translate
@@ -128,7 +132,7 @@
         REAL(MK),DIMENSION(:,:,:),POINTER:: coll_omega
         REAL(MK), ALLOCATABLE, DIMENSION(:,:)   :: coll_drag
         REAL(MK), ALLOCATABLE, DIMENSION(:,:)   :: coll_torque
-         REAL(MK),DIMENSION(:,:,:),POINTER:: coll_reset
+        REAL(MK),DIMENSION(:,:,:),POINTER:: coll_reset
         REAL(MK)                        :: coll_k
         REAL(MK), DIMENSION(3)          :: coll_mom        
         
@@ -269,6 +273,8 @@
              control_get_p_energy(this%ctrl,stat_info_sub)
         integrate_colloid_type = &
              control_get_integrate_colloid_type(this%ctrl,stat_info_sub)
+        integrate_colloid_AB   = &
+             control_get_integrate_colloid_AB(this%ctrl,stat_info_sub)
       
         symmetry = .TRUE.
         CALL control_set_symmetry(this%ctrl,symmetry, stat_info_sub)
@@ -372,6 +378,10 @@
            CALL physics_get_colloid(this%phys,&
                 colloids,stat_info_sub)
            
+           coll_sub_time_step = &
+                colloid_get_sub_time_step(colloids,stat_info_sub)
+           dt_sub_time_step   = dt / coll_sub_time_step
+     
            coll_rho_type = &
                 colloid_get_rho_type(colloids,stat_info_sub)
            
@@ -408,18 +418,45 @@
                 .TRUE.,stat_info_sub)
 #endif
            
-           ALLOCATE(coll_reset(3,num_colloid,integrate_colloid_type))
+           SELECT CASE (integrate_colloid_type )
+              
+           CASE (-2)
+              
+              integrate_num = 1
+
+           CASE (-1)
+              
+              integrate_num = 1
+
+           CASE (1)
+              
+              integrate_num = 1         
+              
+           CASE (2)
+              
+              integrate_num = integrate_colloid_AB
+              
+           CASE  DEFAULT
+              
+              PRINT *, __FILE__, __LINE__, &
+                   "no such integration!"
+              stat_info = -1
+              GOTO 9999
+              
+           END SELECT
+           
+           ALLOCATE(coll_reset(3,num_colloid,integrate_num))
            coll_reset(:,:,:) = 0.0_MK
            CALL colloid_set_v(colloids, &
-                coll_reset(1:num_dim,1:num_colloid,1:integrate_colloid_type),&
+                coll_reset(1:num_dim,1:num_colloid,1:integrate_num),&
                 stat_info_sub)
            CALL colloid_set_omega(colloids, &
-                coll_reset(1:3,1:num_colloid,1:integrate_colloid_type),&
+                coll_reset(1:3,1:num_colloid,1:integrate_num),&
                 stat_info_sub)
            
            ALLOCATE(coll_drag(num_dim,num_colloid))
            ALLOCATE(coll_torque(3,num_colloid))
-      
+           
         END IF ! num_colloid > 0
         
         
@@ -849,13 +886,46 @@
    
            !-------------------------------------------------
            ! Compute colloid-colloid and colloid-wall
-           ! interactions.
+           ! interactions, return drag on the wall.
+           ! distinguish explict and implicit schems.
            !-------------------------------------------------
            
-           CALL colloid_compute_interaction(colloids,comm,&
-                MPI_PREC, coll_drag, coll_torque,&
-                wall_drag_c(1:num_dim,1:num_dim*2),&
-                stat_info_sub)
+           SELECT CASE ( integrate_colloid_type )
+              
+           CASE (-2)
+              
+              !CALL colloid_compute_interaction_implicit_pair(colloids,comm,&
+              !     MPI_PREC, dt_sub_time_step,coll_drag, coll_torque, &
+              !     wall_drag_c(1:num_dim,1:num_dim*2),stat_info_sub)
+              
+              !----------------------------------------------
+              ! As it is implicit scheme, 
+              ! nothing needs to be dong here,
+              ! the force/interaction will be done in 
+              ! marching_integrate routines.
+              !----------------------------------------------
+             
+           CASE (-1)
+              
+              CALL colloid_compute_interaction_implicit_all(colloids,comm,&
+                   MPI_PREC, dt_sub_time_step,coll_drag, coll_torque, &
+                   wall_drag_c(1:num_dim,1:num_dim*2),stat_info_sub)
+       
+           CASE (2)
+              
+              CALL colloid_compute_interaction(colloids,comm,&
+                   MPI_PREC,coll_drag, coll_torque, &
+                   wall_drag_c(1:num_dim,1:num_dim*2),&
+                   stat_info_sub)
+            
+           CASE DEFAULT
+              
+              PRINT *, __FILE__, __LINE__, &
+                   "No such integration scheme for colloids!"
+              stat_info_sub = -1
+              GOTO 9999
+              
+           END SELECT
            
            IF( stat_info_sub /=0 ) THEN
               PRINT *, "marching_relax: ",&

@@ -70,7 +70,8 @@
         LOGICAL                         :: stress_tensor_v
         LOGICAL                         :: stress_tensor_r     
         LOGICAL                         :: p_energy
-        
+        INTEGER                         :: integrate_colloid_type
+
         !----------------------------------------------------
         ! Physics parameters.(colloids)
      	!----------------------------------------------------
@@ -183,7 +184,9 @@
 #endif
         p_energy  = &
              control_get_p_energy(this%ctrl,stat_info_sub) 
-        
+        integrate_colloid_type = &
+             control_get_integrate_colloid_type(this%ctrl,stat_info_sub)
+      
         !----------------------------------------------------
         ! Physics parameters.
         !----------------------------------------------------
@@ -441,7 +444,6 @@
 
         IF ( num_colloid > 0 ) THEN           
            
-
            !-------------------------------------------------
            ! Sum up the force of solvent particles on 
            ! parts of colloids from local processor.
@@ -521,21 +523,148 @@
                  GOTO 9999
               END IF
               
+              IF ( integrate_colloid_type /= - 2 ) THEN
+                 
+                 !-------------------------------------------
+                 ! Integrate the positions of all colloids'
+                 ! centers using desired order.
+                 !-------------------------------------------
+              
+                 CALL colloid_integrate_position(colloids,&
+                      step-1+i-step_start,dt_sub_time_step,stat_info_sub)
+                 
+                 IF ( stat_info_sub /= 0 ) THEN
+                    PRINT *, "marching_integrate_VV: ", &
+                         "integrating colloids position failed!"
+                    stat_info = -1
+                    GOTO 9999
+                 END IF
+                 
+                 !-------------------------------------------
+                 ! Integrate velocity using desired 
+                 ! accuracy order.
+                 !-------------------------------------------
+                 
+                 CALL colloid_integrate_velocity(colloids,&
+                      step-1+i-step_start,dt_sub_time_step,stat_info_sub)
+                 
+                 IF ( stat_info_sub /= 0 ) THEN
+                    PRINT *, "marching_integrate_VV: ", &
+                         "integrating colloids velocity failed!"
+                    stat_info = -1
+                    GOTO 9999
+                 END IF
+                 
+              END IF ! integrate_colloid_type /= -2
+              
               !----------------------------------------------
-              ! Integrate the positions of all colloids'
-              ! centers using desired order.
+              ! Add up force/torque from colloid-colloid
+              ! and colloid-wall interactions.
+              ! distinguish explict and implicit schemes.
               !----------------------------------------------
               
-              CALL colloid_integrate_position(colloids,&
-                   step-1+i-step_start,dt_sub_time_step,stat_info_sub)
+              SELECT CASE ( integrate_colloid_type )
+                 
+              CASE (-2)
+                 
+                 CALL colloid_compute_interaction_implicit_pair(colloids,&
+                      comm,MPI_PREC, dt_sub_time_step, &
+                      coll_drag, coll_torque, &
+                      wall_drag_c(1:num_dim,1:num_dim*2),stat_info_sub)
+                 
+              CASE (-1)
+                 
+                 CALL colloid_compute_interaction_implicit_all(colloids,&
+                      comm,MPI_PREC, dt_sub_time_step, &
+                      coll_drag, coll_torque, &
+                      wall_drag_c(1:num_dim,1:num_dim*2),stat_info_sub)
+                 
+              CASE (2)
+                 
+                 CALL colloid_compute_interaction(colloids,comm, &
+                      MPI_PREC,coll_drag,coll_torque, &
+                      wall_drag_c(1:num_dim,1:num_dim*2),stat_info_sub)
+                 
+              CASE DEFAULT
+                 
+                 PRINT *, __FILE__, __LINE__, &
+                      "no such integration scheme for colloids!"
+                 stat_info_sub = -1
+                 GOTO 9999
+                 
+              END SELECT
               
-              IF ( stat_info_sub /= 0 ) THEN
-                 PRINT *, "marching_integrate_VV: ", &
-                      "Integrating colloids position failed!"
+              IF( stat_info_sub /=0 ) THEN
+                 
+                 PRINT *, "marching_integrate_VV: ",&
+                      "c-c or c-w interaction has problem!"
                  stat_info = -1
                  GOTO 9999
+                 
               END IF
+
               
+              IF ( integrate_colloid_type /= - 2 ) THEN
+                 
+                 !-------------------------------------------
+                 ! Apply body force on colloids.
+                 !-------------------------------------------
+                 
+                 CALL colloid_apply_body_force(colloids,stat_info_sub)
+              
+                 IF( stat_info_sub /=0 ) THEN
+                    PRINT *, "marching_integrate_VV: ", &
+                         "applying body force on colloids has problem!"
+                    stat_info = -1
+                    GOTO 9999
+                 END IF
+                 
+                 !-------------------------------------------
+                 ! Compute colloids accelerations, i.e.,
+                 ! translation and rotation.
+                 !-------------------------------------------
+                 
+                 CALL colloid_compute_acceleration(colloids,stat_info_sub)
+                 
+                 IF( stat_info_sub /=0 ) THEN
+                    PRINT *, "marching_integrate_VV: ",&
+                         "computing colloids accelerations has problem!"
+                    stat_info = -1
+                    GOTO 9999
+                 END IF
+                 
+                  !------------------------------------------
+                 ! In case colloids centers go out of physical
+                 ! boundary, adjust them according to boundary
+                 ! condition.
+                 !-------------------------------------------
+                 
+                 CALL colloid_adjust_colloid(colloids,stat_info_sub)
+                 
+                 IF (stat_info_sub /= 0 ) THEN
+                    PRINT *, "marching_integrate_VV: ", &
+                         "adjusting colloids r or v failed !"
+                    stat_info = -1
+                    GOTO 9999
+                 END IF
+                 
+                 !-------------------------------------------
+                 ! Compute new images(position and velocity)
+                 ! of colloids.
+                 !-------------------------------------------
+                 
+                 CALL colloid_compute_image(colloids,stat_info_sub)
+                 
+                 IF ( stat_info_sub /=0 ) THEN
+                    
+                    PRINT *, "marching_integrate_VV: ",&
+                         "colloid computing image failed!"
+                    stat_info = -1
+                    GOTO 9999
+                    
+                 END IF
+                 
+              END IF ! integrate_colloid_type /= -2
               
               !----------------------------------------------
               ! Compute colloid boundary particle's new
@@ -548,87 +677,15 @@
               
               IF ( stat_info_sub /= 0 ) THEN
                  PRINT *, "marching_integrate_VV: ", &
-                      "Computing boundary particles absolute position failed!"
-                 stat_info = -1
-                 GOTO 9999
-              END IF
-           
-              !-------------------------------------------------
-              ! Integrate velocity using desired accuracy order.
-              !-------------------------------------------------
-              
-              CALL colloid_integrate_velocity(colloids,&
-                   step-1+i-step_start,dt_sub_time_step,stat_info_sub)
-              
-              IF ( stat_info_sub /= 0 ) THEN
-                 PRINT *, "marching_integrate_VV: ", &
-                      "Integrating colloids velocity failed!"
-                 stat_info = -1
-                 GOTO 9999
-              END IF
-              
-              !----------------------------------------------
-              ! Add up force/torque from colloid-colloid and
-              ! colloid-wall interactions.
-              !----------------------------------------------
-              
-              CALL colloid_compute_interaction(colloids,comm, &
-                   MPI_PREC,coll_drag,coll_torque, &
-                   wall_drag_c(1:num_dim,1:num_dim*2),stat_info_sub)
-              
-              IF( stat_info_sub /=0 ) THEN
-                 PRINT *, "marching_integrate_VV: ",&
-                      "c-c or c-w interaction has problem!"
-                 stat_info = -1
-                 GOTO 9999
-              END IF
-              
-              !----------------------------------------------
-              ! Apply body force on colloids.
-              !----------------------------------------------
-              
-              CALL colloid_apply_body_force(colloids,stat_info_sub)
-              
-              IF( stat_info_sub /=0 ) THEN
-                 PRINT *, "marching_integrate_VV: ", &
-                      "Applying body force on colloids has problem!"
-                 stat_info = -1
-                 GOTO 9999
-              END IF
-              
-              !----------------------------------------------
-              ! Compute colloids accelerations, i.e.,
-              ! translation and rotation.
-              !----------------------------------------------
-           
-              CALL colloid_compute_acceleration(colloids,stat_info_sub)
-              
-              IF( stat_info_sub /=0 ) THEN
-                 PRINT *, "marching_integrate_VV: ",&
-                      "Computing colloids accelerations has problem!"
+                      "computing boundary particles absolute position failed!"
                  stat_info = -1
                  GOTO 9999
               END IF
               
            END DO ! i = 1, coll_sub_time_step
            
-           !-------------------------------------------------
-           ! In case colloids centers go out of physical
-           ! boundary, adjust them according to boundary
-           ! condition.
-           !-------------------------------------------------
-
-           CALL colloid_adjust_colloid(colloids,stat_info_sub)
-
-           IF (stat_info_sub /= 0 ) THEN
-              PRINT *, "marching_integrate_VV: ", &
-                   "Adjusting colloids r or v failed !"
-              stat_info = -1
-              GOTO 9999
-           END IF
-           
         END IF ! num_colloid > 0
-
+        
 #ifdef __DEBUG_INTEGRATE_VV
         IF ( debug_flag == 3 ) THEN
            debug_time1 = &
@@ -1386,108 +1443,6 @@
            END IF ! eigen-dynamics
            
         END IF ! non-Newtonian
-        
-#if 0        
-        !----------------------------------------------------
-        ! Since paire-wise interaction/force have been
-        ! calculated, sum up the force on colloids,
-        ! if colloids are present.
-        !----------------------------------------------------
-
-        
-        IF ( num_colloid > 0 ) THEN
-           
-           !-------------------------------------------------
-           ! Sum up force/torque exerted on parts of
-           ! colloids on this process.
-           !-------------------------------------------------
-           
-           CALL particles_collect_colloid_interaction(this%particles, &
-                coll_drag,coll_torque,stat_info_sub)
-           
-           IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_integrate_VV: ", &
-                   "Summing up interaction on colloid locally has problem !"
-              stat_info = -1
-              GOTO 9999
-           END IF
-           
-
-           !-------------------------------------------------
-           ! Sum up force/torque exerted on colloids
-           ! from all processes.
-           !-------------------------------------------------
-           
-           CALL colloid_collect_particles_interaction(colloids,&
-                comm,MPI_PREC,coll_drag,coll_torque,stat_info_sub)
-           
-           IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_integrate_VV: ",&
-                   "Summing up interaction on colloid globally has problem !"
-              stat_info = -1
-              GOTO 9999
-           END IF
-           
-           !-------------------------------------------------
-           ! Sum up force/torque exerted on colloids
-           ! from all processes.
-           !-------------------------------------------------
-      
-#ifdef __DEBUG_INTEGRATE_VV
-        IF ( debug_flag == 3 ) THEN
-           debug_time0 = &
-                debug_get_time(global_debug,stat_info_sub)
-        END IF
-#endif     
-           CALL colloid_compute_interaction(colloids,comm, &
-                MPI_PREC,wall_drag_c(1:num_dim,1:num_dim*2),&
-                stat_info_sub)
-           
-#ifdef __DEBUG_INTEGRATE_VV
-        IF ( debug_flag == 3 ) THEN
-           debug_time1 = &
-                debug_get_time(global_debug,stat_info_sub)
-           debug_index = debug_index + 1
-           debug_time_record(debug_index) = &
-                debug_time1 - debug_time0
-        END IF
-#endif   
-           IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_integrate_VV: ", &
-                   "Summing up interaction on colloid globally has problem !"
-              stat_info = -1
-              GOTO 9999
-           END IF
-           
-           !-------------------------------------------------
-           ! Apply body force on colloids.
-           !-------------------------------------------------
-        
-           CALL colloid_apply_body_force(colloids,stat_info_sub)
-           
-           IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_integrate_VV: ", &
-                   "Applying body force on colloids has problem !"
-              stat_info = -1
-              GOTO 9999
-           END IF
-           
-           !-------------------------------------------------
-           ! Compute colloids accelerations, i.e.,
-           ! translation and rotation.
-           !-------------------------------------------------
-           
-           CALL colloid_compute_acceleration(colloids,stat_info_sub)
-           
-           IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_integrate_VV: ",&
-                   "Computing colloids accelerations has problem !"
-              stat_info = -1
-              GOTO 9999
-           END IF
-           
-        END IF !  num_colloid > 0
-#endif
         
         !----------------------------------------------------
         ! If there is wall using symmetry, solid boundary

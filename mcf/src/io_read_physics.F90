@@ -103,8 +103,10 @@
         INTEGER                                 :: coll_integrate_type
         INTEGER                                 :: coll_integrate_RK
         INTEGER                                 :: coll_integrate_AB
+        INTEGER                                 :: coll_integrate_num
         REAL(MK)                                :: coll_adapt_t_coef
         INTEGER                                 :: coll_sub_time_step
+        INTEGER                                 :: coll_implicit_pair_num_sweep
         REAL(MK)                                :: coll_rho
         INTEGER                                 :: coll_rho_type
         LOGICAL                                 :: coll_translate
@@ -911,6 +913,7 @@
              
              coll_adapt_t_coef  = 1.0_MK
              coll_sub_time_step = 1
+             coll_implicit_pair_num_sweep = 1
              coll_rho       = 0.0_MK
              coll_rho_type  = 0
              coll_translate = .TRUE.
@@ -940,20 +943,38 @@
              ALLOCATE(coll_m(num_colloid))
              ALLOCATE(coll_mmi(3,num_colloid))
              ALLOCATE(coll_x(num_dim,num_colloid))
+             
              SELECT CASE(coll_integrate_type)
+                
+             CASE (-2)
+                
+                coll_integrate_num = 1
+                
+             CASE (-1)
+                
+                coll_integrate_num = 1
+                
              CASE (1)
-                ALLOCATE(coll_v(num_dim,num_colloid,coll_integrate_type))
+                
+                coll_integrate_num = 1
+
              CASE (2)
-                ALLOCATE(coll_v(num_dim,num_colloid,coll_integrate_AB))
+                
+                coll_integrate_num = coll_integrate_AB
+                
+             CASE DEFAULT 
+                
+                PRINT *, __FILE__, __LINE__, &
+                     "no such integration!"
+                stat_info = -1
+                GOTO 9999
+                
              END SELECT
+             
+             ALLOCATE(coll_v(num_dim,num_colloid,coll_integrate_num))
              ALLOCATE(coll_acc_vector(4,num_colloid))
              ALLOCATE(coll_theta(3,num_colloid))
-             SELECT CASE(coll_integrate_type)
-             CASE (1)
-                ALLOCATE(coll_omega(3,num_colloid,coll_integrate_type))
-             CASE (2)
-                ALLOCATE(coll_omega(3,num_colloid,coll_integrate_AB))
-             END SELECT
+             ALLOCATE(coll_omega(3,num_colloid,coll_integrate_num))
              
              coll_shape(:)     = 1
              coll_radius(:,:)  = 0.0_MK
@@ -998,7 +1019,18 @@
              ! colloids sub time step
              !-----------------------------------------------
              
-             READ(cvalue,*,IOSTAT=ios, ERR=200) coll_sub_time_step            
+             READ(cvalue,*,IOSTAT=ios, ERR=200) coll_sub_time_step
+
+          ELSE IF ( carg == 'COLL_IMPLICIT_PAIR_NUM_SWEEP'  .AND. &
+               num_species > 1 .AND. &
+               num_colloid > 0 ) THEN
+             
+             !-----------------------------------------------
+             ! colloids implicit pair number of sweeps
+             !-----------------------------------------------
+             
+             READ(cvalue,*,IOSTAT=ios, ERR=200) coll_implicit_pair_num_sweep
+       
              
           ELSE IF (carg == 'COLL_RHO') THEN
              
@@ -1435,7 +1467,9 @@
               CALL colloid_set_adapt_t_coef(colloids, &
                    coll_adapt_t_coef,stat_info_sub)
               CALL colloid_set_sub_time_step(colloids, &
-                   coll_sub_time_step,stat_info_sub)            
+                   coll_sub_time_step,stat_info_sub)
+              CALL colloid_set_implicit_pair_num_sweep(colloids, &
+                   coll_implicit_pair_num_sweep,stat_info_sub)         
               CALL colloid_set_rho(colloids, &
                    coll_rho,stat_info_sub)
               CALL colloid_set_rho_type(colloids, &
@@ -1489,7 +1523,7 @@
               CALL colloid_set_x(colloids,&
                    coll_x(1:num_dim,1:num_colloid),stat_info_sub)
               CALL colloid_set_v(colloids,&
-                   coll_v(1:num_dim,1:num_colloid,1:coll_integrate_type),&
+                   coll_v(1:num_dim,1:num_colloid,1:coll_integrate_num),&
                    stat_info_sub)
               
               !CALL colloid_set_rotation_vector(colloids,&
@@ -1500,7 +1534,7 @@
               CALL colloid_set_theta(colloids,&
                    coll_theta(1:3,1:num_colloid),stat_info_sub)           
               CALL colloid_set_omega(colloids,&
-                   coll_omega(1:3,1:num_colloid,1:coll_integrate_type),&
+                   coll_omega(1:3,1:num_colloid,1:coll_integrate_num),&
                    stat_info_sub)
               
               !----------------------------------------------

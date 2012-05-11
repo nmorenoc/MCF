@@ -47,8 +47,9 @@
         ! compiler complains that it is not used.
         !----------------------------------------------------
         
-        stat_info = this%flag
-        stat_info = 0
+        stat_info     = this%flag
+        stat_info     = 0
+        stat_info_sub = 0
         
         IF ( MK == ppm_kind_single ) THEN
            
@@ -62,6 +63,8 @@
 
         IF ( stat_info_sub /= 0 ) THEN
            
+           PRINT *, "N, LDA, LDB: ", N, LDA, LDB
+           PRINT *, "A, B:", A(:,:), B(:,:)
            PRINT *, __FILE__, __LINE__, "does not work!"
            stat_info = -1
            GOTO 9999

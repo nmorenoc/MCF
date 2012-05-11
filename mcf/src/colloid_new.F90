@@ -30,7 +30,8 @@
         
         INTEGER                         :: stat_info_sub
         INTEGER                         :: dim, num
-        
+        INTEGER                         :: integrate_num
+
         !----------------------------------------------------
         ! For default colloid, there is only one,
         ! i.e., 2D flow around cylinder problem.
@@ -53,6 +54,7 @@
         this%integrate_AB = 1
         this%adapt_t_coef   = 1.0_MK
         this%sub_time_step  = 1
+        this%implicit_pair_num_sweep = 1
         this%rho         = 1.e3_MK
         this%rho_type    = 0
         this%translate   = .FALSE.
@@ -108,14 +110,49 @@
         this%x(:,1) = 0.05_MK
         
         NULLIFY(this%v)
+        NULLIFY(this%omega)
+        NULLIFY(this%f)
+        NULLIFY(this%alpha)   
+        
         SELECT CASE (this%integrate_type)
+           
+        CASE (-2)
+           
+           integrate_num = 1
+       
+        CASE (-1)
+           
+           integrate_num = 1
+      
         CASE (1)
-           ALLOCATE(this%v(dim,num,this%integrate_RK))
+           
+           integrate_num = 1
+          
         CASE (2)
-           ALLOCATE(this%v(dim,num,this%integrate_AB))
+           
+           integrate_num = this%integrate_AB
+           
+        CASE DEFAULT
+           
+           PRINT *, __FILE__, __LINE__, &
+                "no such integration!"
+           stat_info = -1
+           GOTO 9999
+           
         END SELECT
+        
+        ALLOCATE(this%v(dim,num,integrate_num))
         this%v(:,:,:) = 0.0_MK
-
+        ALLOCATE(this%omega(3,num,integrate_num))
+        this%omega(:,:,:) = 0.0_MK
+        ALLOCATE(this%f(dim,num,integrate_num))
+        this%f(:,:,:) = 0.0_MK
+        
+        this%fa_min = 0.0_MK
+        this%fa_max = 0.0_MK
+        
+        ALLOCATE(this%alpha(3,num,integrate_num))
+        this%alpha(:,:,:) = 0.0_MK
         
 #if __DRAG_PART
         NULLIFY(this%drag_lub)
@@ -154,15 +191,7 @@
         ALLOCATE(this%theta(3,num))
         this%theta(:,:) = 0.0_MK
     
-        NULLIFY(this%omega)
-        SELECT CASE (this%integrate_type)
-        CASE (1)
-           ALLOCATE(this%omega(3,num,this%integrate_RK))
-        CASE (2)
-           ALLOCATE(this%omega(3,num,this%integrate_AB))
-        END SELECT
-        this%omega(:,:,:) = 0.0_MK
-        
+         
         NULLIFY(this%torque)
         ALLOCATE(this%torque(3,num))
         this%torque(:,:) = 0.0_MK
@@ -174,27 +203,6 @@
         NULLIFY(this%num_numerical_part)
         ALLOCATE(this%num_numerical_part(num))
         this%num_numerical_part(:)  = 0
-         
-        NULLIFY(this%f)
-        SELECT CASE (this%integrate_type)
-        CASE (1)
-           ALLOCATE(this%f(dim,num,this%integrate_RK))
-        CASE (2)
-           ALLOCATE(this%f(dim,num,this%integrate_AB))
-        END SELECT
-        this%f(:,:,:) = 0.0_MK
-        
-        this%fa_min = 0.0_MK
-        this%fa_max = 0.0_MK
-
-        NULLIFY(this%alpha)
-        SELECT CASE (this%integrate_type)
-        CASE (1)
-           ALLOCATE(this%alpha(3,num,this%integrate_RK))
-        CASE (2)
-           ALLOCATE(this%alpha(3,num,this%integrate_AB))
-        END SELECT
-        this%alpha(:,:,:) = 0.0_MK
         
         NULLIFY(this%k_energy)
         ALLOCATE(this%k_energy(num))
@@ -247,6 +255,8 @@
         
         CALL tool_new(this%tool,stat_info_sub)
         
+9999    CONTINUE
+        
         RETURN          
         
       END SUBROUTINE colloid_init_default
@@ -289,6 +299,7 @@
         INTEGER,INTENT(OUT)             :: stat_info
         
         INTEGER                         :: stat_info_sub
+        INTEGER                         :: integrate_num
 
         !----------------------------------------------------
         ! For non default colloid(s).
@@ -307,6 +318,7 @@
         
         this%adapt_t_coef   = 1.0_MK
         this%sub_time_step  = 1
+        this%implicit_pair_num_sweep = 1
         this%rho            = 1.e3_MK
         this%rho_type       = 0
         this%translate      = .FALSE.
@@ -367,15 +379,52 @@
         ALLOCATE(this%x(d_dim,d_num))
         this%x(:,:) = 0.0_MK
         
-        NULLIFY(this%v)
-        SELECT CASE (this%integrate_type)
-        CASE (1)
-           ALLOCATE(this%v(d_dim,d_num,d_integrate_RK))
-        CASE (2)
-           ALLOCATE(this%v(d_dim,d_num,d_integrate_AB))
-        END SELECT
-        this%v(:,:,:) = 0.0_MK
         
+        NULLIFY(this%v)
+        NULLIFY(this%omega)
+        NULLIFY(this%f)
+        NULLIFY(this%alpha)   
+        
+        SELECT CASE (this%integrate_type)
+           
+        CASE (-2)
+           
+           integrate_num = 1
+         
+        CASE (-1)
+           
+           integrate_num = 1
+           
+        CASE (1)
+           
+           integrate_num = 1
+           
+        CASE (2)
+           
+           integrate_num = this%integrate_AB
+           
+        CASE DEFAULT
+           
+           PRINT *, __FILE__, __LINE__, &
+                "no such integration!"
+           stat_info = -1
+           GOTO 9999
+           
+        END SELECT
+        
+        ALLOCATE(this%v(d_dim,d_num,integrate_num))
+        this%v(:,:,:) = 0.0_MK
+        ALLOCATE(this%omega(3,d_num,integrate_num))
+        this%omega(:,:,:) = 0.0_MK
+        ALLOCATE(this%f(d_dim,d_num,integrate_num))
+        this%f(:,:,:) = 0.0_MK
+        
+        this%fa_min = 0.0_MK
+        this%fa_max = 0.0_MK
+        
+        ALLOCATE(this%alpha(3,d_num,integrate_num))
+        this%alpha(:,:,:) = 0.0_MK
+
 #if __DRAG_PART
         NULLIFY(this%drag_lub)
         ALLOCATE(this%drag_lub(d_dim,d_num))
@@ -410,15 +459,6 @@
         ALLOCATE(this%theta(3,d_num))
         this%theta(:,:) = 0.0_MK
         
-        NULLIFY(this%omega)
-        SELECT CASE (this%integrate_type)
-        CASE (1)
-           ALLOCATE(this%omega(3,d_num,d_integrate_RK))
-        CASE (2)
-           ALLOCATE(this%omega(3,d_num,d_integrate_AB))
-        END SELECT
-        this%omega(:,:,:) = 0.0_MK
-        
         NULLIFY(this%torque)
         ALLOCATE(this%torque(3,d_num))
         this%torque(:,:) = 0.0_MK
@@ -435,28 +475,6 @@
         !----------------------------------------------------
         ! Derived quantities.                               
         !----------------------------------------------------
-        
-        NULLIFY(this%f)
-        ALLOCATE(this%f(d_dim,d_num,d_integrate_type))
-        SELECT CASE (this%integrate_type)
-        CASE (1)
-           ALLOCATE(this%f(d_dim,d_num,d_integrate_RK))
-        CASE (2)
-           ALLOCATE(this%f(d_dim,d_num,d_integrate_AB))
-        END SELECT
-        this%f(:,:,:) = 0.0_MK
-        
-        this%fa_min = 0.0_MK
-        this%fa_max = 0.0_MK
-        
-        NULLIFY(this%alpha)
-        SELECT CASE (this%integrate_type)
-        CASE (1)
-           ALLOCATE(this%alpha(3,d_num,d_integrate_RK))
-        CASE (2)
-           ALLOCATE(this%alpha(3,d_num,d_integrate_AB))
-        END SELECT
-        this%alpha(:,:,:) = 0.0_MK
         
         NULLIFY(this%k_energy)
         ALLOCATE(this%k_energy(d_num))
@@ -510,9 +528,11 @@
         this%num_image = 0
         NULLIFY(this%x_image)
         NULLIFY(this%v_image)
-
+        
         CALL tool_new(this%tool,stat_info_sub)
-                
+        
+9999    CONTINUE
+        
         RETURN          
         
       END SUBROUTINE colloid_init
@@ -560,6 +580,7 @@
         PRINT *, "integrate_AB       : ", this%integrate_AB
         PRINT *, "adapt_t_coef       : ", this%adapt_t_coef
         PRINT *, "sub_time_step      : ", this%sub_time_step
+        PRINT *, "implicit pair num sweep : ", this%implicit_pair_num_sweep
         PRINT *, "rho                : ", this%rho
         PRINT *, "rho type           : ", this%rho_type
         PRINT *, "translate          : ", this%translate

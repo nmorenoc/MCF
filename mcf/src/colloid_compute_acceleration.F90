@@ -55,7 +55,7 @@
         
         dim   = this%num_dim
         num   = this%num_colloid
-        itype = this%integrate_type
+        itype = this%integrate_AB
         
 #ifdef __COLLOID_NOACCE
         

@@ -82,6 +82,7 @@
         LOGICAL                         :: stress_tensor_r
         LOGICAL                         :: p_energy
         LOGICAL                         :: flow_v_fixed
+        INTEGER                         :: integrate_colloid_type
         INTEGER                         :: adaptive_dt
 
         !----------------------------------------------------
@@ -130,6 +131,8 @@
      	!----------------------------------------------------
         
         INTEGER                         :: num_colloid
+        INTEGER                         :: coll_sub_time_step
+        REAL(MK)                        :: dt_sub_time_step    
         TYPE(Colloid), POINTER          :: colloids
         REAL(MK), ALLOCATABLE, DIMENSION(:,:)   :: coll_drag
         REAL(MK), ALLOCATABLE, DIMENSION(:,:)   :: coll_torque
@@ -303,7 +306,8 @@
              control_get_flow_v_fixed(this%ctrl,stat_info_sub)
         adaptive_dt = &
              control_get_adaptive_dt(this%ctrl,stat_info_sub)
-         
+        integrate_colloid_type = &
+             control_get_integrate_colloid_type(this%ctrl,stat_info_sub)
         
         !----------------------------------------------------
         ! Physics parameters :
@@ -371,7 +375,10 @@
            
            CALL physics_get_colloid(this%phys,&
                 colloids,stat_info_sub)
-       
+           coll_sub_time_step = &
+                colloid_get_sub_time_step(colloids,stat_info_sub)
+           dt_sub_time_step   = dt / coll_sub_time_step
+     
            ALLOCATE(coll_drag(num_dim,num_colloid))
            ALLOCATE(coll_torque(3,num_colloid))
            
@@ -1004,18 +1011,67 @@
            END IF
            
            !-------------------------------------------------
-           ! Compute colloid-colloid and colloid-wall
-           ! interactions, return drag on the wall.
+           ! Compute images(position and velocity) of colloids.
            !-------------------------------------------------
            
-           CALL colloid_compute_interaction(colloids,comm,&
-                MPI_PREC,coll_drag, coll_torque, &
-                wall_drag_c(1:num_dim,1:num_dim*2),&
-                stat_info_sub)
+           CALL colloid_compute_image(colloids,stat_info_sub)
+           
+           IF ( stat_info_sub /=0 ) THEN
+              PRINT *, "marching_marching: ",&
+                   "colloid computing image failed!"
+              stat_info = -1
+              GOTO 9999
+           END IF
+           
+           
+
+           !-------------------------------------------------
+           ! Compute colloid-colloid and colloid-wall
+           ! interactions, return drag on the wall.
+           ! distinguish explict and implicit schems.
+           !-------------------------------------------------
+           
+           SELECT CASE ( integrate_colloid_type )
+              
+           CASE (-2)
+              
+              !CALL colloid_compute_interaction_implicit_pair(colloids,comm,&
+              !     MPI_PREC, dt_sub_time_step,coll_drag, coll_torque, &
+              !     wall_drag_c(1:num_dim,1:num_dim*2),stat_info_sub)
+              
+              
+              !----------------------------------------------
+              ! As it is implicit scheme, 
+              ! nothing needs to be dong here,
+              ! the force/interaction will be done in 
+              ! marching_integrate routines.
+              !----------------------------------------------
+              
+           CASE (-1)
+              
+              CALL colloid_compute_interaction_implicit_all(colloids,comm,&
+                   MPI_PREC, dt_sub_time_step,coll_drag, coll_torque, &
+                   wall_drag_c(1:num_dim,1:num_dim*2),stat_info_sub)
+         
+           CASE (2)
+              
+              CALL colloid_compute_interaction(colloids,comm,&
+                   MPI_PREC,coll_drag, coll_torque, &
+                   wall_drag_c(1:num_dim,1:num_dim*2),&
+                   stat_info_sub)
+            
+           CASE DEFAULT
+              
+              PRINT *, __FILE__, __LINE__, &
+                   "No such integration scheme for colloids!"
+              stat_info_sub = -1
+              GOTO 9999
+              
+           END SELECT
            
            IF( stat_info_sub /=0 ) THEN
               PRINT *, "marching_marching: ",&
-                   "c-c or c-w interaction has problem !"
+                   "c-c or c-w interaction has problem!"
               stat_info = -1
               GOTO 9999
            END IF
@@ -1028,7 +1084,7 @@
            
            IF ( stat_info_sub /=0 ) THEN
               PRINT *, "marching_marching: ",&
-                   "Applying body force on colloids has problem !"
+                   "applying body force on colloids has problem!"
               stat_info = -1
               GOTO 9999
            END IF
@@ -1042,7 +1098,7 @@
            
            IF ( stat_info_sub /=0 ) THEN
               PRINT *, "marching_marching: ",&
-                   "Computing colloids accelerations has problem !"
+                   "computing colloids accelerations has problem!"
               stat_info = -1
               GOTO 9999
            END IF
@@ -1056,7 +1112,7 @@
            coll_k = colloid_get_k_energy_tot(colloids,stat_info_sub)
            CALL colloid_get_mom_tot(colloids,coll_mom,stat_info_sub)
            
-        END If ! num_colloid > 0
+        END IF ! num_colloid > 0
         
         
         CALL statistic_compute_statistic(this%statis, &
@@ -1064,7 +1120,7 @@
         
         IF ( stat_info_sub /=0 ) THEN
            PRINT *, "marching_marching: ",&
-                "Computing statistics failed !"
+                "computing statistics failed!"
            stat_info = -1
            GOTO 9999
         END IF
@@ -1080,7 +1136,7 @@
            
            IF( stat_info_sub /=0 ) THEN              
               PRINT *, "marching_marching: ",&
-                   "Adjusting flow velocity failed!"
+                   "adjusting flow velocity failed!"
               stat_info = -1
               GOTO 9999
            END IF
@@ -1094,7 +1150,7 @@
            
            IF( stat_info_sub /=0 ) THEN              
               PRINT *, "marching_marching: ",&
-                   "Computing average flow velocity failed!"
+                   "computing average flow velocity failed!"
               stat_info = -1
               GOTO 9999
            END IF
@@ -1128,7 +1184,7 @@
            
            IF ( stat_info_sub /=0 ) THEN
               PRINT *, "marching_marching: ",&
-                   "Summing up interaction on boundary locally has problem !"
+                   "summing up interaction on boundary locally has problem!"
               stat_info = -1
               GOTO 9999
            END IF
@@ -1149,7 +1205,7 @@
            
            IF ( stat_info_sub /=0 ) THEN
               PRINT *, "marching_marching: ",&
-                   "Summing up particles contribution on boundary has problem !"
+                   "summing up particles contribution on boundary has problem!"
               stat_info = -1
               GOTO 9999
            END IF
@@ -1159,7 +1215,7 @@
            
            IF( stat_info_sub /=0 ) THEN
               PRINT *, "marching_marching: ",&
-                   "Summing up colloids contribution on boundary has problem !"
+                   "summing up colloids contribution on boundary has problem!"
               stat_info = -1
               GOTO 9999
            END IF
@@ -1174,7 +1230,7 @@
            
            IF ( stat_info_sub /=0 ) THEN
               PRINT *, "marching_marching: ",&
-                   "Resetting boundary particles interaction failed !"
+                   "resetting boundary particles interaction failed!"
               stat_info = -1
               GOTO 9999
            END IF
@@ -1184,7 +1240,7 @@
            
            IF ( stat_info_sub /=0 ) THEN
               PRINT *, "marching_marching: ",&
-                   "Resetting boundary ghost particles interaction failed !"
+                   "resetting boundary ghost particles interaction failed!"
               stat_info = -1
               GOTO 9999
            END IF
@@ -1203,7 +1259,7 @@
            
            IF ( stat_info_sub /=0 ) THEN
               PRINT *, "marching_marching: ",&
-                   "Opening (s,b) files failed !"
+                   "opening (s,b) files failed !"
               stat_info = -1
               GOTO 9999
            END IF
@@ -1227,7 +1283,7 @@
         
         IF ( stat_info_sub /=0 ) THEN
            PRINT *, "marching_marching: ",&
-                "Initial writing failed !"
+                "initial writing failed!"
            stat_info = -1
            GOTO 9999
         END IF
@@ -1247,7 +1303,7 @@
            
            IF ( stat_info_sub /= 0 ) THEN
               PRINT *, "marching_marching: ", &
-                   "debug_open_time has problem ! "
+                   "debug_open_time has problem! "
               stat_info_sub = -1
               GOTO 9999
            END IF
@@ -1345,11 +1401,12 @@
            
            IF ( stat_info_sub /=0 ) THEN
               PRINT *, "marching_marching: ",&
-                   "Integrating failed!"
+                   "integrating failed!"
               stat_info = -1
               GOTO 9999
            END IF
-           
+         
+#if 0  
            !-------------------------------------------------
            ! Compute new images(position and velocity)
            ! of colloids.
@@ -1367,20 +1424,8 @@
               END IF
               
            END IF
+#endif
            
-#if 0
-           !-------------------------------------------------
-           ! Update current step and time.
-           !-------------------------------------------------
-           
-           step_current = step_current + 1
-           time_current = time_current + dt
-           
-           CALL physics_set_step_current(this%phys,step_current,&
-                stat_info_sub)
-           CALL physics_set_time_current(this%phys,time_current,&
-                stat_info_sub)
-#endif     
            !-------------------------------------------------
            ! Check what we need to write at this time step.
            !-------------------------------------------------
@@ -1392,7 +1437,7 @@
            
            IF (stat_info_sub /=0 ) THEN
               PRINT *,"marching_marching: ",&
-                   "Checking writing conditions failed!"              
+                   "checking writing conditions failed!"
               stat_info = -1
               GOTO 9999
            END IF
@@ -1424,7 +1469,7 @@
               
               IF (stat_info_sub /=0 ) THEN
                  PRINT *, "marching_marching: ", &
-                      "Computing statistics failed !"
+                      "computing statistics failed!"
                  stat_info = -1
                  GOTO 9999
               END IF
@@ -1436,7 +1481,7 @@
               
               IF( stat_info_sub /=0 ) THEN              
                  PRINT *, "marching_marching: ",&
-                      "Computing average flow velocity failed!"
+                      "computing average flow velocity failed!"
                  stat_info = -1
                  GOTO 9999
               END IF
@@ -1472,7 +1517,7 @@
               
               IF( stat_info_sub /=0 ) THEN
                  PRINT *, "marching_marching: ",&
-                      "Adjusting flow velocity failed !"
+                      "adjusting flow velocity failed!"
                  stat_info = -1
                  GOTO 9999
               END IF
@@ -1516,7 +1561,7 @@
            
            IF ( stat_info_sub /= 0 ) THEN
               PRINT *, "marching_marching: ", &
-                   "debug_close_time has problem ! "
+                   "debug_close_time has problem!"
               stat_info_sub = -1
               GOTO 9999
            END IF
@@ -1608,7 +1653,7 @@
         
         IF ( stat_info_sub /=0 ) THEN              
            PRINT *, "marching_marching: ",&
-                "Final writing failed !"
+                "final writing failed!"
            stat_info = -1
            GOTO 9999
         END IF
@@ -1624,7 +1669,7 @@
 
         IF ( stat_info_sub /=0 ) THEN
            PRINT *,"marching_marching: ",&
-                "Closing (s,b,c) files failed !"
+                "closing (s,b,c) files failed!"
            stat_info = -1           
         END IF
         
