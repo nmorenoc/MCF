@@ -27,7 +27,11 @@
         !                
         !              
         !
-        ! Remarks     : V0.3 6.3.2012, change the second
+        ! Remarks     : V0.4 18.5.2012, shift 2nd type
+        !               repulsive force down to have a zero
+        !               value at 5*cut off, i.e., 5*hn.
+        !
+        !               V0.3 6.3.2012, change the second
         !               repulive force,assuming radius
         !               of colloid is universally one.
         !             
@@ -144,7 +148,15 @@
                  
               END IF
               
-              F = F0 / hn * EXP(-h/hn) /(1.0_MK-EXP(-h/hn))
+              F = F0 / hn * EXP(-h/hn) /(1.0_MK-EXP(-h/hn)) - &
+                   F0 / hn * EXP(-5.0_MK) /(1.0_MK-EXP(-5.0_MK))
+              
+           CASE DEFAULT
+              
+              PRINT *, __FILE__, __LINE__, &
+                   "no such repulsive force!"
+              stat_info = -1
+              GOTO 9999
               
            END SELECT
            
@@ -152,6 +164,8 @@
            F_ij(1:dim) = F * R12(1:dim)
            
         END IF ! h < 5*hn
+        
+9999    CONTINUE
         
         RETURN          
         

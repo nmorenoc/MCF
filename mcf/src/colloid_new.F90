@@ -55,6 +55,7 @@
         this%adapt_t_coef   = 1.0_MK
         this%sub_time_step  = 1
         this%implicit_pair_num_sweep = 1
+        this%explicit_sub_time_step = 1
         this%rho         = 1.e3_MK
         this%rho_type    = 0
         this%translate   = .FALSE.
@@ -319,6 +320,7 @@
         this%adapt_t_coef   = 1.0_MK
         this%sub_time_step  = 1
         this%implicit_pair_num_sweep = 1
+        this%explicit_sub_time_step = 1
         this%rho            = 1.e3_MK
         this%rho_type       = 0
         this%translate      = .FALSE.
@@ -581,6 +583,7 @@
         PRINT *, "adapt_t_coef       : ", this%adapt_t_coef
         PRINT *, "sub_time_step      : ", this%sub_time_step
         PRINT *, "implicit pair num sweep : ", this%implicit_pair_num_sweep
+        PRINT *, "explicit_sub_time_step  : ", this%explicit_sub_time_step
         PRINT *, "rho                : ", this%rho
         PRINT *, "rho type           : ", this%rho_type
         PRINT *, "translate          : ", this%translate

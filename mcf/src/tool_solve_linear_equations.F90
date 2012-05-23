@@ -51,13 +51,18 @@
         stat_info     = 0
         stat_info_sub = 0
         
+        stat_info = -1
+        PRINT *, __FILE__,__LINE__,&
+             "Lapack is not linked!"
+        GOTO 9999
+        
         IF ( MK == ppm_kind_single ) THEN
            
-           CALL SGESV(N,NRHS,A,LDA,IPIV,B,LDB,stat_info_sub)
+           !CALL SGESV(N,NRHS,A,LDA,IPIV,B,LDB,stat_info_sub)
            
         ELSE IF ( MK == ppm_kind_double ) THEN
            
-           CALL DGESV(N,NRHS,A,LDA,IPIV,B,LDB,stat_info_sub)
+           !CALL DGESV(N,NRHS,A,LDA,IPIV,B,LDB,stat_info_sub)
            
         END IF
 

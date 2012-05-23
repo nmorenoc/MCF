@@ -26,7 +26,11 @@
         !                  J. Rheol. 46(5), 1031-1056, 2002.
         !              
         !
-        ! Remarks     : V0.3 6.3.2012, change the second
+        ! Remarks     : V0.4 18.5.2012, shift second type
+        !               repulsive force down to have a zero
+        !               value at 5*cut off, i.e., 5*hn.
+        !
+        !               V0.3 6.3.2012, change the second
         !               repulsive force, assuming radius
         !               of colloid is universally one.
         !
@@ -182,7 +186,16 @@
                        
                     END IF
                     
-                    Ft = F0 /hn * EXP(-h1/hn) /(1.0_MK-EXP(-h1/hn))
+                    Ft = &
+                         F0 /hn * EXP(-h1/hn) /(1.0_MK-EXP(-h1/hn)) - &
+                         F0 / hn * EXP(-5.0_MK) /(1.0_MK-EXP(-5.0_MK))
+                    
+                 CASE DEFAULT
+                    
+                    PRINT *, __FILE__, __LINE__, &
+                         "no such repulsive force!"
+                    stat_info = -1
+                    GOTO 9999
                     
                  END SELECT ! cw_repul_type
                  
@@ -243,7 +256,16 @@
                        
                     END IF
                     
-                    Ft = F0 / hn * EXP(-h2/hn) /(1.0_MK-EXP(-h2/hn))
+                    Ft = &
+                         F0 / hn * EXP(-h2/hn) /(1.0_MK-EXP(-h2/hn)) - &
+                         F0 / hn * EXP(-5.0_MK) /(1.0_MK-EXP(-5.0_MK))
+                    
+                 CASE DEFAULT
+                    
+                    PRINT *, __FILE__, __LINE__, &
+                         "no such repulsive force!"
+                    stat_info = -1
+                    GOTO 9999
                     
                  END SELECT
                  

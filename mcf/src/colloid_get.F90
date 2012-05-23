@@ -84,6 +84,22 @@
       END FUNCTION colloid_get_implicit_pair_num_sweep
       
       
+      INTEGER FUNCTION colloid_get_explicit_sub_time_step(this, stat_info)
+        !----------------------------------------------------
+        ! Return the number of explicit sub-time step
+        !----------------------------------------------------
+
+        TYPE(Colloid), INTENT(IN)       :: this
+        INTEGER, INTENT(OUT)            :: stat_info
+        
+        stat_info = 0
+        colloid_get_explicit_sub_time_step = this%sub_time_step
+        
+        RETURN
+        
+      END FUNCTION colloid_get_explicit_sub_time_step
+
+
       REAL(MK) FUNCTION colloid_get_adapt_t_coef(this, stat_info)
         !----------------------------------------------------
         ! Return the coefficient of adaptive t.

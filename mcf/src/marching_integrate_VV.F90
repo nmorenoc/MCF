@@ -567,22 +567,22 @@
                  
               CASE (-2)
                  
-                 CALL colloid_compute_interaction_implicit_pair(colloids,&
-                      comm,MPI_PREC, dt_sub_time_step, &
+                 CALL colloid_compute_interaction_implicit_velocity_pair(colloids,&
+                      comm, MPI_PREC, dt_sub_time_step, &
                       coll_drag, coll_torque, &
                       wall_drag_c(1:num_dim,1:num_dim*2),stat_info_sub)
                  
               CASE (-1)
                  
                  CALL colloid_compute_interaction_implicit_all(colloids,&
-                      comm,MPI_PREC, dt_sub_time_step, &
+                      comm, MPI_PREC, dt_sub_time_step, &
                       coll_drag, coll_torque, &
                       wall_drag_c(1:num_dim,1:num_dim*2),stat_info_sub)
                  
               CASE (2)
                  
-                 CALL colloid_compute_interaction(colloids,comm, &
-                      MPI_PREC,coll_drag,coll_torque, &
+                 CALL colloid_compute_interaction(colloids, comm, &
+                      MPI_PREC, coll_drag,coll_torque, &
                       wall_drag_c(1:num_dim,1:num_dim*2),stat_info_sub)
                  
               CASE DEFAULT
@@ -602,7 +602,7 @@
                  GOTO 9999
                  
               END IF
-
+              
               
               IF ( integrate_colloid_type /= - 2 ) THEN
                  
@@ -1548,22 +1548,6 @@
            GOTO 9999
         END IF
         
-#if 0        
-        !----------------------------------------------------
-        ! Adjust real particles' r/v after motion,
-        ! according to boundary conditions,
-	! in case they go out of the physical domain.
-	!----------------------------------------------------
-        CALL particles_adjust_particles(this%particles,&
-             num_part_real,stat_info_sub)
-        
-        IF( stat_info_sub /= 0 ) THEN
-           PRINT *, "marching_integrate_VV: ", &
-                "Adjusting r or v failed ! "
-           stat_info = -1
-           GOTO 9999
-        END IF      
-#endif    
         
         !----------------------------------------------------
         ! Check if potential energy is needed.

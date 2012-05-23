@@ -32,7 +32,12 @@
         ! to stop colloid's surface away from wall not
         ! its center.
         !
-        ! Revision    : V0.2 26.11.2009, including
+        ! Revision    : V0.3 22.05.2012, check how far
+        !               of a colloid is out of box for
+        !               periodic and solid wall boundary
+        !               conditions.
+        !               
+        !               V0.2 26.11.2009, including
         !               Lees-Edwards boundaries.
         !
         !               V0.1 15.07.2009, original version
@@ -62,7 +67,9 @@
         REAL(MK), DIMENSION(:), POINTER :: length
         REAL(MK),DIMENSION(:,:),POINTER :: shear_length
         REAL(MK),DIMENSION(:,:),POINTER :: shear_v
-        INTEGER                         :: i,j,k
+        INTEGER                         :: i,j,k,m
+        INTEGER                         :: num_over
+        REAL(MK)                        :: cross_over
         
         
         !----------------------------------------------------
@@ -119,8 +126,26 @@
                     ! Reinsert it back from the other side.
                     !----------------------------------------
                     
-                    this%x(i,j) = this%x(i,j) + &
+                    cross_over = &
+                         ( this%max_phys(i) - this%x(i,j) )/ &
                          length(i)
+                    
+                    num_over = INT(cross_over)
+                    
+                    this%x(i,j) = this%x(i,j) + length(i) * num_over
+                    
+                    !----------------------------------------
+                    ! After one adjustment, if it is still 
+                    ! outside of computational box, warning!
+                    !----------------------------------------
+                    
+                    IF ( cross_over > 2.0_MK ) THEN
+                       
+                       PRINT *, __FILE__, __LINE__, & 
+                            ": colloid", j, "crosses", &
+                            cross_over, "times periodic box minimum!"
+                       
+                    END IF
                     
                  CASE ( ppm_param_bcdef_symmetry )
                     
@@ -148,9 +173,20 @@
                     ! Freeze its center locally.
                     !----------------------------------------
                     
-                    this%x(i,j) = this%min_phys(i)
+                    cross_over = & 
+                         ( this%max_phys(i) - this%x(i,j) ) / &
+                         length(i)
+                    
+                    num_over = INT(cross_over)
+                    
+                    this%x(i,j) = &
+                         this%min_phys(i) + this%radius(1,j)
                     
                     this%v(i,j,1) = 0.0_MK
+                    
+                    PRINT *, __FILE__,__LINE__, &
+                         ": colloid", j, "penetrates lower wall", &
+                         cross_over, "box length!"
                     
                  CASE ( ppm_param_bcdef_LE ) 
                     
@@ -193,8 +229,26 @@
                     ! Reinsert it back from the other side.
                     !----------------------------------------
                     
-                    this%x(i,j) = this%x(i,j) - &
+                    cross_over = &
+                         ( this%x(i,j) - this%min_phys(i) ) / &
                          length(i)
+                    
+                    num_over = INT(cross_over)
+                    
+                    this%x(i,j) = this%x(i,j) - length(i) * num_over
+                
+                    !----------------------------------------
+                    ! After one adjustment, if it is still 
+                    ! outside of computational box, warning!
+                    !----------------------------------------
+                    
+                    IF ( cross_over > 2.0_MK ) THEN
+                       
+                       PRINT *, __FILE__, __LINE__, &
+                            ": colloid", j, "crosses", &
+                            cross_over, "times periodic box maximum!"
+                       
+                    END IF
                     
                  CASE ( ppm_param_bcdef_symmetry )
                     
@@ -224,10 +278,21 @@
                     ! Freeze its center locally.
                     !----------------------------------------
                     
+                    cross_over = &
+                         ( this%x(i,j) - this%min_phys(i) )/ &
+                         length(i)
+                    
+                    num_over = INT(cross_over)
+                    
                     this%x(i,j) = &
-                         this%max_phys(i) - mcf_machine_zero
+                         this%max_phys(i) - this%radius(1,j)- &
+                         mcf_machine_zero
                     
                     this%v(i,j,1) = 0.0_MK
+
+                    PRINT *, __FILE__,__LINE__, &
+                         ": colloid", j, "penetrates upper wall", &
+                         cross_over, "box length!"
                     
                  CASE ( ppm_param_bcdef_LE ) 
                     

@@ -96,9 +96,9 @@
            !-------------------------------------------------
            ! Writting freq is based on simulation step.
            !-------------------------------------------------
-
-        CASE (1)
            
+        CASE (1)
+
            IF(MOD(step,this%output_particles_freq_step) == 0 ) THEN
               this%write_particles = .TRUE.
            ELSE
@@ -132,11 +132,19 @@
               this%write_boundary = .FALSE.
            END IF
            
-           
+#if 0
+           IF ( step > 5000 ) THEN
+              
+              this%write_particles = .TRUE.
+              this%write_colloid = .TRUE.
+
+           END IF
+#endif
+      
            !-------------------------------------------------
            ! Writting freq is based on simulation time.
            !-------------------------------------------------
-
+           
         CASE (2)
            
            IF( time >= this%output_particles_freq_time * &
@@ -257,6 +265,11 @@
            END IF
            
         CASE (3)
+
+           PRINT *, __FILE__,__LINE__, &
+                "write_restart type not available!"
+           stat_info = -1
+           GOTO 9999
            
         END SELECT ! write_restart
          
@@ -293,6 +306,10 @@
         IF (PRESENT(write_restart_conformation) ) THEN
            write_restart_conformation = this%write_restart_conformation
         END IF
+        
+9999    CONTINUE
+        
+        RETURN
         
       END SUBROUTINE io_write_condition_check
       

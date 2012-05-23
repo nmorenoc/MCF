@@ -1035,8 +1035,8 @@
               
            CASE (-2)
               
-              !CALL colloid_compute_interaction_implicit_pair(colloids,comm,&
-              !     MPI_PREC, dt_sub_time_step,coll_drag, coll_torque, &
+              !CALL colloid_compute_interaction_implicit_velocity_pair(colloids,&
+              !comm,MPI_PREC, dt_sub_time_step,coll_drag, coll_torque, &
               !     wall_drag_c(1:num_dim,1:num_dim*2),stat_info_sub)
               
               

@@ -107,6 +107,7 @@
         REAL(MK)                                :: coll_adapt_t_coef
         INTEGER                                 :: coll_sub_time_step
         INTEGER                                 :: coll_implicit_pair_num_sweep
+        INTEGER                                 :: coll_explicit_sub_time_step
         REAL(MK)                                :: coll_rho
         INTEGER                                 :: coll_rho_type
         LOGICAL                                 :: coll_translate
@@ -914,6 +915,7 @@
              coll_adapt_t_coef  = 1.0_MK
              coll_sub_time_step = 1
              coll_implicit_pair_num_sweep = 1
+             coll_explicit_sub_time_step = 1
              coll_rho       = 0.0_MK
              coll_rho_type  = 0
              coll_translate = .TRUE.
@@ -1031,6 +1033,15 @@
              
              READ(cvalue,*,IOSTAT=ios, ERR=200) coll_implicit_pair_num_sweep
        
+          ELSE IF ( carg == 'COLL_EXPLICIT_SUB_TIME_STEP'  .AND. &
+               num_species > 1 .AND. &
+               num_colloid > 0 ) THEN
+             
+             !-----------------------------------------------
+             ! colloids explicit sub time step
+             !-----------------------------------------------
+             
+             READ(cvalue,*,IOSTAT=ios, ERR=200) coll_explicit_sub_time_step
              
           ELSE IF (carg == 'COLL_RHO') THEN
              
@@ -1469,7 +1480,9 @@
               CALL colloid_set_sub_time_step(colloids, &
                    coll_sub_time_step,stat_info_sub)
               CALL colloid_set_implicit_pair_num_sweep(colloids, &
-                   coll_implicit_pair_num_sweep,stat_info_sub)         
+                   coll_implicit_pair_num_sweep,stat_info_sub)
+              CALL colloid_set_explicit_sub_time_step(colloids, &
+                   coll_explicit_sub_time_step,stat_info_sub)
               CALL colloid_set_rho(colloids, &
                    coll_rho,stat_info_sub)
               CALL colloid_set_rho_type(colloids, &

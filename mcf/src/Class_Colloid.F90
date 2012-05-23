@@ -102,6 +102,7 @@
            REAL(MK)                           :: adapt_t_coef
            INTEGER                            :: sub_time_step
            INTEGER                            :: implicit_pair_num_sweep
+           INTEGER                            :: explicit_sub_time_step
            REAL(MK)                           :: rho
            INTEGER                            :: rho_type
            LOGICAL                            :: translate
@@ -308,7 +309,7 @@
 #include "colloid_compute_repulsion_cc.F90"
 #include "colloid_compute_repulsion_cw.F90"
 #include "colloid_compute_interaction_implicit_all.F90"
-#include "colloid_compute_interaction_implicit_pair.F90"
+#include "colloid_compute_interaction_implicit_velocity_pair.F90"
 #include "colloid_compute_acceleration.F90"
 #include "colloid_apply_body_force.F90"
 #include "colloid_integrate_position.F90"

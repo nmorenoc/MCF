@@ -452,6 +452,30 @@
       END SUBROUTINE colloid_set_implicit_pair_num_sweep
       
       
+      SUBROUTINE colloid_set_explicit_sub_time_step(this,d_step,stat_info)
+        !-----------------------------------------
+        ! Set the sub-time step of explicit force
+        !-----------------------------------------
+        
+        TYPE(Colloid), INTENT(INOUT)    :: this
+        INTEGER, INTENT(IN)             :: d_step
+        INTEGER, INTENT(OUT)            :: stat_info
+
+        stat_info = 0
+
+        IF ( d_step < 1  ) THEN
+           PRINT *, "colloid_set_explicit_sub_time_step: ", &
+                "Wrong sub-time step!"
+           stat_info = -1
+        END IF
+        
+        this%explicit_sub_time_step = d_step
+        
+        RETURN
+        
+      END SUBROUTINE colloid_set_explicit_sub_time_step
+
+      
       SUBROUTINE colloid_set_rho(this,d_rho,stat_info)
         !-----------------------------------------
         ! Set the colloid density.
