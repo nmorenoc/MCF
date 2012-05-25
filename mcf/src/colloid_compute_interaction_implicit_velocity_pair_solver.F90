@@ -1,7 +1,8 @@
-      SUBROUTINE colloid_compute_interaction_implicit_pair_solver(this,&
+      SUBROUTINE colloid_compute_interaction_implicit_velocity_pair_solver(this,&
            comm,MPI_PREC,dt,drag,torque,FB,stat_info)
         !----------------------------------------------------
-        ! Subroutine  : colloid_compute_interaction_implicit_pair
+        ! Subroutine  : colloid_compute_interaction_implicit_
+        !               velocity_pair_solver
         !----------------------------------------------------
         !
         ! Purpose     : Update velocties using implicit
@@ -723,7 +724,7 @@
         
         RETURN          
         
-      END SUBROUTINE colloid_compute_interaction_implicit_pair_solver
+      END SUBROUTINE colloid_compute_interaction_implicit_velocity_pair_solver
       
       
       

@@ -107,6 +107,9 @@
         REAL(MK)                                :: coll_adapt_t_coef
         INTEGER                                 :: coll_sub_time_step
         INTEGER                                 :: coll_implicit_pair_num_sweep
+        LOGICAL                                 :: coll_implicit_pair_sweep_adaptive
+        REAL(MK)                                :: coll_implicit_pair_sweep_tolerance
+
         INTEGER                                 :: coll_explicit_sub_time_step
         REAL(MK)                                :: coll_rho
         INTEGER                                 :: coll_rho_type
@@ -914,7 +917,9 @@
              
              coll_adapt_t_coef  = 1.0_MK
              coll_sub_time_step = 1
-             coll_implicit_pair_num_sweep = 1
+             coll_implicit_pair_num_sweep       = 1
+             coll_implicit_pair_sweep_adaptive  = .FALSE.
+             coll_implicit_pair_sweep_tolerance = 1.0e-3_MK
              coll_explicit_sub_time_step = 1
              coll_rho       = 0.0_MK
              coll_rho_type  = 0
@@ -1033,6 +1038,26 @@
              
              READ(cvalue,*,IOSTAT=ios, ERR=200) coll_implicit_pair_num_sweep
        
+          ELSE IF (carg =='COLL_IMPLICIT_PAIR_SWEEP_ADAPTIVE' .AND. &
+               num_species > 1 .AND. &
+               num_colloid > 0 ) THEN
+             
+             !-----------------------------------------------
+             ! colloids implicit sweeps is adaptive
+             !-----------------------------------------------
+             
+             READ(cvalue,'(L)',IOSTAT=ios,ERR=200) coll_implicit_pair_sweep_adaptive
+             
+          ELSE IF ( carg == 'COLL_IMPLICIT_PAIR_SWEEP_TOLERANCE'  .AND. &
+               num_species > 1 .AND. &
+               num_colloid > 0 ) THEN
+             
+             !-----------------------------------------------
+             ! colloids implicit tolerance of sweeps
+             !-----------------------------------------------
+             
+             READ(cvalue,*,IOSTAT=ios, ERR=200) coll_implicit_pair_sweep_tolerance
+       
           ELSE IF ( carg == 'COLL_EXPLICIT_SUB_TIME_STEP'  .AND. &
                num_species > 1 .AND. &
                num_colloid > 0 ) THEN
@@ -1043,7 +1068,9 @@
              
              READ(cvalue,*,IOSTAT=ios, ERR=200) coll_explicit_sub_time_step
              
-          ELSE IF (carg == 'COLL_RHO') THEN
+          ELSE IF (carg == 'COLL_RHO' .AND. &
+               num_species > 1 .AND. &
+               num_colloid > 0 ) THEN
              
              !-----------------------------------------------
              ! colloids mass density
@@ -1481,6 +1508,10 @@
                    coll_sub_time_step,stat_info_sub)
               CALL colloid_set_implicit_pair_num_sweep(colloids, &
                    coll_implicit_pair_num_sweep,stat_info_sub)
+              CALL colloid_set_implicit_pair_sweep_adaptive(colloids, &
+                   coll_implicit_pair_sweep_adaptive,stat_info_sub)
+              CALL colloid_set_implicit_pair_sweep_tolerance(colloids, &
+                   coll_implicit_pair_sweep_tolerance,stat_info_sub)          
               CALL colloid_set_explicit_sub_time_step(colloids, &
                    coll_explicit_sub_time_step,stat_info_sub)
               CALL colloid_set_rho(colloids, &

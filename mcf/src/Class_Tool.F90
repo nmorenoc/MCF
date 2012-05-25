@@ -42,5 +42,8 @@
 #include "tool_rotation_matrix.F90"
 #include "tool_rotation_vector.F90"
 #include "tool_solve_linear_equations.F90"
-        
+#include "tool_L1_norm.F90"
+#include "tool_L2_norm.F90"
+#include "tool_Linfty_norm.F90"
+
       END MODULE Class_Tool

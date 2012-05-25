@@ -1,7 +1,7 @@
-      SUBROUTINE colloid_integrate_velocity(this,&
+      SUBROUTINE colloid_integrate_translate_velocity(this,&
            step,dt,stat_info)
         !----------------------------------------------------
-        ! Subroutine  : colloid_integrate_velocity
+        ! Subroutine  : colloid_integrate_translate_velocity
         !----------------------------------------------------
         !
         ! Purpose     : Integrate translation velocity of 
@@ -141,80 +141,9 @@
            
         END IF ! translate
         
-        
-        IF ( this%rotate ) THEN
-           
-           !-------------------------------------------------
-           ! Save the rotational velocity at previous 
-           ! time steps.
-           !-------------------------------------------------
-           
-           i = itype
-           
-           DO WHILE ( i >=  2 )
-              
-              this%omega(:,:,i)  =  this%omega(:,:,i-1)
-           
-              i = i -1
-              
-           END DO
-           
-           SELECT CASE (order)
-              
-           CASE (1)
-              
-              this%omega(:,:,1) = &
-                   this%omega(:,:,1) + this%alpha(:,:,1) * dt
-              
-           CASE (2)
-              
-              this%omega(:,:,1) = &
-                   this%omega(:,:,1) + &
-                   ( 3.0_MK * this%alpha(:,:,1) - &
-                   this%alpha(:,:,2) ) * dt / 2.0_MK
-              
-           CASE (3)
-              
-              this%omega(:,:,1) = &
-                   this%omega(:,:,1) + &
-                   ( 23.0_MK * this%alpha(:,:,1) - &
-                   16.0_MK * this%alpha(:,:,2) + &
-                   5.0_MK * this%alpha(:,:,3) ) * dt / 12.0_MK
-              
-           CASE (4)
-              
-              this%omega(:,:,1) = &
-                   this%omega(:,:,1) + &
-                   ( 55.0_MK * this%alpha(:,:,1) - &
-                   59.0_MK * this%alpha(:,:,2) + &
-                   37.0_MK * this%alpha(:,:,3) - &
-                   9.0_MK * this%alpha(:,:,4) ) * dt / 24.0_MK
-              
-           CASE (5) 
-              
-              this%omega(:,:,1) = &
-                   this%omega(:,:,1) + &
-                   ( 1901.0_MK * this%alpha(:,:,1) - &
-                   2774.0_MK * this%alpha(:,:,2) + &
-                   2616.0_MK * this%alpha(:,:,3) - &
-                   1274.0_MK * this%alpha(:,:,4) + &
-                   251.0_MK * this%alpha(:,:,5) ) * dt / 720.0_MK
-              
-           CASE DEFAULT
-              
-              PRINT *, "colloid_integrate_velocity: ",&
-                   "integrator not available!"
-              stat_info = -1
-              GOTO 9999
-              
-           END SELECT ! order
-           
-        END IF ! rotate
-        
-        
 9999    CONTINUE
         
         RETURN
         
-      END SUBROUTINE colloid_integrate_velocity
+      END SUBROUTINE colloid_integrate_translate_velocity
       

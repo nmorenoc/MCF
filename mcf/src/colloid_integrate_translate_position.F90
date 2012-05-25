@@ -1,7 +1,7 @@
-      SUBROUTINE colloid_integrate_position(this,&
+      SUBROUTINE colloid_integrate_translate_position(this,&
            step,dt,stat_info)
         !----------------------------------------------------
-        ! Subroutine  : colloid_integrate_position
+        ! Subroutine  : colloid_integrate_translate_position
         !----------------------------------------------------
         !
         ! Purpose     : Integrate the positions of centers of
@@ -120,5 +120,5 @@
         
         RETURN
         
-      END SUBROUTINE colloid_integrate_position
+      END SUBROUTINE colloid_integrate_translate_position
       

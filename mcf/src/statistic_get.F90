@@ -389,3 +389,49 @@
         RETURN
         
       END FUNCTION statistic_get_p_energy
+
+
+      LOGICAL FUNCTION statistic_get_colloid_implicit_pair_sweep_adaptive(this,stat_info)
+        
+        TYPE(Statistic), INTENT(IN)     :: this
+        INTEGER, INTENT(OUT)            :: stat_info 
+        
+        stat_info = 0
+        
+        statistic_get_colloid_implicit_pair_sweep_adaptive = &
+             this%colloid_implicit_pair_sweep_adaptive
+        
+        RETURN        
+        
+      END FUNCTION statistic_get_colloid_implicit_pair_sweep_adaptive
+
+      
+      INTEGER FUNCTION statistic_get_colloid_implicit_pair_num_sweep(this,stat_info)
+        
+        TYPE(Statistic), INTENT(IN)     :: this
+        INTEGER, INTENT(OUT)            :: stat_info 
+        
+        stat_info = 0
+        
+        statistic_get_colloid_implicit_pair_num_sweep = &
+             this%colloid_implicit_pair_num_sweep 
+        
+        RETURN        
+        
+      END FUNCTION  statistic_get_colloid_implicit_pair_num_sweep
+      
+      
+      REAL(MK) FUNCTION statistic_get_colloid_implicit_pair_sweep_error(this,stat_info)
+        
+        TYPE(Statistic), INTENT(IN)     :: this
+        INTEGER, INTENT(OUT)            :: stat_info 
+        
+        stat_info = 0
+        
+        statistic_get_colloid_implicit_pair_sweep_error = &
+             this%colloid_implicit_pair_sweep_error 
+        
+        RETURN        
+        
+      END FUNCTION statistic_get_colloid_implicit_pair_sweep_error
+      

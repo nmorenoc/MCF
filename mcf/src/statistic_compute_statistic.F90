@@ -468,7 +468,7 @@
            
         END IF
         
-        IF ( PRESENT(extra_mom)) THEN
+        IF ( PRESENT(extra_mom) ) THEN
            
            this%momentum(1:dim) =  &
                 this%momentum(1:dim) + extra_mom(1:dim)

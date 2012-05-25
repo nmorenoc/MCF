@@ -332,11 +332,11 @@
              STATUS="NEW",FORM=this%colloid_fmt, &
              ACTION="WRITE",IOSTAT=stat_info_sub)
         
-        WRITE(fbuf, '(A,I2,A)' ) , '(', j_end, 'E16.8)'
+        WRITE(fbuf, '(A,I2,A)') , '(', j_end, 'E16.8)'
         
         DO i = 1, num_colloid
            
-           WRITE(cbuf,fbuf ) output(1:j_end,i)
+           WRITE(cbuf,fbuf) output(1:j_end,i)
            WRITE(UNIT=this%colloid_unit,FMT='(A)',&
                 IOSTAT=stat_info_sub)  TRIM(cbuf)
            

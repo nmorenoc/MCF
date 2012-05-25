@@ -1,7 +1,8 @@
-      SUBROUTINE colloid_compute_interaction_implicit_all(this,&
+      SUBROUTINE colloid_compute_interaction_implicit_velocity_all(this,&
            comm,MPI_PREC,dt,drag,torque,FB,stat_info)
         !----------------------------------------------------
-        ! Subroutine  : colloid_compute_interaction_implicit_all
+        ! Subroutine  : colloid_compute_interaction_implicit_
+        !               velocity_all
         !----------------------------------------------------
         !
         ! Purpose     : Calculate updated velocties using 
@@ -435,7 +436,7 @@
         
         RETURN          
         
-      END SUBROUTINE colloid_compute_interaction_implicit_all
+      END SUBROUTINE colloid_compute_interaction_implicit_velocity_all
       
       
       

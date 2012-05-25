@@ -54,7 +54,10 @@
         this%integrate_AB = 1
         this%adapt_t_coef   = 1.0_MK
         this%sub_time_step  = 1
-        this%implicit_pair_num_sweep = 1
+        this%implicit_pair_num_sweep       = 1
+        this%implicit_pair_sweep_adaptive  = .FALSE.
+        this%implicit_pair_sweep_tolerance = 1.0e-3_MK
+        this%implicit_pair_sweep_error     = 0.0_MK
         this%explicit_sub_time_step = 1
         this%rho         = 1.e3_MK
         this%rho_type    = 0
@@ -319,7 +322,10 @@
         
         this%adapt_t_coef   = 1.0_MK
         this%sub_time_step  = 1
-        this%implicit_pair_num_sweep = 1
+        this%implicit_pair_num_sweep       = 1
+        this%implicit_pair_sweep_adaptive  = .FALSE.
+        this%implicit_pair_sweep_tolerance = 1.0e-3_MK
+        this%implicit_pair_sweep_error     = 0.0_MK
         this%explicit_sub_time_step = 1
         this%rho            = 1.e3_MK
         this%rho_type       = 0
@@ -583,6 +589,8 @@
         PRINT *, "adapt_t_coef       : ", this%adapt_t_coef
         PRINT *, "sub_time_step      : ", this%sub_time_step
         PRINT *, "implicit pair num sweep : ", this%implicit_pair_num_sweep
+        PRINT *, "implicit pair sweep adaptive  : ", this%implicit_pair_sweep_adaptive
+        PRINT *, "implicit pair sweep tolerance : ", this%implicit_pair_sweep_tolerance
         PRINT *, "explicit_sub_time_step  : ", this%explicit_sub_time_step
         PRINT *, "rho                : ", this%rho
         PRINT *, "rho type           : ", this%rho_type

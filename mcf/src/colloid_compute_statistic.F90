@@ -52,14 +52,17 @@
         this%k_energy_tot     = 0.0_MK
         this%mom_tot(1:dim)   = 0.0_MK
         
-        DO i =1, num
+        DO i = 1, num
            
-           v2 = 0.0_MK         
+           v2 = 0.0_MK
+           
            DO j=1, dim 
               
               v2= v2+ this%v(j,i,1)**2
+              
               this%mom(j,i) = this%mom(j,i) + &
-                   this%m(i) * this%v(j,i,1)            
+                   this%m(i) * this%v(j,i,1)
+              
            END DO
            
            this%k_energy(i) = this%k_energy(i) + &
@@ -71,7 +74,8 @@
            this%mom_tot(1:dim) = this%mom_tot(1:dim) + &
                 this%mom(1:dim,i)
            
-        END DO
+        END DO ! i = 1, num
+        
         
         RETURN
         

@@ -1,10 +1,10 @@
-      SUBROUTINE colloid_compute_acceleration(this,stat_info)
+      SUBROUTINE colloid_compute_rotate_acceleration(this,stat_info)
         !----------------------------------------------------
-        ! Subroutine  : colloid_compute_acceleration
+        ! Subroutine  : colloid_compute_rotate_acceleration
         !----------------------------------------------------
         !
-        ! Purpose     : Compute colloid accelerations,
-        !               both translation and rotation.
+        ! Purpose     : Compute colloid accelerations of
+        !               rotation.
         !               
         !
         ! Routines    :
@@ -67,7 +67,7 @@
         ! rotational acceleration.
         !----------------------------------------------------
         
-        this%f(1:dim,1:num,1:itype)   = 0.0_MK
+
         this%alpha(1:3,1:num,1:itype) = 0.0_MK
         
 #else
@@ -80,32 +80,11 @@
         
         DO WHILE ( i >= 2 )
         
-           this%f(1:dim,1:num,i)  =  this%f(1:dim,1:num,i-1)                
            this%alpha(1:3,1:num,i) = this%alpha(1:3,1:num,i-1)
            
            i = i -1
            
         END DO
-        
-        !----------------------------------------------------
-        ! Calculate current translating accelerations,
-        ! set zero if no translation.
-        !----------------------------------------------------
-    
-        IF( this%translate ) THEN
-           
-           DO i = 1, dim
-              
-              this%f(i,1:num,1) = &
-                   this%drag(i,1:num) / this%m(1:num)
-              
-           END DO
-           
-        ELSE
-           
-           this%f(1:dim,1:num,1) = 0.0_MK
-           
-        END IF
         
         !----------------------------------------------------
         ! Calculate current rotating accelerations.
@@ -214,8 +193,6 @@
            IF ( this%bcdef(2*i-1) == ppm_param_bcdef_symmetry .AND.&
                 this%bcdef(2*i) == ppm_param_bcdef_symmetry ) THEN
               
-              this%f(i,1:num,1) = 0.0_MK
-              
               this%alpha(1:3,1:num,1) = 0.0_MK              
               
            END IF
@@ -229,7 +206,7 @@
         
         RETURN          
         
-      END SUBROUTINE colloid_compute_acceleration
+      END SUBROUTINE colloid_compute_rotate_acceleration
       
       
       

@@ -37,6 +37,7 @@
         SAVE
         
         TYPE Statistic
+
            PRIVATE
            TYPE(Control)                      :: ctrl
            LOGICAL                            :: dynamic_density_ref
@@ -54,6 +55,10 @@
            REAL(MK), DIMENSION(9)             :: stress_v
            REAL(MK), DIMENSION(9)             :: stress_r
            REAL(MK)                           :: p_energy
+           LOGICAL                            :: colloid_implicit_pair_sweep_adaptive
+           INTEGER                            :: colloid_implicit_pair_num_sweep
+           REAL(MK)                           :: colloid_implicit_pair_sweep_error
+           
         END TYPE Statistic
         
         INTERFACE statistic_new

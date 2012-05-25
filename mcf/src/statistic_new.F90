@@ -38,6 +38,9 @@
         this%rho_min               = 0.0_MK
         this%rho_max               = 0.0_MK
 
+        this%colloid_implicit_pair_sweep_adaptive = .FALSE.
+        this%colloid_implicit_pair_num_sweep      = 1
+        this%colloid_implicit_pair_sweep_error    = 1.0e2_MK
         
 9999    CONTINUE
         

@@ -138,7 +138,8 @@
         REAL(MK), ALLOCATABLE, DIMENSION(:,:)   :: coll_torque
         REAL(MK)                        :: coll_k
         REAL(MK), DIMENSION(:), POINTER :: coll_mom        
-        
+        LOGICAL                         :: coll_implicit_pair_sweep_adaptive
+
         !----------------------------------------------------
         ! Boundary parameters :
         ! wall_drag_p : drag from SDPD/SPH particles
@@ -381,6 +382,11 @@
      
            ALLOCATE(coll_drag(num_dim,num_colloid))
            ALLOCATE(coll_torque(3,num_colloid))
+           
+           coll_implicit_pair_sweep_adaptive = &
+                colloid_get_implicit_pair_sweep_adaptive(colloids,stat_info_sub)
+           CALL statistic_set_colloid_implicit_pair_sweep_adaptive(&
+                this%statis,coll_implicit_pair_sweep_adaptive,stat_info_sub)
            
         END IF
         
@@ -841,7 +847,7 @@
                 l_map_au  = p_energy, &
                 stat_info = stat_info_sub)
 #endif
-
+           
            IF ( stat_info_sub /= 0 ) THEN
               PRINT *, 'marching_marching: ',&
                    'Receiving force(stress, vgt,au) from ghosts failed !'
@@ -970,7 +976,6 @@
            
         END IF  ! non-Newtonian
         
-        
         !----------------------------------------------------
         ! Since paire-wise force have been calculated,
         ! sum up the force on colloids,
@@ -988,6 +993,7 @@
            
            CALL particles_collect_colloid_interaction(this%particles,&
                 coll_drag,coll_torque,stat_info_sub)
+           
            IF( stat_info_sub /=0 ) THEN
               PRINT *, "marching_marching: ",&
                    "Summing up interaction on colloid locally has problem !"
@@ -1023,82 +1029,65 @@
               GOTO 9999
            END IF
            
-           
-
            !-------------------------------------------------
-           ! Compute colloid-colloid and colloid-wall
+           ! For explicit integration,
+           ! compute colloid-colloid and colloid-wall
            ! interactions, return drag on the wall.
-           ! distinguish explict and implicit schems.
            !-------------------------------------------------
            
-           SELECT CASE ( integrate_colloid_type )
-              
-           CASE (-2)
-              
-              !CALL colloid_compute_interaction_implicit_velocity_pair(colloids,&
-              !comm,MPI_PREC, dt_sub_time_step,coll_drag, coll_torque, &
-              !     wall_drag_c(1:num_dim,1:num_dim*2),stat_info_sub)
-              
-              
-              !----------------------------------------------
-              ! As it is implicit scheme, 
-              ! nothing needs to be dong here,
-              ! the force/interaction will be done in 
-              ! marching_integrate routines.
-              !----------------------------------------------
-              
-           CASE (-1)
-              
-              CALL colloid_compute_interaction_implicit_all(colloids,comm,&
-                   MPI_PREC, dt_sub_time_step,coll_drag, coll_torque, &
-                   wall_drag_c(1:num_dim,1:num_dim*2),stat_info_sub)
-         
-           CASE (2)
+           IF ( integrate_colloid_type  > 0 ) THEN
               
               CALL colloid_compute_interaction(colloids,comm,&
                    MPI_PREC,coll_drag, coll_torque, &
                    wall_drag_c(1:num_dim,1:num_dim*2),&
                    stat_info_sub)
-            
-           CASE DEFAULT
               
-              PRINT *, __FILE__, __LINE__, &
-                   "No such integration scheme for colloids!"
-              stat_info_sub = -1
-              GOTO 9999
+              IF( stat_info_sub /=0 ) THEN
+                 PRINT *, "marching_marching: ",&
+                      "c-c or c-w interaction has problem!"
+                 stat_info = -1
+                 GOTO 9999
+              END IF
               
-           END SELECT
+              !----------------------------------------------
+              ! Apply body force on colloids.
+              !----------------------------------------------
+              
+              CALL colloid_apply_body_force(colloids,stat_info_sub)
+              
+              IF ( stat_info_sub /=0 ) THEN
+                 PRINT *, "marching_marching: ",&
+                      "applying body force on colloids has problem!"
+                 stat_info = -1
+                 GOTO 9999
+              END IF
+              
+              !----------------------------------------------
+              ! Compute colloids translating accelerations.
+              !----------------------------------------------
+              
+              CALL colloid_compute_translate_acceleration(colloids,&
+                   stat_info_sub)
+              
+              IF ( stat_info_sub /=0 ) THEN
+                 PRINT *, "marching_marching: ",&
+                      "computing colloid translating accelerations has problem!"
+                 stat_info = -1
+                 GOTO 9999
+              END IF
+              
+           END IF ! integrate_colloid_type > 0 
            
-           IF( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_marching: ",&
-                   "c-c or c-w interaction has problem!"
-              stat_info = -1
-              GOTO 9999
-           END IF
+           !----------------------------------------------
+           ! Compute colloid ratating acceleration.
+           !----------------------------------------------
            
-           !-------------------------------------------------
-           ! Apply body force on colloids.
-           !-------------------------------------------------
-           
-           CALL colloid_apply_body_force(colloids,stat_info_sub)
+           CALL colloid_compute_rotate_acceleration(colloids,&
+                stat_info_sub)
            
            IF ( stat_info_sub /=0 ) THEN
               PRINT *, "marching_marching: ",&
-                   "applying body force on colloids has problem!"
-              stat_info = -1
-              GOTO 9999
-           END IF
-           
-           !-------------------------------------------------
-           ! Compute colloids accelerations, i.e.,
-           ! translation and rotation.
-           !-------------------------------------------------
-           
-           CALL colloid_compute_acceleration(colloids,stat_info_sub)
-           
-           IF ( stat_info_sub /=0 ) THEN
-              PRINT *, "marching_marching: ",&
-                   "computing colloids accelerations has problem!"
+                   "computing colloid rotating accelerations has problem!"
               stat_info = -1
               GOTO 9999
            END IF
@@ -1406,26 +1395,7 @@
               GOTO 9999
            END IF
          
-#if 0  
-           !-------------------------------------------------
-           ! Compute new images(position and velocity)
-           ! of colloids.
-           !-------------------------------------------------
-           
-           IF ( num_colloid > 0 ) THEN
-              
-              CALL colloid_compute_image(colloids,stat_info_sub)
-              
-              IF ( stat_info_sub /=0 ) THEN
-                 PRINT *, "marching_marching: ",&
-                      "colloid computing image failed!"
-                 stat_info = -1
-                 GOTO 9999
-              END IF
-              
-           END IF
-#endif
-           
+     
            !-------------------------------------------------
            ! Check what we need to write at this time step.
            !-------------------------------------------------

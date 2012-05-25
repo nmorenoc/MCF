@@ -228,12 +228,12 @@
         CASE (-2)
            
            PRINT *, "integrate_colloid_type: ", &
-                "implicit for pairwise colloids"
+                "implicit velocity for pairwise colloids"
            
         CASE (-1)
            
            PRINT *, "integrate_colloid_type: ", &
-                "implicit for all colloids"
+                "implicit velocity for all colloids"
        
         CASE (1)
            

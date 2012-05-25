@@ -90,7 +90,7 @@
               
            END DO ! i =1, num_part_colloid
            
-        END IF ! translate
+        END IF ! translate OR rotate
         
 #endif        
         

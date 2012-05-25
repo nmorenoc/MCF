@@ -49,6 +49,8 @@
         LOGICAL                         :: flow_v_fixed
         LOGICAL                         :: l_stress_tensor
         LOGICAL                         :: l_p_energy
+        LOGICAL                         :: integrate_colloid_type
+        
         INTEGER                         :: num_dim
         REAL(MK)                        :: k_energy
         REAL(MK), DIMENSION(:), POINTER :: momentum
@@ -60,13 +62,18 @@
         REAL(MK), DIMENSION(:), POINTER :: stress_r
 #endif
         REAL(MK)                        :: p_energy
+
+        LOGICAL                         :: coll_implicit_pair_sweep_adaptive
+        INTEGER                         :: coll_implicit_pair_num_sweep
+        REAL(MK)                        :: coll_implicit_pair_sweep_error
+     
         INTEGER                         :: num_data
         REAL(MK), DIMENSION(20)         :: data
         CHARACTER(len=MAX_CHAR)	        :: form
         INTEGER                         :: iform
         CHARACTER(len=MAX_CHAR)	        :: cbuf
         
-        
+         
         !----------------------------------------------------
         ! Initialization of variables.
         !----------------------------------------------------
@@ -89,6 +96,7 @@
            stat_info = -1
            GOTO 9999
         END IF
+
         Brownian = &
              control_get_Brownian(this%ctrl,stat_info_sub)     
         dynamic_density_ref = &
@@ -99,7 +107,9 @@
              control_get_stress_tensor(this%ctrl,stat_info_sub)
         l_p_energy   = &
              control_get_p_energy(this%ctrl,stat_info_sub)
-      
+        integrate_colloid_type = &
+             control_get_integrate_colloid_type(this%ctrl,stat_info_sub)
+        
         num_dim      = &
              statistic_get_num_dim(d_statistic,stat_info_sub)
         CALL  statistic_get_statistic(d_statistic, &
@@ -155,11 +165,11 @@
            
            data(num_data+1) = &
                 statistic_get_rho_min(d_statistic,stat_info_sub)
-           num_data = num_data +1
+           num_data = num_data + 1
            
            data(num_data+1) = &
                 statistic_get_rho_max(d_statistic,stat_info_sub)
-           num_data = num_data +1
+           num_data = num_data + 1
            
         END IF
         
@@ -200,8 +210,31 @@
                 statistic_get_p_energy(d_statistic,stat_info_sub)
            
            data(num_data+1) = p_energy
-           num_data = num_data +1
+           num_data = num_data + 1
            
+        END IF
+
+        
+        IF ( integrate_colloid_type == -2 ) THEN
+           
+           coll_implicit_pair_sweep_adaptive = &
+                statistic_get_colloid_implicit_pair_sweep_adaptive(d_statistic,stat_info_sub)
+           
+           IF ( coll_implicit_pair_sweep_adaptive ) THEN
+
+              coll_implicit_pair_num_sweep = &
+                   statistic_get_colloid_implicit_pair_num_sweep(d_statistic,stat_info_sub)
+              
+              coll_implicit_pair_sweep_error = &
+                   statistic_get_colloid_implicit_pair_sweep_error(d_statistic,stat_info_sub)
+              
+              data(num_data+1) = coll_implicit_pair_num_sweep
+              data(num_data+2) = coll_implicit_pair_sweep_error
+         
+              num_data = num_data + 2
+              
+           END IF
+
         END IF
         
         !----------------------------------------------------

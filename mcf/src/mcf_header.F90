@@ -221,7 +221,9 @@
         INTEGER, PARAMETER      :: mcf_cc_lub_type_no    = 0
         INTEGER, PARAMETER      :: mcf_cc_lub_type_first = 1
         
-         !----------------------------------------------------
+        INTEGER, PARAMETER      :: mcf_cc_lub_implicit_velocity_sweep_max = 1024
+        
+        !----------------------------------------------------
         ! Define repulsive force between how two colloidal
         ! particles.
         ! 0: no repulsive at all.

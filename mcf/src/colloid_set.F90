@@ -450,7 +450,64 @@
         RETURN
         
       END SUBROUTINE colloid_set_implicit_pair_num_sweep
+
+
+      SUBROUTINE colloid_set_implicit_pair_sweep_adaptive(this,&
+           d_adapt,stat_info)
+        !----------------------------------------------------
+        ! Set if adaptive sweep is needed
+        !---------------------------------------------------
+        
+        TYPE(Colloid), INTENT(INOUT)    :: this
+        LOGICAL, INTENT(IN)             :: d_adapt
+        INTEGER, INTENT(OUT)            :: stat_info
+
+        stat_info = 0
+
+        this%implicit_pair_sweep_adaptive = d_adapt
+        
+        RETURN
+        
+      END SUBROUTINE colloid_set_implicit_pair_sweep_adaptive
+
+
+      SUBROUTINE colloid_set_implicit_pair_sweep_tolerance(this,d_tol,stat_info)
+        !----------------------------------------------------
+        ! Set the adaptive tolerance of sweep for pairwise implicit
+        ! splitting scheme.
+        !---------------------------------------------------
+        
+        TYPE(Colloid), INTENT(INOUT)    :: this
+        REAL(MK), INTENT(IN)            :: d_tol
+        INTEGER, INTENT(OUT)            :: stat_info
+
+        stat_info = 0
+
+        this%implicit_pair_sweep_tolerance = d_tol
+        
+        RETURN
+        
+      END SUBROUTINE colloid_set_implicit_pair_sweep_tolerance
       
+
+      SUBROUTINE colloid_set_implicit_pair_sweep_error(this,d_error,stat_info)
+        !----------------------------------------------------
+        ! Set the error of sweep for pairwise implicit
+        ! splitting scheme.
+        !---------------------------------------------------
+        
+        TYPE(Colloid), INTENT(INOUT)    :: this
+        REAL(MK), INTENT(IN)            :: d_error
+        INTEGER, INTENT(OUT)            :: stat_info
+
+        stat_info = 0
+
+        this%implicit_pair_sweep_error = d_error
+        
+        RETURN
+        
+      END SUBROUTINE colloid_set_implicit_pair_sweep_error
+    
       
       SUBROUTINE colloid_set_explicit_sub_time_step(this,d_step,stat_info)
         !-----------------------------------------

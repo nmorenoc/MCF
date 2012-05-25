@@ -1,5 +1,5 @@
       SUBROUTINE colloid_compute_interaction_implicit_velocity_pair(this,&
-           comm,MPI_PREC,dt,drag,torque,FB,stat_info)
+           comm,MPI_PREC,step,dt,drag,torque,FB,stat_info)
         !----------------------------------------------------
         ! Subroutine  : colloid_compute_interaction_implicit_
         !               velocity_pair
@@ -52,6 +52,7 @@
         TYPE(Colloid), INTENT(OUT)              :: this
         INTEGER, INTENT(IN)                     :: comm
         INTEGER, INTENT(IN)                     :: MPI_PREC
+        INTEGER, INTENT(IN)                     :: step
         REAL(MK), INTENT(IN)                    :: dt
         REAL(MK), DIMENSION(:,:), INTENT(IN)    :: drag
         REAL(MK), DIMENSION(:,:), INTENT(IN)    :: torque
@@ -73,10 +74,12 @@
         
         INTEGER                                 :: stat_info_sub
         REAL(MK), DIMENSION(:,:), ALLOCATABLE   :: v_backup
+        REAL(MK), DIMENSION(:,:), ALLOCATABLE   :: v_sph
+        REAL(MK), DIMENSION(:,:), ALLOCATABLE   :: v_temp
+        REAL(MK), DIMENSION(:,:), ALLOCATABLE   :: v_update
+        
         INTEGER                                 :: dim, num, dim2
         
-        REAL(MK)                                :: hn_l, hm_l
-        REAL(MK)                                :: F0, F1
         REAL(MK)                                :: hn_r, hm_r
         REAL(MK)                                :: F0_repul
        
@@ -91,6 +94,19 @@
         !
         ! num_sweep   : number of sweeps for pair-wise implicit
         !               splitting scheme.
+        !----------------------------------------------------
+        
+        REAL(MK)                                :: sweep_tolerance
+        LOGICAL                                 :: sweep_adaptive
+        
+        INTEGER                                 :: num_sweep
+        INTEGER                                 :: num_sweep1
+        INTEGER                                 :: num_sweep2
+        REAL(MK)                                :: error
+        LOGICAL                                 :: sweep_decrease
+        LOGICAL                                 :: sweep_increase
+        
+        !----------------------------------------------------
         ! num_sub_step: number of sub-steps for explicit 
         !               scheme.
         ! ai,aj       : radius of colloid i,j.
@@ -102,25 +118,28 @@
         ! v_image     : velocity of closest image of colloid j to i.
         !----------------------------------------------------
         
-        INTEGER                                 :: num_sweep, sweep
-        REAL(MK)                                :: dt_sweep
-        
         INTEGER                                 :: num_sub_step, sub_step
         REAL(MK)                                :: dt_sub
         
         REAL(MK)                                :: ai, aj, aa
-        REAL(MK)                                :: Aij
-        REAL(MK), DIMENSION(3)                  :: vi_old, vj_old
-        REAL(MK), DIMENSION(3)                  :: vi_new, vj_new
         REAL(MK)                                :: Bij
         
-        REAL(MK),DIMENSION(3)                   :: x_image, v_image 
-        REAL(MK), DIMENSION(3)                  :: rij, eij, vij
-        REAL(MK)                                :: r, h, ve
+        REAL(MK), DIMENSION(3)                  :: x_image, v_image 
+        REAL(MK), DIMENSION(3)                  :: rij, eij
+        REAL(MK)                                :: r, h
           
         REAL(MK)                                :: fa, dt_f
         INTEGER                                 :: i, j, k, m        
         
+        !----------------------------------------------------
+        ! coll_k   : total kinetic energy of colloids
+        ! coll_mom : total momentum of colloids
+        !----------------------------------------------------
+        
+        REAL(MK)                                :: coll_k
+        REAL(MK), DIMENSION(3)                  :: coll_mom
+        CHARACTER(LEN=MAX_CHAR)                 :: fbuf
+
         !----------------------------------------------------
         ! Initialization
         !----------------------------------------------------
@@ -131,13 +150,6 @@
         FB(:,:) = 0.0_MK
 
         !----------------------------------------------------
-        ! Back up previous velocities.
-        !----------------------------------------------------
-
-        ALLOCATE(v_backup(dim,num))
-        v_backup(1:dim,1:num) = this%v(1:dim,1:num,1)
-    
-        !----------------------------------------------------
         ! set up physics parameters.
         !----------------------------------------------------
 
@@ -145,52 +157,25 @@
         num   = this%num_colloid
         dim2  = dim * 2
         
-        hn_l  = this%cc_lub_cut_off
-        hm_l  = this%cc_lub_cut_on
-        
-        IF ( dim == 2 ) THEN
-           
-           F0  = 3.0_MK*mcf_pi*SQRT(2.0_MK)/4.0_MK
-           F1  = 231.0_MK*mcf_pi*SQRT(2.0_MK) / 80.0_MK
-           
-        ELSE
-           
-           PRINT *, __FILE__, __LINE__, "dimension not available!"
-           stat_info = -1
-           GOTO 9999
-           
-        END IF
-        
         hn_r  = this%cc_repul_cut_off
         hm_r  = this%cc_repul_cut_on
         F0_repul = this%cc_repul_F0
-
+        
         ALLOCATE(F_repul(dim,num))
         F_repul(:,:) = 0.0_MK
   
         num_wall_solid = &
              boundary_get_num_wall_solid(this%boundary,stat_info_sub)
-     
-        !----------------------------------------------------
-        ! set up numerical parameters.
-        !----------------------------------------------------
-        
-        num_sweep = this%implicit_pair_num_sweep
-        dt_sweep  = dt / num_sweep
-        
-        num_sub_step = this%explicit_sub_time_step
-        dt_sub       = dt / num_sub_step
         
         !----------------------------------------------------
-        ! For now, we assume that each radius is the same.
+        ! Back up previous velocities.
         !----------------------------------------------------
         
-        ai = this%radius(1,1)
-        aj = ai
-        aa = ai+aj
+        ALLOCATE(v_backup(dim,num))
+        v_backup(1:dim,1:num) = this%v(1:dim,1:num,1)
         
         !----------------------------------------------------
-        ! First update velocity from contribution SPH forces.
+        ! First update velocity from  SPH forces contribution.
         !
         ! Check if the force is too big for current time step.
         !----------------------------------------------------
@@ -217,108 +202,240 @@
         END DO ! i = 1, num
         
         !----------------------------------------------------
+        ! Back up velocity after SPH forces contributions.
+        !----------------------------------------------------
+        
+        ALLOCATE(v_sph(dim,num))
+        v_sph(1:dim,1:num) = this%v(1:dim,1:num,1)
+        
+        !----------------------------------------------------
         ! Do the pairwise sweep num_sweep times to update
         ! velocities using only lubrcation correction forces.
-        ! Time step at each sweep is dt_sweep=dt/num_sweep.
-        !
-        ! It is implicit.
-        !
+        ! Time step at each sweep is dt_sweep = dt / num_sweep.
         !----------------------------------------------------
         
         IF ( this%cc_lub_type > mcf_cc_lub_type_no ) THEN
            
-           DO sweep = 1, num_sweep
+           !-------------------------------------------------
+           ! set up parameters for implicit sweeps.
+           !
+           ! sweep_adaptive: check if sweeping is adaptive.
+           ! num_sweep     : initial number of sweeps.
+           !-------------------------------------------------
+           
+           sweep_adaptive  = &
+                this%implicit_pair_sweep_adaptive
+           num_sweep = this%implicit_pair_num_sweep
+           
+#if 0
+           CALL colloid_compute_statistic(this,stat_info_sub)
+           coll_k = colloid_get_k_energy_tot(this,stat_info_sub)
+           CALL colloid_get_mom_tot(this,coll_mom(1:dim),stat_info_sub)
+
+           WRITE(fbuf,'(3E15.8,2E16.8)'), step*dt,step*dt,&
+                coll_k,coll_mom(1:dim)
+           PRINT *, TRIM(fbuf)
+#endif
+           
+           CALL colloid_compute_interaction_implicit_velocity_pair_sweep(&
+                this, dt, num_sweep, stat_info_sub)
+           
+           IF ( stat_info_sub /= 0 ) THEN
+              PRINT *, __FILE__, __LINE__, &
+                   "velocity pair sweeps failed!"
+              stat_info = -1
+              GOTO 9999
+           END IF
+           
+           IF ( sweep_adaptive ) THEN
               
               !----------------------------------------------
-              ! Implicit: dt_sweep.
-              !          
-              ! Loop over each colloid and its interaction with 
-              ! other colloids.
-              ! Build up left hand matrix and right hand vector
-              ! for a system of linear equations of two collodis,
-              ! and then update velocity using implicit scheme
-              ! by dt_sweep.
-              ! We solve this small matrix explicitly/analytically
-              ! using maxima.
+              ! Get tolerance of sweeping.
               !----------------------------------------------
               
-              DO i = 1, num - 1
-                 
-                 !-------------------------------------------
-                 ! Interaction between two different colloids.
-                 !-------------------------------------------
-            
-                 DO j = i + 1, num
-                    
-                    vi_old(1:dim) = this%v(1:dim,i,1)
-                    vj_old(1:dim) = this%v(1:dim,j,1)
-                    
-                    !----------------------------------------
-                    ! Calculate the gap and unit vector joining
-                    ! two colloids, images of colloids have to
-                    ! be considered according to different
-                    ! boundary conditions.
-                    !----------------------------------------
-                    
-                    CALL colloid_nearest_image(this,&
-                         this%x(1:dim,i),j, &
-                         x_image(1:dim),rij(1:dim), &
-                         v_image(1:dim),stat_info_sub)
-                    
-                    r  = SQRT(DOT_PRODUCT(rij(1:dim), rij(1:dim)))
-                    h  = r - aa
-                    eij(1:dim) = rij(1:dim) / r
-                    
-                    !----------------------------------------
-                    ! If gap is smaller than hn_l, i.e., 
-                    ! cut_off of lubrication correction,
-                    ! it needs lubrication correction.
-                    !----------------------------------------
-                    
-                    IF ( h < hn_l ) THEN
-                       
-                       !-------------------------------------
-                       ! If gap is smaller than minimal allowed
-                       ! gap, set it to the pre-set minimum.
-                       !-------------------------------------
-                 
-                       IF ( h < hm_l ) THEN
-                          
-                          h = hm_l
-                          
-                       END IF
-                       
-                       !-------------------------------------
-                       ! dt_sweep/2/m is coefficient of Aij.
-                       ! Assuming now mi=mj
-                       !-------------------------------------
-                       
-                       Aij = -0.5_MK * this%eta * &
-                            ( (aa/h)**1.5_MK  * (F0 + h*F1/aa) - &
-                            (aa/hn_l)**1.5_MK * (F0 + hn_l*F1/aa) ) * &
-                            dt_sweep / this%m(i)
-                       
-                       !-------------------------------------
-                       ! Solve 2*2 linear system analytically.
-                       !-------------------------------------
-                       
-#include "velocity_pair_backward_Euler_2d.inc"
-                       
-                       !-------------------------------------
-                       ! update velocity of the interacting
-                       ! pair immediately.
-                       !-------------------------------------
-                       
-                       this%v(1:dim,i,1) = vi_new(1:dim)
-                       this%v(1:dim,j,1) = vj_new(1:dim)
-                       
-                    END IF ! h < hn_l
-                    
-                 END DO ! j = i+1, num
-                 
-              END DO ! i = 1, num-1
+              sweep_tolerance = &
+                   this%implicit_pair_sweep_tolerance
+
+              !----------------------------------------------
+              ! Back up velocity after num_sweep sweeps.
+              !----------------------------------------------
               
-           END DO ! s = 1, num_sweep
+              ALLOCATE(v_update(dim,num))
+              v_update(1:dim,1:num) = this%v(1:dim,1:num,1)
+              
+              ALLOCATE(v_temp(dim,num))
+              
+              !----------------------------------------------
+              ! Set initial error an artibrarily small number.
+              !----------------------------------------------
+              
+              error          = mcf_machine_zero
+              num_sweep1     = num_sweep / 2
+              sweep_decrease = .FALSE.
+              
+              DO  WHILE ( num_sweep1 > 0 .AND. &
+                   error < sweep_tolerance ) 
+                 
+                 !-------------------------------------------
+                 ! Set velocity to v_sph, i.e., after
+                 ! SPH forces contributions.
+                 !-------------------------------------------
+                 
+                 this%v(1:dim,1:num,1) = v_sph(1:dim,1:num)
+                 
+                 CALL colloid_compute_interaction_implicit_velocity_pair_sweep(&
+                      this, dt, num_sweep1, stat_info_sub)
+                 
+                 IF ( stat_info_sub /= 0 ) THEN
+                    PRINT *, __FILE__, __LINE__, &
+                         "velocity pair sweeps failed!"
+                    stat_info = -1
+                    GOTO 9999
+                 END IF
+                 
+                 !-------------------------------------------
+                 ! Calculate velocity different between
+                 ! num_sweep and num_sweep1 sweeps.
+                 !-------------------------------------------
+                 
+                 v_temp(1:dim,1:num) = &
+                      this%v(1:dim,1:num,1) - v_update(1:dim,1:num)
+                 
+                 error = 0.0_MK
+                 
+                 !-------------------------------------------
+                 ! Calculate error beween two number of sweeps
+                 !-------------------------------------------
+
+                 DO i = 1, dim
+                    
+                    error = error + &
+                         tool_L2_norm(this%tool,v_temp(i,1:num),stat_info_sub)
+                    
+                 END DO
+                 
+                 IF ( error < sweep_tolerance ) THEN
+                    
+                    num_sweep  = num_sweep1
+                    
+                    !----------------------------------------
+                    ! Save the current sutiable sweep as initial
+                    ! values for next SPH time step.
+                    !----------------------------------------
+                    
+                    this%implicit_pair_num_sweep   = num_sweep
+                    this%implicit_pair_sweep_error = error
+                    
+                    num_sweep1            = num_sweep / 2
+                    v_update(1:dim,1:num) = this%v(1:dim,1:num,1)
+                    
+                    sweep_decrease = .TRUE.
+                    
+                 END IF ! error < tolerance
+                 
+              END DO ! num_sweep1 > 0 AND error < tolerance
+              
+              !----------------------------------------------
+              ! If number of sweeps is not decreased,
+              ! it must be constant or increased.
+              !----------------------------------------------
+
+              IF ( .NOT. sweep_decrease ) THEN
+                 
+                 num_sweep2 = num_sweep * 2
+                 
+                 !-------------------------------------------
+                 ! Set initial error an artibrarily big number.
+                 !-------------------------------------------
+             
+                 error = 1.0e2_MK
+                 sweep_increase = .FALSE.
+                 
+                 DO  WHILE ( num_sweep2 <= &
+                      mcf_cc_lub_implicit_velocity_sweep_max .AND. &
+                      error > sweep_tolerance ) 
+                    
+                    !----------------------------------------
+                    ! Set velocity to v_sph, i.e., after
+                    ! SPH forces contributions.
+                    !----------------------------------------
+                    
+                    this%v(1:dim,1:num,1) = v_sph(1:dim,1:num)
+                    
+                    CALL colloid_compute_interaction_implicit_velocity_pair_sweep(&
+                         this, dt, num_sweep2, stat_info_sub)
+                    
+                    IF ( stat_info_sub /= 0 ) THEN
+                       PRINT *, __FILE__, __LINE__, &
+                            "velocity pair sweeps failed!"
+                       stat_info = -1
+                       GOTO 9999
+                    END IF
+                    
+                    !-------------------------------------------
+                    ! Back up velocity after num_sweep2 sweeps.
+                    !-------------------------------------------
+                    
+                    v_temp(1:dim,1:num) = &
+                         this%v(1:dim,1:num,1) - v_update(1:dim,1:num)
+                    
+                    error = 0.0_MK
+
+                    !----------------------------------------
+                    ! Calculate error beween two number of 
+                    ! sweeps
+                    !----------------------------------------
+
+                    DO i = 1, dim
+                       
+                       error = error + &
+                            tool_L2_norm(this%tool,v_temp(i,1:num),stat_info_sub)
+                       
+                    END DO
+                    
+                    IF ( error > sweep_tolerance ) THEN
+                       
+                       num_sweep  = num_sweep2
+                       num_sweep2 = num_sweep * 2
+                       v_update(1:dim,1:num) = this%v(1:dim,1:num,1)
+                       sweep_increase = .TRUE.
+                       
+                    END IF ! error > tolerance
+                    
+                 END DO ! num_sweep2 < sweep_max AND error > tolerance
+                 
+                 !-------------------------------------------
+                 ! If number of sweeps is not increased,
+                 ! set velocity to after previous sweeps.
+                 !-------------------------------------------
+                 
+                 IF ( .NOT. sweep_increase ) THEN
+                    
+                    this%v(1:dim,1:num,1) = v_update(1:dim,1:num)
+                    
+                 ELSE
+                    
+                    !----------------------------------------
+                    ! Save the current sutiable sweep as initial
+                    ! values for next SPH time step.
+                    !----------------------------------------
+                 
+                    this%implicit_pair_num_sweep   = num_sweep
+                    
+                 END IF
+
+                 !-------------------------------------------
+                 ! No matter if it is increased, error
+                 ! has to be recorded.
+                 !-------------------------------------------
+                 
+                 this%implicit_pair_sweep_error = error
+                 
+              END IF ! NOT sweep_decrease
+
+           END IF ! sweep_adaptive
+           
+           !PRINT *, step, this%implicit_pair_num_sweep, error
            
         END IF ! cc_lub_type > mcf_cc_lub_type_no
         
@@ -334,6 +451,13 @@
         !----------------------------------------------------
         
         !----------------------------------------------------
+        ! set up parameters for explicit update.
+        !----------------------------------------------------
+        
+        num_sub_step = this%explicit_sub_time_step
+        dt_sub       = dt / num_sub_step
+        
+        !----------------------------------------------------
         ! Repulsive forces between colloid-colloid and
         ! colloid-wall.
         !----------------------------------------------------
@@ -341,6 +465,14 @@
         IF ( this%cc_repul_type > mcf_cc_repul_type_no .OR. &
              this%cw_repul_type > mcf_cw_repul_type_no ) THEN
            
+           !-------------------------------------------------
+           ! For now, we assume that each radius is the same.
+           !-------------------------------------------------
+           
+           ai = this%radius(1,1)
+           aj = ai
+           aa = ai+aj
+    
            !-------------------------------------------------
            ! As we use modified velocity verlet, dt_sub is
            ! splitted into two sub-steps and the force
@@ -358,7 +490,7 @@
            DO sub_step = 1, num_sub_step
               
               IF ( this%cc_repul_type > mcf_cc_repul_type_no .AND. &
-                   sub_step == 1) THEN
+                   sub_step == 1 ) THEN
                  
                  !-------------------------------------------
                  ! Repulsive force between colloid i,j.
@@ -388,7 +520,7 @@
                        ! If gap is smaller than 5*hn_r, 
                        ! it may need repulsive force.
                        !-------------------------------------
-                    
+                       
                        IF ( h < 5.0_MK * hn_r ) THEN
                           
                           Bij = 0.0_MK
@@ -481,7 +613,7 @@
               !----------------------------------------------
               
               IF ( this%cw_repul_type > mcf_cw_repul_type_no .AND. &
-                   sub_step == 1) THEN
+                   sub_step == 1 ) THEN
                  
                  DO i = 1, num
                     
@@ -502,7 +634,7 @@
                  END DO ! i = 1, num
                  
               END IF ! cw_repul_type > mcf_cw_repul_type_no AND sub_step == 1
-           
+              
               !----------------------------------------------
               ! Update velocity using repulsive force 
               ! by dt_sub/2.
@@ -518,16 +650,16 @@
                  IF ( fa > mcf_machine_zero ) THEN
                     
                     dt_f = this%adapt_t_coef*SQRT(this%h/fa)
-                 
+                    
                     IF ( dt_f < dt_sub/2.0_MK ) THEN
                        
                        PRINT *, "First dt_sub: F_repul is too big for colloid",&
                             i, F_repul(1:dim,i), dt_f, sub_step
                        
                     END IF
-              
+                    
                  END IF
-      
+                 
                  this%v(1:dim,i,1) = &
                       this%v(1:dim,i,1) + &
                       0.5_MK *  F_repul(1:dim,i) * dt_sub / this%m(i)
@@ -690,9 +822,9 @@
                           
                        END IF ! h < hn_r
                        
-                    END DO ! j = i+1, num
+                    END DO ! j = i + 1, num
                     
-                 END DO ! i = 1, num-1
+                 END DO ! i = 1, num - 1
                  
               END IF ! cc_repul_type > mcf_cc_repul_type_no
               
@@ -761,6 +893,51 @@
               
            END DO ! sub_step = 1, num_sub_step
            
+        ELSE
+           
+           !-------------------------------------------------
+           ! Without any repulsive force, update position by dt.
+           !-------------------------------------------------
+           
+           DO i = 1, num
+              
+              this%x(1:dim,i) = &
+                   this%x(1:dim,i) + this%v(1:dim,i,1) * dt
+              
+           END DO ! i = 1, num
+           
+           !-------------------------------------------------
+           ! Adjust colloids position according to 
+           ! boundary conditions.
+           !-------------------------------------------------
+              
+           CALL colloid_adjust_colloid(this,stat_info_sub)
+           
+           IF ( stat_info_sub /= 0 ) THEN
+              
+              PRINT *, __FILE__, __LINE__, &
+                   "adjusting colloid failed!"
+              stat_info = -1
+              GOTO 9999
+              
+           END IF
+           
+           !-------------------------------------------------
+           ! As some colloids may cross boundaries,
+           ! compute theire new images(position and velocity).
+           !-------------------------------------------------
+           
+           CALL colloid_compute_image(this,stat_info_sub)
+           
+           IF ( stat_info_sub /=0 ) THEN
+              
+              PRINT *, __FILE__, __LINE__, &
+                   "colloid computing image failed!"
+              stat_info = -1
+              GOTO 9999
+              
+           END IF
+           
         END IF ! cc_repul_type > no AND cw_repul_type > no
         
         !----------------------------------------------------
@@ -774,7 +951,7 @@
            this%drag(1:dim,i) = &
                 (this%v(1:dim,i,1) - v_backup(1:dim,i))*this%m(i) / dt
            
-        END DO
+        END DO ! i = 1, num
         
         !----------------------------------------------------
         ! Update total torque on each colloid

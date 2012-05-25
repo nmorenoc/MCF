@@ -47,3 +47,49 @@
         
       END SUBROUTINE statistic_set_rho_max
       
+
+      SUBROUTINE statistic_set_colloid_implicit_pair_sweep_adaptive(this,d_adapt,stat_info)
+        
+        TYPE(Statistic), INTENT(OUT)    :: this
+        LOGICAL, INTENT(IN)             :: d_adapt
+        INTEGER, INTENT(OUT)            :: stat_info 
+        
+        stat_info = 0
+        
+        this%colloid_implicit_pair_sweep_adaptive = d_adapt
+        
+        RETURN        
+        
+      END SUBROUTINE statistic_set_colloid_implicit_pair_sweep_adaptive
+
+      
+      SUBROUTINE statistic_set_colloid_implicit_pair_num_sweep(this,d_num,stat_info)
+        
+        TYPE(Statistic), INTENT(OUT)    :: this
+        INTEGER, INTENT(IN)             :: d_num
+        INTEGER, INTENT(OUT)            :: stat_info 
+        
+        stat_info = 0
+        
+        this%colloid_implicit_pair_num_sweep = d_num
+        
+        RETURN        
+        
+      END SUBROUTINE statistic_set_colloid_implicit_pair_num_sweep
+      
+      
+      SUBROUTINE statistic_set_colloid_implicit_pair_sweep_error(this,d_error,stat_info)
+        
+        TYPE(Statistic), INTENT(OUT)    :: this
+        REAL(MK), INTENT(IN)            :: d_error
+        INTEGER, INTENT(OUT)            :: stat_info 
+        
+        stat_info = 0
+        
+        this%colloid_implicit_pair_sweep_error = d_error
+        
+        RETURN        
+        
+      END SUBROUTINE statistic_set_colloid_implicit_pair_sweep_error
+      
+

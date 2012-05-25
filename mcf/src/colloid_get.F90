@@ -82,7 +82,61 @@
         RETURN
         
       END FUNCTION colloid_get_implicit_pair_num_sweep
+
       
+      LOGICAL FUNCTION colloid_get_implicit_pair_sweep_adaptive(this, stat_info)
+        !----------------------------------------------------
+        ! Return if adaptive sweep is needed
+        !----------------------------------------------------
+
+        TYPE(Colloid), INTENT(IN)       :: this
+        INTEGER, INTENT(OUT)            :: stat_info
+        
+        stat_info = 0
+        
+        colloid_get_implicit_pair_sweep_adaptive = &
+             this%implicit_pair_sweep_adaptive
+        
+        RETURN
+        
+      END FUNCTION colloid_get_implicit_pair_sweep_adaptive
+      
+
+      REAL(MK) FUNCTION colloid_get_implicit_pair_sweep_tolerance(this,&
+           stat_info)
+        !----------------------------------------------------
+        ! Return the adaptive tolerance of implicit pair sweeps
+        !----------------------------------------------------
+
+        TYPE(Colloid), INTENT(IN)       :: this
+        INTEGER, INTENT(OUT)            :: stat_info
+        
+        stat_info = 0
+        colloid_get_implicit_pair_sweep_tolerance = &
+             this%implicit_pair_sweep_tolerance
+        
+        RETURN
+        
+      END FUNCTION colloid_get_implicit_pair_sweep_tolerance
+      
+
+      REAL(MK) FUNCTION colloid_get_implicit_pair_sweep_error(this,&
+           stat_info)
+        !----------------------------------------------------
+        ! Return the error of implicit pair sweeps
+        !----------------------------------------------------
+
+        TYPE(Colloid), INTENT(IN)       :: this
+        INTEGER, INTENT(OUT)            :: stat_info
+        
+        stat_info = 0
+        colloid_get_implicit_pair_sweep_error = &
+             this%implicit_pair_sweep_error
+        
+        RETURN
+        
+      END FUNCTION colloid_get_implicit_pair_sweep_error
+     
       
       INTEGER FUNCTION colloid_get_explicit_sub_time_step(this, stat_info)
         !----------------------------------------------------
@@ -1244,19 +1298,23 @@
         !--------------------------------------------
         
         TYPE(Colloid), INTENT(IN)               :: this
-        REAL(MK), DIMENSION(:), POINTER         :: d_mom_tot
+        REAL(MK), DIMENSION(:)                  :: d_mom_tot
         INTEGER, INTENT(OUT)                    :: stat_info
         
+
         stat_info = 0
         
-        IF(ASSOCIATED(d_mom_tot)) THEN           
-           DEALLOCATE(d_mom_tot)
+        IF ( SIZE(d_mom_tot) /= this%num_dim ) THEN
+           PRINT *, __FILE__, __LINE__,&
+                "dimension of input parameter does not match!"
+           stat_info = -1
+           GOTO 9999
         END IF
-
-        ALLOCATE(d_mom_tot(this%num_dim))
         
         d_mom_tot(1:this%num_dim) = &
              this%mom_tot(1:this%num_dim)
+        
+9999    CONTINUE
         
         RETURN       
         
