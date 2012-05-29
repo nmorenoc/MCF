@@ -81,10 +81,11 @@
         INTEGER                                 :: stat_info_sub
         REAL(MK), DIMENSION(:,:), ALLOCATABLE   :: v_backup
         REAL(MK), DIMENSION(:,:), ALLOCATABLE   :: v_sph
-        REAL(MK), DIMENSION(:,:), ALLOCATABLE   :: v_diff
         REAL(MK), DIMENSION(:,:), ALLOCATABLE   :: v_update
+        REAL(MK), DIMENSION(:), ALLOCATABLE     :: v_diff,v_normal
         
         INTEGER                                 :: dim, num, dim2
+        INTEGER                                 :: ent
         
         REAL(MK)                                :: hn_r, hm_r
         REAL(MK)                                :: F0_repul
@@ -110,6 +111,7 @@
         INTEGER                                 :: num_sweep2
         REAL(MK)                                :: error_decrease
         REAL(MK)                                :: error_increase
+        REAL(MK)                                :: error_normal
         LOGICAL                                 :: sweep_decrease
         LOGICAL                                 :: sweep_increase
         
@@ -163,6 +165,7 @@
         dim   = this%num_dim
         num   = this%num_colloid
         dim2  = dim * 2
+        ent   = dim * num
         
         hn_r  = this%cc_repul_cut_off
         hm_r  = this%cc_repul_cut_on
@@ -274,7 +277,8 @@
               ! Allocate memory for velocity difference.
               !----------------------------------------------
 
-              ALLOCATE(v_diff(dim,num))
+              ALLOCATE(v_diff(ent))
+              ALLOCATE(v_normal(ent))
               
               !----------------------------------------------
               ! Set initial error to be an artibrarily 
@@ -316,22 +320,35 @@
                  ! num_sweep and num_sweep1 sweeps.
                  !-------------------------------------------
                  
-                 v_diff(1:dim,1:num) = &
-                      this%v(1:dim,1:num,1) - v_update(1:dim,1:num)
+                 DO i = 1, dim
+                    
+                    v_diff((i-1)*num+1:i*num) = &
+                         this%v(i,1:num,1) - v_update(i,1:num)
+                    v_normal((i-1)*num+1:i*num) = &
+                         v_update(i,1:num)
+                    
+                 END DO
                  
-                 error_decrease = 0.0_MK
                  
                  !-------------------------------------------
                  ! Calculate error(L2 norm) beween two numbers 
                  ! of sweeping.
                  !-------------------------------------------
-
-                 DO i = 1, dim
+                 
+                 error_decrease = &
+                      tool_L2_norm(this%tool,v_diff(1:ent),stat_info_sub)
+                 error_normal   = &
+                      tool_L2_norm(this%tool,v_normal(1:ent),stat_info_sub)
+                 
+                 IF ( error_normal < mcf_machine_zero ) THEN
                     
-                    error_decrease = error_decrease + &
-                         tool_L2_norm(this%tool,v_diff(i,1:num),stat_info_sub)
+                    error_normal = mcf_machine_zero
                     
-                 END DO
+                 END IF
+                 
+                 !PRINT *, "sweep1, error_normal: ", error_normal
+                 
+                 error_decrease = error_decrease / error_normal
                  
                  IF ( error_decrease < sweep_tolerance ) THEN
                     
@@ -428,26 +445,40 @@
                        GOTO 9999
                     END IF
                     
-                    !----------------------------------------
-                    ! Calculate velocity difference.
-                    !----------------------------------------
+                    !-------------------------------------------
+                    ! Calculate velocity different between
+                    ! num_sweep and num_sweep1 sweeps.
+                    !-------------------------------------------
                     
-                    v_diff(1:dim,1:num) = &
-                         this%v(1:dim,1:num,1) - v_update(1:dim,1:num)
+                    DO i = 1, dim
+                       
+                       v_diff((i-1)*num+1:i*num) = &
+                            this%v(i,1:num,1) - v_update(i,1:num)
+                       v_normal((i-1)*num+1:i*num) = &
+                            v_update(i,1:num)
+                       
+                    END DO
                     
-                    error_increase = 0.0_MK
-
                     !----------------------------------------
                     ! Calculate error beween two number of 
                     ! sweeps
                     !----------------------------------------
-
-                    DO i = 1, dim
+                    
+                    error_increase = &
+                            tool_L2_norm(this%tool,v_diff(1:ent),stat_info_sub)
+                    
+                    error_normal   = &
+                         tool_L2_norm(this%tool,v_normal(1:ent),stat_info_sub)
+                    
+                    IF ( error_normal < mcf_machine_zero ) THEN
                        
-                       error_increase = error_increase + &
-                            tool_L2_norm(this%tool,v_diff(i,1:num),stat_info_sub)
+                       error_normal = mcf_machine_zero
                        
-                    END DO
+                    END IF
+                    
+                    !PRINT *, "sweep2, error_normal: ", error_normal
+                    
+                    error_increase = error_increase / error_normal
                     
                     IF ( error_increase > sweep_tolerance ) THEN
                        

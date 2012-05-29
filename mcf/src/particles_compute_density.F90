@@ -798,7 +798,6 @@
                              
                              CALL kernel_kernel(this%kern,dij,&
                                   w,stat_info_sub)
-                             
                              CALL rhs_density_ff(this%rhs, w,&
                                   this%m(ip),this%m(jp), &
                                   rhoi,rhoj,stat_info_sub)
