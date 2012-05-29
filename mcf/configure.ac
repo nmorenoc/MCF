@@ -49,7 +49,6 @@ AC_ARG_VAR(MAKEDEPF90, [F90 dependency tracking])
 
 # ppm library
 #ac_ext=f90 
-
 AC_FC_SRCEXT(F90)
 
 AC_LANG_PUSH(Fortran)
@@ -79,6 +78,7 @@ AC_CHECK_LIB(metis,
 	     [],
 	     [AC_MSG_ERROR([Cannot find lib metis, please set LDFLAGS])])
 
+# test ppm library
 LIBS="-lppm $LIBS"
 
 AC_LINK_IFELSE([
@@ -91,11 +91,14 @@ END PROGRAM main
 	[AC_MSG_RESULT([can compile with ppm])],
 	[AC_MSG_ERROR([cannot link against ppm library, please set LDFLAGS and FCFLAGS])])
 
-AC_LANG_POP
-AC_PROG_FC
-AC_PROG_CC
-AX_LAPACK(,[AC_MSG_ERROR([cannot link against lapack])])
-LIBS="$LAPACK_LIBS $BLAS_LIBS $LIBS $FCLIBS"
+# test lapack and blas
+#AC_LANG_POP
+#AC_PROG_FC
+#AC_PROG_CC
+#AX_LAPACK(,[AC_MSG_ERROR([cannot link against lapack])])
+#LIBS="$LAPACK_LIBS $BLAS_LIBS $LIBS $FCLIBS"
+
+
 #Declare Makefile and src/Makefile as output files
 AC_CONFIG_FILES([Makefile src/Makefile])
 
