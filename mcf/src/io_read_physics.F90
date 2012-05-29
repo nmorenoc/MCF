@@ -1511,7 +1511,13 @@
               CALL colloid_set_implicit_pair_sweep_adaptive(colloids, &
                    coll_implicit_pair_sweep_adaptive,stat_info_sub)
               CALL colloid_set_implicit_pair_sweep_tolerance(colloids, &
-                   coll_implicit_pair_sweep_tolerance,stat_info_sub)          
+                   coll_implicit_pair_sweep_tolerance,stat_info_sub)
+              !----------------------------------------------
+              ! Set first error to be the tolerance.
+              !----------------------------------------------
+              CALL colloid_set_implicit_pair_sweep_error(colloids, &
+                   coll_implicit_pair_sweep_tolerance,stat_info_sub)
+              
               CALL colloid_set_explicit_sub_time_step(colloids, &
                    coll_explicit_sub_time_step,stat_info_sub)
               CALL colloid_set_rho(colloids, &

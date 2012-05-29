@@ -139,6 +139,8 @@
         REAL(MK)                        :: coll_k
         REAL(MK), DIMENSION(:), POINTER :: coll_mom        
         LOGICAL                         :: coll_implicit_pair_sweep_adaptive
+        INTEGER                         :: coll_implicit_pair_num_sweep
+        REAL(MK)                        :: coll_implicit_pair_sweep_error
 
         !----------------------------------------------------
         ! Boundary parameters :
@@ -387,6 +389,20 @@
                 colloid_get_implicit_pair_sweep_adaptive(colloids,stat_info_sub)
            CALL statistic_set_colloid_implicit_pair_sweep_adaptive(&
                 this%statis,coll_implicit_pair_sweep_adaptive,stat_info_sub)
+           
+           IF ( coll_implicit_pair_sweep_adaptive ) THEN
+              
+              coll_implicit_pair_num_sweep = &
+                   colloid_get_implicit_pair_num_sweep(colloids,stat_info_sub)
+              coll_implicit_pair_sweep_error = &
+                   colloid_get_implicit_pair_sweep_error(colloids,stat_info_sub)
+              
+              CALL statistic_set_colloid_implicit_pair_num_sweep(&
+                   this%statis,coll_implicit_pair_num_sweep,stat_info_sub)
+              CALL statistic_set_colloid_implicit_pair_sweep_error(&
+                   this%statis,coll_implicit_pair_sweep_error,stat_info_sub)
+              
+           END IF
            
         END IF
         

@@ -31,7 +31,13 @@
         !               1) Consider only serial run for the moment.
         !               2) body force is not considered.
         !
-        ! Revisions   : V0.2 18.05.2012, shift 2nd repulsive force
+        ! Revisions   : V0.3 29.05.2012, sweeping of implicit pairwise
+        !               velocity is improved to be adaptive, i.e.,
+        !               number of sweeps is always decreased or increased
+        !               by 2 times to have velocity difference between
+        !               numbers of sweeping below (L2 norm)tolerance. 
+        !
+        !               V0.2 18.05.2012, shift 2nd repulsive force
         !               down to have clear zero force at 5*cut_off.
         !
         !               V0.1 09.05.2012, original version.
@@ -75,7 +81,7 @@
         INTEGER                                 :: stat_info_sub
         REAL(MK), DIMENSION(:,:), ALLOCATABLE   :: v_backup
         REAL(MK), DIMENSION(:,:), ALLOCATABLE   :: v_sph
-        REAL(MK), DIMENSION(:,:), ALLOCATABLE   :: v_temp
+        REAL(MK), DIMENSION(:,:), ALLOCATABLE   :: v_diff
         REAL(MK), DIMENSION(:,:), ALLOCATABLE   :: v_update
         
         INTEGER                                 :: dim, num, dim2
@@ -102,7 +108,8 @@
         INTEGER                                 :: num_sweep
         INTEGER                                 :: num_sweep1
         INTEGER                                 :: num_sweep2
-        REAL(MK)                                :: error
+        REAL(MK)                                :: error_decrease
+        REAL(MK)                                :: error_increase
         LOGICAL                                 :: sweep_decrease
         LOGICAL                                 :: sweep_increase
         
@@ -219,23 +226,18 @@
            !-------------------------------------------------
            ! set up parameters for implicit sweeps.
            !
-           ! sweep_adaptive: check if sweeping is adaptive.
-           ! num_sweep     : initial number of sweeps.
+           ! sweep_adaptive : check if sweeping is adaptive.
+           ! num_sweep      : initial number of sweeps.
            !-------------------------------------------------
            
            sweep_adaptive  = &
                 this%implicit_pair_sweep_adaptive
            num_sweep = this%implicit_pair_num_sweep
            
-#if 0
-           CALL colloid_compute_statistic(this,stat_info_sub)
-           coll_k = colloid_get_k_energy_tot(this,stat_info_sub)
-           CALL colloid_get_mom_tot(this,coll_mom(1:dim),stat_info_sub)
-
-           WRITE(fbuf,'(3E15.8,2E16.8)'), step*dt,step*dt,&
-                coll_k,coll_mom(1:dim)
-           PRINT *, TRIM(fbuf)
-#endif
+           !-------------------------------------------------
+           ! Compute implicit veloicyt pairwise  interaction
+           ! num_sweep times.
+           !-------------------------------------------------
            
            CALL colloid_compute_interaction_implicit_velocity_pair_sweep(&
                 this, dt, num_sweep, stat_info_sub)
@@ -247,38 +249,54 @@
               GOTO 9999
            END IF
            
+           !-------------------------------------------------
+           ! Perform adapting number of sweeps, if sweeping
+           ! is required adaptive.
+           !-------------------------------------------------
+           
            IF ( sweep_adaptive ) THEN
               
               !----------------------------------------------
-              ! Get tolerance of sweeping.
+              ! Get tolerance of between two numbers of sweeping.
               !----------------------------------------------
               
               sweep_tolerance = &
                    this%implicit_pair_sweep_tolerance
 
               !----------------------------------------------
-              ! Back up velocity after num_sweep sweeps.
+              ! Back up velocity from previous num_sweep sweeps.
               !----------------------------------------------
               
               ALLOCATE(v_update(dim,num))
               v_update(1:dim,1:num) = this%v(1:dim,1:num,1)
               
-              ALLOCATE(v_temp(dim,num))
+              !----------------------------------------------
+              ! Allocate memory for velocity difference.
+              !----------------------------------------------
+
+              ALLOCATE(v_diff(dim,num))
               
               !----------------------------------------------
-              ! Set initial error an artibrarily small number.
+              ! Set initial error to be an artibrarily 
+              ! small number, and perform decreasing number
+              ! of sweeps.
               !----------------------------------------------
               
-              error          = mcf_machine_zero
+              error_decrease = 0.0_MK
               num_sweep1     = num_sweep / 2
               sweep_decrease = .FALSE.
               
-              DO  WHILE ( num_sweep1 > 0 .AND. &
-                   error < sweep_tolerance ) 
+              !----------------------------------------------
+              ! Minimum number of sweeps is 1.
+              !----------------------------------------------
+
+              DO  WHILE ( num_sweep1 >= 1 .AND. &
+                   error_decrease < sweep_tolerance ) 
                  
                  !-------------------------------------------
                  ! Set velocity to v_sph, i.e., after
-                 ! SPH forces contributions.
+                 ! SPH forces contributions and perform
+                 ! pairwise sweeping num_sweep1 times.
                  !-------------------------------------------
                  
                  this%v(1:dim,1:num,1) = v_sph(1:dim,1:num)
@@ -298,66 +316,104 @@
                  ! num_sweep and num_sweep1 sweeps.
                  !-------------------------------------------
                  
-                 v_temp(1:dim,1:num) = &
+                 v_diff(1:dim,1:num) = &
                       this%v(1:dim,1:num,1) - v_update(1:dim,1:num)
                  
-                 error = 0.0_MK
+                 error_decrease = 0.0_MK
                  
                  !-------------------------------------------
-                 ! Calculate error beween two number of sweeps
+                 ! Calculate error(L2 norm) beween two numbers 
+                 ! of sweeping.
                  !-------------------------------------------
 
                  DO i = 1, dim
                     
-                    error = error + &
-                         tool_L2_norm(this%tool,v_temp(i,1:num),stat_info_sub)
+                    error_decrease = error_decrease + &
+                         tool_L2_norm(this%tool,v_diff(i,1:num),stat_info_sub)
                     
                  END DO
                  
-                 IF ( error < sweep_tolerance ) THEN
-                    
-                    num_sweep  = num_sweep1
+                 IF ( error_decrease < sweep_tolerance ) THEN
                     
                     !----------------------------------------
-                    ! Save the current sutiable sweep as initial
-                    ! values for next SPH time step.
+                    ! If error is small enough, decrease
+                    ! number of sweeps again.
                     !----------------------------------------
                     
-                    this%implicit_pair_num_sweep   = num_sweep
-                    this%implicit_pair_sweep_error = error
-                    
-                    num_sweep1            = num_sweep / 2
+                    num_sweep   = num_sweep1
+                    num_sweep1  = num_sweep / 2
                     v_update(1:dim,1:num) = this%v(1:dim,1:num,1)
-                    
                     sweep_decrease = .TRUE.
                     
-                 END IF ! error < tolerance
+                    !----------------------------------------
+                    ! If number of sweeps was decreased,
+                    ! save the current error.
+                    !----------------------------------------
+                    
+                    this%implicit_pair_sweep_error = error_decrease
+                    
+                 END IF ! error_decrease < tolerance
                  
-              END DO ! num_sweep1 > 0 AND error < tolerance
+              END DO ! num_sweep1 > 0 AND error_decrease < tolerance
               
-              !----------------------------------------------
-              ! If number of sweeps is not decreased,
-              ! it must be constant or increased.
-              !----------------------------------------------
-
-              IF ( .NOT. sweep_decrease ) THEN
+            
+              IF ( sweep_decrease ) THEN
                  
+                 !-------------------------------------------
+                 ! If number of sweeps was decreased,
+                 ! there is no need to perform increasing and
+                 ! save the current sutiable number of sweeps.
+                 !-------------------------------------------
+                 
+                 this%implicit_pair_num_sweep   = num_sweep     
+                 
+              ELSE
+                 
+                 !-------------------------------------------
+                 ! If number of sweeps was not decreased,
+                 ! we need to increase the number of sweeps.
+                 ! There may be two reasons that we did not
+                 ! decrease number of sweeps.
+                 ! 1: num_sweep1 < 1 or
+                 ! 2: error_decrease > sweep_tolerance.
+                 !-------------------------------------------
+
+                 sweep_increase = .FALSE.
                  num_sweep2 = num_sweep * 2
                  
-                 !-------------------------------------------
-                 ! Set initial error an artibrarily big number.
-                 !-------------------------------------------
+                 IF ( num_sweep1 >= 1 ) THEN
+                    
+                    !----------------------------------------
+                    ! set initial error_increase to be
+                    ! error_decrease.
+                    !----------------------------------------
+                    
+                    error_increase = error_decrease
+                    
+                 ELSE
+                    
+                    !----------------------------------------
+                    ! set initial error to be an artibrarily 
+                    ! big number.
+                    !----------------------------------------
              
-                 error = 1.0e2_MK
-                 sweep_increase = .FALSE.
+                    error_increase = 1.0e2_MK
+                    
+                 END IF
                  
+                 !-------------------------------------------
+                 ! perform number of sweeps until maximum 
+                 ! number or error is small enough.
+                 !-------------------------------------------
+
                  DO  WHILE ( num_sweep2 <= &
                       mcf_cc_lub_implicit_velocity_sweep_max .AND. &
-                      error > sweep_tolerance ) 
+                      error_increase > sweep_tolerance ) 
                     
                     !----------------------------------------
                     ! Set velocity to v_sph, i.e., after
-                    ! SPH forces contributions.
+                    ! SPH forces contributions and num_sweep2
+                    ! times sweeping.
                     !----------------------------------------
                     
                     this%v(1:dim,1:num,1) = v_sph(1:dim,1:num)
@@ -372,14 +428,14 @@
                        GOTO 9999
                     END IF
                     
-                    !-------------------------------------------
-                    ! Back up velocity after num_sweep2 sweeps.
-                    !-------------------------------------------
+                    !----------------------------------------
+                    ! Calculate velocity difference.
+                    !----------------------------------------
                     
-                    v_temp(1:dim,1:num) = &
+                    v_diff(1:dim,1:num) = &
                          this%v(1:dim,1:num,1) - v_update(1:dim,1:num)
                     
-                    error = 0.0_MK
+                    error_increase = 0.0_MK
 
                     !----------------------------------------
                     ! Calculate error beween two number of 
@@ -388,48 +444,39 @@
 
                     DO i = 1, dim
                        
-                       error = error + &
-                            tool_L2_norm(this%tool,v_temp(i,1:num),stat_info_sub)
+                       error_increase = error_increase + &
+                            tool_L2_norm(this%tool,v_diff(i,1:num),stat_info_sub)
                        
                     END DO
                     
-                    IF ( error > sweep_tolerance ) THEN
+                    IF ( error_increase > sweep_tolerance ) THEN
                        
                        num_sweep  = num_sweep2
                        num_sweep2 = num_sweep * 2
                        v_update(1:dim,1:num) = this%v(1:dim,1:num,1)
                        sweep_increase = .TRUE.
                        
-                    END IF ! error > tolerance
+                    END IF ! error_increase > tolerance
                     
-                 END DO ! num_sweep2 < sweep_max AND error > tolerance
+                 END DO ! num_sweep2 < sweep_max AND error_increase > tolerance
                  
                  !-------------------------------------------
-                 ! If number of sweeps is not increased,
-                 ! set velocity to after previous sweeps.
-                 !-------------------------------------------
+                 ! No matter if it is increased, number of
+                 ! sweeps and error have to be recorded.
+                 !-------------------------------------------                 
+          
+                 this%implicit_pair_num_sweep   = num_sweep                 
+                 this%implicit_pair_sweep_error = error_increase
                  
-                 IF ( .NOT. sweep_increase ) THEN
+                 !-------------------------------------------
+                 ! If not increase, velocity has to be restored.
+                 !-------------------------------------------
+
+                 IF (  .NOT. sweep_increase ) THEN
                     
                     this%v(1:dim,1:num,1) = v_update(1:dim,1:num)
                     
-                 ELSE
-                    
-                    !----------------------------------------
-                    ! Save the current sutiable sweep as initial
-                    ! values for next SPH time step.
-                    !----------------------------------------
-                 
-                    this%implicit_pair_num_sweep   = num_sweep
-                    
                  END IF
-
-                 !-------------------------------------------
-                 ! No matter if it is increased, error
-                 ! has to be recorded.
-                 !-------------------------------------------
-                 
-                 this%implicit_pair_sweep_error = error
                  
               END IF ! NOT sweep_decrease
 

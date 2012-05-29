@@ -57,7 +57,8 @@
         this%implicit_pair_num_sweep       = 1
         this%implicit_pair_sweep_adaptive  = .FALSE.
         this%implicit_pair_sweep_tolerance = 1.0e-3_MK
-        this%implicit_pair_sweep_error     = 0.0_MK
+        this%implicit_pair_sweep_error     = &
+             this%implicit_pair_sweep_tolerance
         this%explicit_sub_time_step = 1
         this%rho         = 1.e3_MK
         this%rho_type    = 0
@@ -324,8 +325,9 @@
         this%sub_time_step  = 1
         this%implicit_pair_num_sweep       = 1
         this%implicit_pair_sweep_adaptive  = .FALSE.
-        this%implicit_pair_sweep_tolerance = 1.0e-3_MK
-        this%implicit_pair_sweep_error     = 0.0_MK
+        this%implicit_pair_sweep_tolerance = 1.0e-3
+        this%implicit_pair_sweep_error     = &
+             this%implicit_pair_sweep_tolerance 
         this%explicit_sub_time_step = 1
         this%rho            = 1.e3_MK
         this%rho_type       = 0
