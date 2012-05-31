@@ -90,6 +90,21 @@
         
       END SUBROUTINE control_set_relax_run
 
+      
+      SUBROUTINE control_set_colloid_relax(this,d_relax,stat_info)
+        
+        TYPE(Control), INTENT(INOUT)             :: this
+        LOGICAL, INTENT(IN)                      :: d_relax
+        INTEGER, INTENT(out)                     :: stat_info
+        
+        stat_info = 0
+        
+        this%colloid_relax =d_relax
+        
+        RETURN
+        
+      END SUBROUTINE control_set_colloid_relax
+
 
       SUBROUTINE control_set_read_external(this,d_read_external,stat_info)
         

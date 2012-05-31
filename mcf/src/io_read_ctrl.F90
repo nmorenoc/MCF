@@ -43,6 +43,7 @@
         
         INTEGER                         :: debug_flag
         LOGICAL                         :: relax_run
+        LOGICAL                         :: colloid_relax
         LOGICAL                         :: read_external
         INTEGER                         :: kernel_type
         LOGICAL                         :: symmetry
@@ -275,7 +276,13 @@
              READ(cvalue,'(L)',IOSTAT=ios,ERR=200) relax_run
              CALL control_set_relax_run(ctrl,&
                   relax_run,stat_info_sub)
+            
+          ELSE IF (carg == 'COLLOID_RELAX') THEN
              
+             READ(cvalue,'(L)',IOSTAT=ios,ERR=200) colloid_relax
+             CALL control_set_colloid_relax(ctrl,&
+                  colloid_relax,stat_info_sub)
+      
           ELSE IF (carg == 'READ_EXTERNAL') THEN
              
              READ(cvalue,'(L)',IOSTAT=ios,ERR=200) read_external

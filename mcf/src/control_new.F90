@@ -45,6 +45,7 @@
              this%job_execute_time, this%job_execute_zone)
         this%debug_flag          = 1
         this%relax_run           = .FALSE.
+        this%colloid_relax       = .FALSE.
         this%read_external       = .FALSE.
         this%kernel_type         = 1
         this%symmetry            = .FALSE.
@@ -123,6 +124,12 @@
         PRINT *, "debug_flag         : ", this%debug_flag
         
         PRINT *, "relax run          : ", this%relax_run
+
+        IF ( this%relax_run ) THEN
+           
+           PRINT *, "colloid relax      : ", this%colloid_relax
+           
+        END IF
         
         PRINT *, "read external      : ", this%read_external
         

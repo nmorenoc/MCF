@@ -19,7 +19,10 @@
         !               afterwards.
         !
         !
-        ! Revisions   : V0.1, 19.11.2010, small bug fixed for
+        ! Revisions   : V0.2, 31.05.2012, change colloid_relax
+        !               complier flag to be an input in ctrl file.
+        !
+        !               V0.1, 19.11.2010, small bug fixed for
         !               non-Newtonian relax run. Although it
         !               is considered Newtonian fluid during
         !               relax run, ct(conformation tensor)
@@ -66,6 +69,7 @@
         ! Control parameters :
         !----------------------------------------------------
         
+        LOGICAL                         :: colloid_relax
         LOGICAL                         :: symmetry_target
         LOGICAL                         :: symmetry
         LOGICAL                         :: dynamic_density_ref
@@ -259,6 +263,8 @@
         ! Set symmetry to conserve momentum.
         !----------------------------------------------------
         
+        colloid_relax       = & 
+             control_get_colloid_relax(this%ctrl,stat_info_sub)
         symmetry_target     = &
              control_get_symmetry(this%ctrl,stat_info_sub)
         dynamic_density_ref = &
@@ -411,14 +417,16 @@
            CALL colloid_set_body_force_type(colloids, &
                 0,stat_info_sub)
           
-#if __COLLOID_RELAX
-           CALL colloid_set_translate(colloids, &
-                .TRUE.,stat_info_sub)
-           CALL colloid_set_rotate(colloids, &
-                .TRUE.,stat_info_sub)
-#endif
+           IF ( colloid_relax ) THEN
+              
+              CALL colloid_set_translate(colloids, &
+                   .TRUE.,stat_info_sub)
+              CALL colloid_set_rotate(colloids, &
+                   .TRUE.,stat_info_sub)
+              
+           END IF
            
-           SELECT CASE (integrate_colloid_type )
+           SELECT CASE ( integrate_colloid_type )
               
            CASE (-2)
               

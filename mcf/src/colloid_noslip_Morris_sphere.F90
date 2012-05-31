@@ -195,7 +195,7 @@
         IF( d_ccoll > this%radius(1,sid_c) + this%dout ) THEN
            
            PRINT *, "colloid_noslip_Morris_sphere : ", &
-                "Colloid particle goes out of colloid disk/sphere !"
+                "Boundary particle goes out of colloid disk/sphere !"
            PRINT *, "dist,radius,xc,xcolloid,xcoll :", &
                 d_ccoll,this%radius(1,sid_c),xc(1:dim),&
                 this%x(1:dim,sid_c),xcoll(1:dim)

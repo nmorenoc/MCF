@@ -745,15 +745,19 @@
               END DO ! i = 1, num
               
               !----------------------------------------------
-              ! Update position by dt_sub.
+              ! Update position by dt_sub, if it is translate.
               !----------------------------------------------
               
-              DO i = 1, num
+              IF ( this%translate ) THEN
                  
-                 this%x(1:dim,i) = &
-                      this%x(1:dim,i) + this%v(1:dim,i,1) * dt_sub
-                 
-              END DO ! i = 1, num
+                 DO i = 1, num
+                    
+                    this%x(1:dim,i) = &
+                         this%x(1:dim,i) + this%v(1:dim,i,1) * dt_sub
+                    
+                 END DO ! i = 1, num
+              
+              END IF
               
               !----------------------------------------------
               ! Adjust colloids position according to 

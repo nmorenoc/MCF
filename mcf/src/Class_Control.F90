@@ -40,6 +40,7 @@
            CHARACTER(LEN=10)          :: job_execute_zone
            INTEGER                    :: debug_flag
            LOGICAL                    :: relax_run
+           LOGICAL                    :: colloid_relax
            LOGICAL                    :: read_external
            INTEGER                    :: kernel_type
            LOGICAL                    :: symmetry

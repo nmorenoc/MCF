@@ -36,7 +36,7 @@
      
      IF( stat_info_sub /=0 ) THEN
         PRINT *, "pp_interaction_fc : ",&
-             "Colloid no slip jp has problem !"
+             "Colloid no slip jp:", jp," has problem !"
         stat_info = -1
         GOTO 9999
      END IF

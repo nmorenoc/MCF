@@ -233,10 +233,24 @@ flow_adjust_freq = 10
 #
 #  Common characteristics:
 #
-#  num_colloid      : number of colloids.
+#  num_colloid        : number of colloids.
 #
-#  coll_adapt_t_coef: if adapt time step is chosen,
-#                     a cofficient is need: coef*sqrt(h/f_max);
+#  coll_adapt_t_coef  : if a overall adapt time step(SPH time step) is chosen,
+#                       a cofficient is need: coef*sqrt(h/f_max);
+#
+#  coll_sub_time_step : a sub-time step of colloid(integer number)
+#                       1: dt_1=dt_0, one step, i.e., 
+#                          same time step as solvent particles.
+#                       2: dt_1=dt_0/2.0, two steps inbetween, i.e.,
+#                          half time step as solvent particles.
+#                       and so on...
+#  coll_implicit_pair_num_sweep  : number of sweeps
+#                       in case of splitting implicit scheme 
+#                       for pairwise colloids.
+#
+#  coll_repulsive_sub_time_step  : number of sub time step
+#                       in case of splitting implicit scheme 
+#                       for repulsive force.
 #
 #  coll_rho         : density of colloids.
 #  coll_rho_type    : density type
@@ -406,6 +420,11 @@ flow_adjust_freq = 10
 
 num_colloid          = 1
 coll_adapt_t_coef    = 1.0
+coll_sub_time_step   = 1
+coll_implicit_pair_num_sweep       = 1
+coll_implicit_pair_sweep_adaptive  = F
+coll_implicit_pair_sweep_tolerance = 1.0e-3
+coll_explicit_sub_time_step  = 1
 coll_rho             = 1.0e3
 coll_rho_type        = 0
 coll_translate       = F

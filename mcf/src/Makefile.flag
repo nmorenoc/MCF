@@ -129,12 +129,6 @@ lattice grid, to make the shape consisting
 of boundary particles symmetrically.
 
 #************************************************************
--D__COLLOID_RELAX :
-#************************************************************
-colloids can be moving during relax run.
-otherwise, colloid stay fixed during relax run.
-
-#************************************************************
 -D__COLLOID_NOACCE :
 #************************************************************
 

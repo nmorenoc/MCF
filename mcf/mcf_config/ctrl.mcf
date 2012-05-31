@@ -21,7 +21,7 @@
 
 job_name           = flow_around_cylinder
 
-job_submit_date    = 2012_02_10
+job_submit_date    = 2012_04_17
 
 #**********************************************************************
 #       File name for Physics configuration information.
@@ -102,7 +102,7 @@ mcf_io_config_file      = io_config.mcf
 #                          2: Espanol and Revenga Phys. Rev. E 2003.
 #                          3: Hu and Adams. J. Comput. Phys. 2006.
 #                          4: Hu and Adams. Angular momentum conservative.
-#                              Phys. Fluids. 2006.
+#                             Phys. Fluids. 2006.
 #
 #                          Note that 1 can work only with 
 #                          rhs_density_type 1, i.e., mass density.
@@ -114,45 +114,68 @@ mcf_io_config_file      = io_config.mcf
 #                          colloidal boundary particles from any 
 #                          2 different colloids.
 #
-#       pp_interact_cw   :particle-particle interaction between 
+#       pp_interact_cw   : particle-particle interaction between 
 #                          colloidal and wall boundary particles.
 #
 #
-#       cc_lub_type:     direct lubrication between colloid-colloid
-#                        0 no interaction.
-#                        1 lubrication theory, 1st order.
+#       cc_lub_type:       direct lubrication between colloid-colloid
+#                          0 no interaction.
+#                          1 lubrication theory, 1st order.
 #
-#       cc_repul_type:   direct repulsion between colloid-colloid
-#                        0 no interaction.
-#                        1 Hookean spring repulsive force.
-#                        2 DLVO type repulsive force.
+#       cc_repul_type:     direct repulsion between colloid-colloid
+#                          0 no interaction.
+#                          1 Hookean spring repulsive force.
+#                          2 DLVO type repulsive force.
 #
-#       cw_lub_type:     direct lubrication force between colloid-wall
-#                        0 no interaction.
-#                        1 lubrication theory, 1st order.
+#       cw_lub_type:      direct lubrication force between colloid-wall
+#                         0 no interaction.
+#                         1 lubrication theory, 1st order.
 #
-#       cw_repul_type:   direct repulsion between colloid-wall
-#                        0 no interaction.
-#                        1 Hookean spring repulsive force.
-#                        2 DLVO type repulsive force.
+#       cw_repul_type:    direct repulsion between colloid-wall
+#                         0 no interaction.
+#                         1 Hookean spring repulsive force.
+#                         2 DLVO type repulsive force.
 #
 #       stress_tensor:    calculation of stress tensor on each
 #                         particle. 
 #
-#       p_energy         : logical value indicating if potential
-#                          energy is calculated.
+#       p_energy:         logical value indicating if potential
+#                         energy is calculated.
 #
-#       flow_v_fixed     : in-flow velocity is a constant value
-#                          adjusting body force dynamically.
+#       flow_v_fixed:     in-flow velocity is a constant value
+#                         adjusting body force dynamically.
 #
-#       integrate_type   : time integration scheme.
-#                          1: Explicit Euler.
-#                          2: Velocity Verlet.
+#       integrate_type:   time integration scheme for solvent
+#                         1: explicit Euler.
+#                         2: explicit velocity Verlet.
+#                         3: explicit predictor-corrector 2nd oder accuracy.
 #
-#       adaptive_dt      : adapting time step due to certain time step
-#                          constraints. 
-#                          1: maximum accleration of particles,colloids.
-#                          2: non-overlap of colloids.
+#       integrate_colloid_type : time integration for colloids
+#                         -2: implicity for pair-wise colloids
+#                         -1: implicit for all colloids
+#                          1: explicty single step
+#                          2: multiple steps
+#
+#       integrate_colloid_RK  : single step time integration for colloid
+#                          Runge-Kutta is not available yet!
+#                          1: Runge-Kutta 1st order.
+#			   2: Runge-Kutta 4nd order.
+#			   3: Runge-Kutta 3rd order.
+#			   4: Runge-Kutta 4s  order.
+#
+#       integrate_colloid_AB  : multiple steps time integration scheme for colloid
+#                          1: Adams-Bashforth 1s order, explicit Euler;
+#                          2: Adams-Bashforth 2s order;
+#                          3: Adams-Bashforth 3s order;
+#                          4: Adams-Bashforth 4s order;
+#                          5: Adams-Bashforth 5s order;
+#                          
+#       adaptive_dt      : adapting time step for SPH/SDPD,
+#                          due to certain time step constraints. 
+#                          0: no adaptive time step
+#                          1: maximum accleration of SPH/SDPD particles and
+#                             (non)colloidal particles.
+#                          2: non-overlap criterion of colloids(not available).
 #
 #
 #       write_output     : write information during simulatin,
@@ -173,6 +196,8 @@ mcf_io_config_file      = io_config.mcf
 debug_flag             = 1
 
 relax_run              = F
+
+colloid_relax          = F
 
 read_external          = F
 
@@ -213,6 +238,12 @@ p_energy               = F
 flow_v_fixed           = F
 
 integrate_type         = 2
+
+integrate_colloid_type = 2
+
+integrate_colloid_RK   = 4
+
+integrate_colloid_AB   = 1
 
 adaptive_dt            = 0
 

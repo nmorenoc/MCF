@@ -45,6 +45,20 @@
         RETURN
         
       END FUNCTION control_get_relax_run
+
+      
+      LOGICAL FUNCTION control_get_colloid_relax(this,stat_info)
+        
+        TYPE(Control), INTENT(IN)                :: this
+        INTEGER, INTENT(out)                     :: stat_info
+        
+        stat_info = 0
+        
+        control_get_colloid_relax  = this%colloid_relax
+        
+        RETURN
+        
+      END FUNCTION control_get_colloid_relax
       
       
       LOGICAL FUNCTION control_get_read_external(this,stat_info)

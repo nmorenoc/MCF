@@ -131,7 +131,7 @@
               ! For rotation:
               ! get new relative position according to 
               ! rotation motion.
-              
+              !
               ! For non-rotation:
               ! keep the old relative position.
               !----------------------------------------------
