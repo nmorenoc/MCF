@@ -51,6 +51,22 @@
         
       END FUNCTION colloid_get_num_colloid
 
+
+      REAL(MK) FUNCTION colloid_get_adapt_t_coef(this, stat_info)
+        !----------------------------------------------------
+        ! Return the coefficient of adaptive t.
+        !----------------------------------------------------
+
+        TYPE(Colloid), INTENT(IN)       :: this
+        INTEGER, INTENT(OUT)            :: stat_info
+        
+        stat_info = 0
+        colloid_get_adapt_t_coef = this%adapt_t_coef
+        
+        RETURN
+        
+      END FUNCTION colloid_get_adapt_t_coef
+      
       
       INTEGER FUNCTION colloid_get_sub_time_step(this, stat_info)
         !----------------------------------------------------
@@ -137,6 +153,23 @@
         
       END FUNCTION colloid_get_implicit_pair_sweep_error
      
+
+      INTEGER FUNCTION colloid_get_implicit_pair_sweep_max(this, stat_info)
+        !----------------------------------------------------
+        ! Return the maximum number of implicit pair sweeps
+        !----------------------------------------------------
+
+        TYPE(Colloid), INTENT(IN)       :: this
+        INTEGER, INTENT(OUT)            :: stat_info
+        
+        stat_info = 0
+        colloid_get_implicit_pair_sweep_max = &
+             this%implicit_pair_sweep_max
+        
+        RETURN
+        
+      END FUNCTION colloid_get_implicit_pair_sweep_max
+
       
       INTEGER FUNCTION colloid_get_explicit_sub_time_step(this, stat_info)
         !----------------------------------------------------
@@ -153,22 +186,6 @@
         
       END FUNCTION colloid_get_explicit_sub_time_step
 
-
-      REAL(MK) FUNCTION colloid_get_adapt_t_coef(this, stat_info)
-        !----------------------------------------------------
-        ! Return the coefficient of adaptive t.
-        !----------------------------------------------------
-
-        TYPE(Colloid), INTENT(IN)       :: this
-        INTEGER, INTENT(OUT)            :: stat_info
-        
-        stat_info = 0
-        colloid_get_adapt_t_coef = this%adapt_t_coef
-        
-        RETURN
-        
-      END FUNCTION colloid_get_adapt_t_coef
-      
 
       REAL(MK) FUNCTION colloid_get_rho(this, stat_info)
         !----------------------------------------------------

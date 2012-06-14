@@ -96,15 +96,16 @@
 
            INTEGER                            :: num_dim
            INTEGER                            :: num_colloid
+           REAL(MK)                           :: adapt_t_coef
+           INTEGER                            :: sub_time_step
            INTEGER                            :: integrate_type
            INTEGER                            :: integrate_RK
            INTEGER                            :: integrate_AB
-           REAL(MK)                           :: adapt_t_coef
-           INTEGER                            :: sub_time_step
            INTEGER                            :: implicit_pair_num_sweep
            LOGICAL                            :: implicit_pair_sweep_adaptive
            REAL(MK)                           :: implicit_pair_sweep_tolerance
            REAL(MK)                           :: implicit_pair_sweep_error
+           INTEGER                            :: implicit_pair_sweep_max
            INTEGER                            :: explicit_sub_time_step
            REAL(MK)                           :: rho
            INTEGER                            :: rho_type

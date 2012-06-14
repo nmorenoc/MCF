@@ -248,7 +248,17 @@ flow_adjust_freq = 10
 #                       in case of splitting implicit scheme 
 #                       for pairwise colloids.
 #
-#  coll_repulsive_sub_time_step  : number of sub time step
+#  coll_implicit_pair_sweep_adaptive : indicate if number of sweeps for
+#                       pairwise splitting implicit scheme is adaptive
+#   
+#  coll_implicit_pair_sweep_tolerance : when sweeping is adaptive,
+#                       define the error tolerance.
+#                    
+#  coll_implicit_pair_sweep_max : maximum number of sweeps
+#                       in case of splitting implicit scheme 
+#                       for pairwise colloids.
+#
+#  coll_explicit_sub_time_step  : number of sub time step
 #                       in case of splitting implicit scheme 
 #                       for repulsive force.
 #
@@ -424,6 +434,7 @@ coll_sub_time_step   = 1
 coll_implicit_pair_num_sweep       = 1
 coll_implicit_pair_sweep_adaptive  = F
 coll_implicit_pair_sweep_tolerance = 1.0e-3
+coll_implicit_pair_sweep_max       = 1024
 coll_explicit_sub_time_step  = 1
 coll_rho             = 1.0e3
 coll_rho_type        = 0

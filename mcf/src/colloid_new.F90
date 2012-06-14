@@ -49,16 +49,19 @@
         this%num_dim     = dim
         this%num_colloid = num
         
-        this%integrate_type = 1
-        this%integrate_RK = 1
-        this%integrate_AB = 1
         this%adapt_t_coef   = 1.0_MK
         this%sub_time_step  = 1
+        
+        this%integrate_type = 1
+        this%integrate_RK = 1
+        this%integrate_AB = 1    
         this%implicit_pair_num_sweep       = 1
         this%implicit_pair_sweep_adaptive  = .FALSE.
         this%implicit_pair_sweep_tolerance = 1.0e-3_MK
         this%implicit_pair_sweep_error     = &
              this%implicit_pair_sweep_tolerance
+        this%implicit_pair_sweep_max       = &
+             mcf_cc_lub_implicit_velocity_sweep_max
         this%explicit_sub_time_step = 1
         this%rho         = 1.e3_MK
         this%rho_type    = 0
@@ -317,17 +320,20 @@
         
         this%num_dim        = d_dim
         this%num_colloid    = d_num
-        this%integrate_type = d_integrate_type
-        this%integrate_RK   = d_integrate_RK
-        this%integrate_AB   = d_integrate_AB
         
         this%adapt_t_coef   = 1.0_MK
         this%sub_time_step  = 1
+
+        this%integrate_type = d_integrate_type
+        this%integrate_RK   = d_integrate_RK
+        this%integrate_AB   = d_integrate_AB
         this%implicit_pair_num_sweep       = 1
         this%implicit_pair_sweep_adaptive  = .FALSE.
         this%implicit_pair_sweep_tolerance = 1.0e-3
         this%implicit_pair_sweep_error     = &
              this%implicit_pair_sweep_tolerance 
+        this%implicit_pair_sweep_max       = &
+             mcf_cc_lub_implicit_velocity_sweep_max   
         this%explicit_sub_time_step = 1
         this%rho            = 1.e3_MK
         this%rho_type       = 0
@@ -585,15 +591,26 @@
         PRINT *, '---***********************************---'
         
         PRINT *, "num_colloid        : ", this%num_colloid
-        PRINT *, "integrate_type     : ", this%integrate_type
-        PRINT *, "integrate_RK       : ", this%integrate_RK
-        PRINT *, "integrate_AB       : ", this%integrate_AB
         PRINT *, "adapt_t_coef       : ", this%adapt_t_coef
         PRINT *, "sub_time_step      : ", this%sub_time_step
-        PRINT *, "implicit pair num sweep : ", this%implicit_pair_num_sweep
-        PRINT *, "implicit pair sweep adaptive  : ", this%implicit_pair_sweep_adaptive
-        PRINT *, "implicit pair sweep tolerance : ", this%implicit_pair_sweep_tolerance
-        PRINT *, "explicit_sub_time_step  : ", this%explicit_sub_time_step
+        PRINT *, "integrate_type     : ", this%integrate_type
+        SELECT CASE ( this%integrate_type )
+        CASE (1)
+           PRINT *, "integrate_RK       : ", this%integrate_RK
+        CASE (2)
+           PRINT *, "integrate_AB       : ", this%integrate_AB
+        CASE (-2)
+           PRINT *, "implicit pair num sweep : ", this%implicit_pair_num_sweep
+           PRINT *, "implicit pair sweep adaptive  : ", this%implicit_pair_sweep_adaptive
+           PRINT *, "implicit pair sweep tolerance : ", this%implicit_pair_sweep_tolerance
+           PRINT *, "implicit pair sweep max       : ", this%implicit_pair_sweep_max
+           PRINT *, "explicit_sub_time_step  : ", this%explicit_sub_time_step
+        CASE DEFAULT
+           PRINT *, __FILE__, __LINE__, &
+                "colloid integration type not available!"
+           stat_info = -1
+           GOTO 9999
+        END SELECT
         PRINT *, "rho                : ", this%rho
         PRINT *, "rho type           : ", this%rho_type
         PRINT *, "translate          : ", this%translate

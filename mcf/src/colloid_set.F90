@@ -509,6 +509,30 @@
       END SUBROUTINE colloid_set_implicit_pair_sweep_error
     
       
+      SUBROUTINE colloid_set_implicit_pair_sweep_max(this,d_max,stat_info)
+        !-----------------------------------------
+        ! Set the maximum number of sweeps
+        !-----------------------------------------
+        
+        TYPE(Colloid), INTENT(INOUT)    :: this
+        INTEGER, INTENT(IN)             :: d_max
+        INTEGER, INTENT(OUT)            :: stat_info
+
+        stat_info = 0
+
+        IF ( d_max < 1  ) THEN
+           PRINT *, "colloid_set_implicit_pair_sweep_max: ", &
+                "Wrong sweep max!"
+           stat_info = -1
+        END IF
+        
+        this%implicit_pair_sweep_max = d_max
+        
+        RETURN
+        
+      END SUBROUTINE colloid_set_implicit_pair_sweep_max
+
+
       SUBROUTINE colloid_set_explicit_sub_time_step(this,d_step,stat_info)
         !-----------------------------------------
         ! Set the sub-time step of explicit force

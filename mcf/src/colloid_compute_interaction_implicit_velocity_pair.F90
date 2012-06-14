@@ -156,6 +156,10 @@
         stat_info     = 0
         stat_info_sub = 0
         
+        IF ( .NOT. this%translate ) THEN
+           GOTO 9999
+        END IF
+
         FB(:,:) = 0.0_MK
 
         !----------------------------------------------------
@@ -424,7 +428,7 @@
                  !-------------------------------------------
 
                  DO  WHILE ( num_sweep2 <= &
-                      mcf_cc_lub_implicit_velocity_sweep_max .AND. &
+                      this%implicit_pair_sweep_max .AND. &
                       error_increase > sweep_tolerance ) 
                     
                     !----------------------------------------
@@ -981,12 +985,16 @@
            ! Without any repulsive force, update position by dt.
            !-------------------------------------------------
            
-           DO i = 1, num
+           IF ( this%translate ) THEN
               
-              this%x(1:dim,i) = &
-                   this%x(1:dim,i) + this%v(1:dim,i,1) * dt
-              
-           END DO ! i = 1, num
+              DO i = 1, num
+                 
+                 this%x(1:dim,i) = &
+                      this%x(1:dim,i) + this%v(1:dim,i,1) * dt
+                 
+              END DO ! i = 1, num
+           
+           END IF
            
            !-------------------------------------------------
            ! Adjust colloids position according to 

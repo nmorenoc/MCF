@@ -32,8 +32,8 @@
         stat_info = 0
         
         !----------------------------------------------------
-        ! If colloid doesn't translate or rotate,
-        ! we set its velocity to zero.
+        ! If colloids do not translate,
+        ! we set translation velocity to be zero.
         !----------------------------------------------------
         
         IF ( .NOT. this%translate ) THEN
@@ -42,11 +42,29 @@
            
         END IF
            
+        !----------------------------------------------------
+        ! If colloids do not rotate,
+        ! we set rotation velocity to be zero.
+        !----------------------------------------------------
+      
         IF ( .NOT. this%rotate ) THEN
               
            this%omega(:,:,:) = 0.0_MK
            
         END IF
+
+        !----------------------------------------------------
+        ! If colloids do not translate or rotate,
+        ! we set sub time step to be zero.
+        !----------------------------------------------------
+        
+        IF ( (.NOT. this%translate) .AND. &
+             (.NOT. this%rotate ) ) THEN
+           
+           this%sub_time_step = 0
+           
+        END IF
+        
         
         !----------------------------------------------------
         ! Set h to threshold gap, i.e., cc_lub_cut_on
