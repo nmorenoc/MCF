@@ -1,29 +1,28 @@
 #############################################################
 # Calculate radial distribution function of colloid pair
-# according to its radial distance, it is averaged over
-# orientation angle theta.
+# according to relative angle.
 #############################################################
 use Math::Trig;
-
 
 $dir_name=$ARGV[0];
 $file_in_prefix="mcf_colloid";
 $file_out_prefix=$ARGV[1];
 
 opendir(DIR, $dir_name) || 
-die   ("can not open directory   :".$dir_name.", as it does not exist !\n");
-print "processing directory      : ", $dir_name, "\n";
+die ("can not open directory  :".$dir_name.", as it does not exist !\n");
+print "processing directory   : ", $dir_name, "\n";
 
 @file_names_temp = readdir(DIR);
 @file_names_in=sort @file_names_temp;
 closedir(DIR);
-print "number of files inside    : ", scalar(@file_names_in), "\n";
+print "number of files inside : ", scalar(@file_names_in), "\n";
 
 
 $pi=3.1415926;
 $num_file  = 0;
 $step_start=80000;
 $step_start=$ARGV[2];
+#$step_end=1000000;
 $step_end  =99999999;
 $step_end=$ARGV[3];
 
@@ -55,64 +54,71 @@ $num_t=0;
 
 #############################################################
 # minimum/maximum distrance
+# minimum angle=0; maximum angle=pi.
 #############################################################
 $r_min=2.0;
-$r_max=8.0;
+$r_max=2.05;
+$dr=$r_max-$r_min;
+$t_min=0.0;
+$t_max=$pi;
 
 #############################################################
-# number of different resolutions in distance.
+# number of different resolutions in angle.
 #############################################################
-$num_dr=9;
+
+$num_dt=5;
 
 #############################################################
 #the 0th resolution, i.e., number of points.
 #############################################################
-$r_num[0]=30;
-$r_dr[0]=($r_max-$r_min)/$r_num[0];
 
-print "number of resolution : ", $num_dr, "\n";
+
+$t_num[0]=5;
+$t_dt[0]=($t_max-$t_min)/$t_num[0];
+
+print "number of resolution: ",  $num_dt,"\n";
 
 #############################################################
-#other resolutions, 
-#each one is 2 time bigger than the previous one.
+#other resolutions
 #############################################################
 
-for ($i=1;$i<$num_dr;$i++)
+for ($i=1;$i<$num_dt;$i++)
 {
-    $r_num[$i]=$r_num[$i-1]*2;
-    $r_dr[$i] =($r_max-$r_min)/$r_num[$i];
+    $t_num[$i]=$t_num[$i-1]*2;
+    $t_dt[$i] =($t_max-$t_min)/$t_num[$i];
 }
 
+print "reslutions (t,dt): ";
 
-print "reslutions (r,dr): ";
-
-for ($i=0;$i<$num_dr;$i++)
+for ($i=0;$i<$num_dt;$i++)
 {
-    print  $r_num[$i], ' ', $r_dr[$i], "; ";
-    
+    print $t_num[$i], ' ',$t_dt[$i],"; "
 }
+
 print "\n";
 
+
 #############################################################
-# initialize mid location r.
+# initialize mid location t.
 #############################################################
 
-for ($i=0;$i<$num_dr;$i++)
+for ($i=0;$i<$num_dt;$i++)
 {
-    for ($j=0; $j<$r_num[$i]; $j++)
+    for ($j=0; $j<$t_num[$i]; $j++)
     {
-	$r[$j][$i] = $r_min+$j*$r_dr[$i]+ $r_dr[$i]/2.0;
-	#print $r[$j][$i], "\n";
+	$t[$j][$i] = $t_min+$j*$t_dt[$i]+ $t_dt[$i]/2.0;
+	#print $t[$j][$i], "\n";
     }
 }
+
 
 #############################################################
 # initialize number counter of each portion.
 #############################################################
 
-for ($i=0; $i<$num_dr;$i++)
+for ($i=0; $i<$num_dt;$i++)
 {
-    for ($j=0; $j<$r_num[$i];$j++)
+    for ($j=0; $j<$t_num[$i];$j++)
     {
 	$num[$j][$i] = 0.0;
 	
@@ -127,8 +133,8 @@ $num_file=0;
 
 $f_start = $file_in_prefix . stepstring($step_start). ".out";
 $f_end = $file_in_prefix . stepstring($step_end). ".out";
-print "starting file   : ", $f_start, "\n";
-print "ending file     : ", $f_end, "\n";
+print "starting file : ", $f_start, "\n";
+print "ending file   : ", $f_end, "\n";
 
 foreach $f (@file_names_in)
 {
@@ -147,7 +153,6 @@ foreach $f (@file_names_in)
 #############################################################
 	
 	open (IN, $file_name);	
-	
 	$num_p=0;
 	while ($line = <IN>)
 	{
@@ -156,15 +161,19 @@ foreach $f (@file_names_in)
 	    $x[$num_p] = $data[0];
 	    $y[$num_p] = $data[1];
 	    $num_p++;
+	    
 	}
 	close(IN);
-	#print "num_p : ", $num_p, "\n";
+   	#print "num_p : ", $num_p, "\n";
 	
-        ###################################
+	###################################
         # get number denisty.
         ###################################
 	$num_density=$num_p/$V;
 	$num_density_r=$V/$num_p;
+	
+	#print "volume      : ", $V, "\n";
+	#print "volume effective : ", $V_eff, "\n";
 	#print "num density : ", $num_density, "\n";
 	
 #############################################################
@@ -196,55 +205,57 @@ foreach $f (@file_names_in)
 	}
         #print "num_o : ", $num_o, "\n";
 	#print "num_t : ", $num_t, "\n";
-
 	
 #############################################################
 # calculate pair-wise correlation.
-# i.e., probability at each distance.
-# number density of particls is num_p/V_eff
-# periodic images have to be considered.
+# i.e., distance and relative angle.
 #############################################################
-
-	$coeff = $num_density_r/2.0/$pi/$num_o;
-
-	for($p=0;$p<$num_o; $p++)
-	{  
-	    for($q=0;$q<$num_t;$q++)
+	$area  = $pi*($r_max**2-$r_min**2);
+	$coeff = $num_o*$area*$num_density;
+	
+	#print "area        :", $area, "\n";
+	#print "num_density :", $num_density, "\n";
+	#print "coefficient :", $coeff, "\n";
+	
+	for($p=0; $p<$num_o; $p++)
+	{
+	    for($q=0; $q<$num_t; $q++)
 	    {
-		$x_12 = $x_o[$p]-$x_t[$q];
-		$y_12 = $y_o[$p]-$y_t[$q];
+		$x_12 = $x[$p]-$x[$q];
+		$y_12 = $y[$p]-$y[$q];
 		$r_12 = sqrt($x_12**2+$y_12**2);
 		
-		#print "r_12: ", $r_12, "\n";
-		
-		for ($i=0;$i<$num_dr;$i++)
+		if ($r_12>$r_max || $r_12 < $r_min )
 		{
+		    next;
+		}
+		
+		$t_12 = acos(($r_12**2+$x_12**2-$y_12**2)/(2.0*$r_12*$x_12));
+		
+		if ($y_12 < 0.0)
+		{
+		    $t_12 = $pi - $t_12;
+		}
+		
+		#print "t_12: ", $t_12, "\n";
+		
+		for ($i=0; $i<$num_dt; $i++)
+		{
+		    $t_idx = ($t_12-$t_min)/$t_dt[$i];
+		    $num[$t_idx][$i] += $t_num[$i]/$coeff;
 		    
-		    $r_idx=($r_12-$r_min)/$r_dr[$i];
-		    
-                    ###########################################
-                    # exclude two particles too close or far.
-                    ###########################################
-		    if( $r_idx<0 || $r_idx >= $r_num[$i] )
-		    {
-			next;
-		    }
-		    
-		    ############################################
-                    # Add one contribution.
-		    ############################################
-		    $num[$r_idx][$i] += ($coeff/$r[$r_idx][$i]/$r_dr[$i]);
-		    
-		} # i < num_dr
-	    } # q < num_t
-	} # p < num_o
-	
+		} # i < num_dt
+		
+	    }# q < num_t
+	    
+	}# p < num_o
+    
 #############################################################	
 # increase counter of files
 #############################################################
 	$num_file ++;
 	
-    } # if file is in consideration.
+    } # if f is in consideration
     
 }# folder
 
@@ -252,9 +263,9 @@ print "number of files processed: ", $num_file, "\n";
 
 if ( $num_file > 0 ) 
 {
-    for ($i=0; $i<$num_dr; $i++)
+    for ($i=0; $i<$num_dt; $i++)
     {
-	for ($j=0; $j<$r_num[$i]; $j++)
+	for ($j=0; $j<$t_num[$i]; $j++)
 	{
 	    $num[$j][$i] /= $num_file;
 	    
@@ -262,19 +273,17 @@ if ( $num_file > 0 )
     }
 }
 
-for ($i=0; $i<$num_dr; $i++)
+for ($i=0; $i<$num_dt; $i++)
 {
-    
-    $file_out_name = ">".$file_out_prefix."_".$gap."_".$r_dr[$i].".dat";
+    $file_out_name = ">".$file_out_prefix."_".$gap."_".$t_dt[$i].".dat";
     open(OUT, $file_out_name);
     
-    for ($j=0;$j<$r_num[$i];$j++)
+    for ($j=0;$j<$t_num[$i];$j++)
     {
-	print OUT $r[$j][$i],' ', $num[$j][$i], "\n";
+	print OUT $t[$j][$i], ' ', $num[$j][$i], "\n";
     }
     
-    
-    print "writing output file : ", $file_out_name, "\n";
+    print "writing file : ", $file_out_name, "\n";
     close(OUT);
     
 }

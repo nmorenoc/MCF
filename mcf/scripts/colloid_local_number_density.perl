@@ -3,21 +3,27 @@
 # its distance to top and bottom boundaries.
 #############################################################
 
-$dir_name_prefix= $ARGV[0];
-$dir_num=$ARGV[1];
+$dir_name= $ARGV[0];
 $file_in_prefix="mcf_colloid";
-$file_out_prefix= $ARGV[2];
+$file_out_prefix= $ARGV[1];
 $Lx=16.0;
 $Ly=16.0;
 $R=1.0;
 $pi=3.1415926;
 
-$num_file  = 0;
+opendir(DIR, $dir_name) || die ("can not open directory");
+print "processing directory : ", $dir_name, "\n";
+@file_names_temp = readdir(DIR);
+@file_names_in=sort @file_names_temp;
+closedir(DIR);
 
+
+$num_file  = 0;
 $step_start=300000;
-$step_start=$ARGV[3];
+$step_start=$ARGV[2];
 $step_end  =99999999;
-$step_end  =$ARGV[4];
+$step_end  =$ARGV[3];
+
 
 #############################################################
 # number of different resolutions.
@@ -29,7 +35,6 @@ $num_res=6;
 #############################################################
 
 $res[0]=40;
-#$res_step=40;
 $h[0]=$Ly/$res[0];
 
 print "number of resolution : ", $num_res, "\n";
@@ -62,95 +67,68 @@ for ($j=0;$j<$num_res;$j++)
     }
 }
 
-print "starting step : ", $step_start;
-print "ending  step  : ", $step_end;
-
-$f_start = $file_in_prefix . stepstring($step_start). ".out";
-$f_end = $file_in_prefix . stepstring($step_end). ".out";
-    
-print "starting file : ", $f_start, "\n";
-print "ending file   : ", $f_end, "\n";
-    
- 
-#############################################################
-# loop each folder given.
-#############################################################
-
-
-for ($fd=1;$fd<=$dir_num;$fd++)
-{
-    $dir_name=$dir_name_prefix."_".$fd."/";
-    opendir(DIR, $dir_name) || die ("can not open directory");
-    print "processing directory : ", $dir_name, "\n";
-
-    @file_names_temp = readdir(DIR);
-    @file_names_in=sort @file_names_temp;
-    print "number of files inside    : ", scalar(@file_names_in), "\n";
-    closedir(DIR);
-    
-    
 #############################################################
 # Loop over all files according to starting and ending files. 
 #############################################################
-    
-    $num_file[$fd]=0;
-    
-       foreach $f (@file_names_in)
+
+$num_file=0;
+
+print "starting step : ", $step_start;
+print "ending  step  : ", $step_end;
+ 
+$f_start = $file_in_prefix . stepstring($step_start). ".out";
+$f_end = $file_in_prefix . stepstring($step_end). ".out";
+
+print "starting file : ", $f_start, "\n";
+print "ending file   : ", $f_end, "\n";
+
+foreach $f (@file_names_in)
+{
+    if (( $f ge $f_start) && ( $f lt $f_end ) )
     {
-	if (( $f ge $f_start) && ( $f lt $f_end ) )
-	{
-	    $file_name = $dir_name . $f;
-	    print "processing file : ", $file_name, "\n";
-	    
+	$file_name = $dir_name . $f;
+	print "processing file : ", $file_name, "\n";
+	
 #############################################################
 # reset to zero 
 #############################################################
+	
+	open (IN, $file_name);
+	
+	$num_particle=0;
+
+	while ($line = <IN>)
+	{
+	    @data = split(' ', $line);
 	    
-	    open (IN, $file_name);
+	    $y = $data[1];
 	    
-	    $num_particle=0;
-	    
-	    while ($line = <IN>)
+	    for ($j=0; $j<$num_res; $j++)
 	    {
-		@data = split(' ', $line);
-		
-		$y = $data[1];
-		
-		for ($j=0; $j<$num_res; $j++)
-		{
-		    #print "y/h : ", $y/$h, "\n";
-		    $num[$y/$h[$j]][$j] += 1.0;
-		}
-		
-		$num_particle++;
-		
+		#print "y/h : ", $y/$h, "\n";
+		$num[$y/$h[$j]][$j] += 1.0;
 	    }
 	    
-	    $num_file[$fd] ++;
-	    
-	    close(IN);
+	    $num_particle++;
 	    
 	}
+	$num_file ++;
 	
-    } # each file
-}#each folder
-
-
-$num_file_tot=0;
-for ($fd=1;$fd<=$dir_num;$fd++)
-{
-    $num_file_tot+=$num_file[$fd];
-    print "number of files processed: ", $num_file[$fd], "\n";    
+	close(IN);
+	
+    }
+    
 }
-print "total number of files processed: ", $num_file_tot, "\n";
 
-if ($num_file_tot > 0 ) 
+print "number of files processed: ", $num_file, "\n";
+
+if ($num_file > 0 ) 
 {
     for ($j=0; $j<$num_res; $j++)
     {
 	for ($k=0;$k<=$res[$j];$k++)
 	{
-	    $num[$k][$j]=$num[$k][$j]*$res[$j]/$num_file_tot/$num_particle;
+	    $num[$k][$j]=$num[$k][$j]*$res[$j]/$num_file/$num_particle;
 	}
     }
 }

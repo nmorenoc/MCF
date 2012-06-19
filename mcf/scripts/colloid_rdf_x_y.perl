@@ -1,108 +1,94 @@
 #############################################################
 # Calculate radial distribution function of colloid pair
-# according to its radial distance, it is averaged over
-# orientation angle theta.
+# according to its distance and relative angle and
+# map on a 2D grid;
 #############################################################
-use Math::Trig;
 
 
 $dir_name=$ARGV[0];
 $file_in_prefix="mcf_colloid";
 $file_out_prefix=$ARGV[1];
 
-opendir(DIR, $dir_name) || 
-die   ("can not open directory   :".$dir_name.", as it does not exist !\n");
-print "processing directory      : ", $dir_name, "\n";
+opendir(DIR, $dir_name) || die ("can not open directory");
+print "processing directory : ", $dir_name, "\n";
 
 @file_names_temp = readdir(DIR);
 @file_names_in=sort @file_names_temp;
 closedir(DIR);
-print "number of files inside    : ", scalar(@file_names_in), "\n";
+print "number of files inside     : ", scalar(@file_names_in), "\n";
 
 
-$pi=3.1415926;
 $num_file  = 0;
-$step_start=80000;
+$step_start=8000;
 $step_start=$ARGV[2];
 $step_end  =99999999;
 $step_end=$ARGV[3];
 
-######################################
-# Lx,Ly: box size.
-# V    : volume 3D / area 2D.
-# gap  : gap considered away from the walls.
-# suppose x-direction periodic and
-# y-direction wall.
-######################################
-
+#############################################################
+# Box size of simulation
+# gap: remove colloids which have distance smaller than gap.
+#############################################################
 $Lx=$ARGV[4];
 $Ly=$ARGV[5];
 $V=$Lx*$Ly;
 $gap=$ARGV[6];
 $R=1.0;
-$V_eff=$Lx*($Ly-2.0*($gap-$R));
-
-
-################################################################
-#num_p: number of colloid in the file.
-#num_o: number of colloid considered as origin, 
-#       for which we look for neighbors.
-#num_t: number of all including the ones near wall and periodic
-################################################################
-$num_p=0;
-$num_o=0;
-$num_t=0;
 
 #############################################################
 # minimum/maximum distrance
+# minimum angle=0; maximum angle=2*pi.
 #############################################################
-$r_min=2.0;
-$r_max=8.0;
+$r_min=-5.0;
+$r_max=5.0;
 
 #############################################################
 # number of different resolutions in distance.
 #############################################################
-$num_dr=9;
+$num_dr=5;
 
 #############################################################
 #the 0th resolution, i.e., number of points.
 #############################################################
-$r_num[0]=30;
+
+$r_num[0]=50;
 $r_dr[0]=($r_max-$r_min)/$r_num[0];
 
 print "number of resolution : ", $num_dr, "\n";
 
 #############################################################
-#other resolutions, 
-#each one is 2 time bigger than the previous one.
+#other resolutions
 #############################################################
 
-for ($i=1;$i<$num_dr;$i++)
+for ($j=1;$j<$num_dr;$j++)
 {
-    $r_num[$i]=$r_num[$i-1]*2;
-    $r_dr[$i] =($r_max-$r_min)/$r_num[$i];
+    $r_num[$j]=$r_num[$j-1]*2;
+    $r_dr[$j] =($r_max-$r_min)/$r_num[$j];
 }
 
 
-print "reslutions (r,dr): ";
+print "reslutions (x_num,y_num,dx,dy;): ";
 
 for ($i=0;$i<$num_dr;$i++)
 {
-    print  $r_num[$i], ' ', $r_dr[$i], "; ";
-    
+    print  $r_num[$i], ' ',$r_num[$i], ' ', $r_dr[$i], ' ',$r_dr[$i],"; ";    
 }
+
 print "\n";
 
+
 #############################################################
-# initialize mid location r.
+# initialize mid location r, t.
+# as x and y dimension have the same resolution,
+# use one dimension array to record its mid location,
+# use second dimension for different resolution.
 #############################################################
 
-for ($i=0;$i<$num_dr;$i++)
+for ($j=0;$j<$num_dr;$j++)
 {
-    for ($j=0; $j<$r_num[$i]; $j++)
+    for ($k=0; $k<$r_num[$j]; $k++)
     {
-	$r[$j][$i] = $r_min+$j*$r_dr[$i]+ $r_dr[$i]/2.0;
-	#print $r[$j][$i], "\n";
+	$r[$k][$j] = $r_min+$k*$r_dr[$j]+ $r_dr[$j]/2.0;
+	#print $r[$k][$j], "\n";
     }
 }
 
@@ -114,8 +100,11 @@ for ($i=0; $i<$num_dr;$i++)
 {
     for ($j=0; $j<$r_num[$i];$j++)
     {
-	$num[$j][$i] = 0.0;
-	
+	for ($k=0; $k<$r_num[$i];$k++)
+	{
+	    $num[$j][$k][$i] = 0.0;
+	    
+	}
     }
 }
 
@@ -127,8 +116,18 @@ $num_file=0;
 
 $f_start = $file_in_prefix . stepstring($step_start). ".out";
 $f_end = $file_in_prefix . stepstring($step_end). ".out";
-print "starting file   : ", $f_start, "\n";
-print "ending file     : ", $f_end, "\n";
+print "starting file : ", $f_start, "\n";
+print "ending file   : ", $f_end, "\n";
+
+################################################################
+#num_p: number of colloid in the file.
+#num_o: number of colloid considered as origin, 
+#       for which we look for neighbors.
+#num_t: number of all including the ones near wall and periodic
+################################################################
+$num_p=0;
+$num_o=0;
+$num_t=0;
 
 foreach $f (@file_names_in)
 {
@@ -139,16 +138,17 @@ foreach $f (@file_names_in)
 	$file_name = $dir_name . $f;
 	print "processing file : ", $file_name, "\n";
 	
-	
 #############################################################
 # Open a colloid file.
 # reset counter to zero. 
+# ### the last simulation file may be incomplete
 # read each colloid position.
 #############################################################
 	
-	open (IN, $file_name);	
+	open (IN, $file_name);
 	
 	$num_p=0;
+	
 	while ($line = <IN>)
 	{
 	    @data = split(' ', $line);
@@ -156,23 +156,26 @@ foreach $f (@file_names_in)
 	    $x[$num_p] = $data[0];
 	    $y[$num_p] = $data[1];
 	    $num_p++;
+	    
 	}
+	
 	close(IN);
 	#print "num_p : ", $num_p, "\n";
 	
-        ###################################
+	###################################
         # get number denisty.
         ###################################
 	$num_density=$num_p/$V;
 	$num_density_r=$V/$num_p;
 	#print "num density : ", $num_density, "\n";
-	
+
 #############################################################
 # reset counter to zero. 
 # record the origin ones, which are inside simulation box and
 # away from walls.
 # record all ones, assuming x direction is periodic boundary.
 #############################################################
+	
 	$num_o=0;
 	$num_t=0;
 	
@@ -197,43 +200,74 @@ foreach $f (@file_names_in)
         #print "num_o : ", $num_o, "\n";
 	#print "num_t : ", $num_t, "\n";
 
-	
 #############################################################
 # calculate pair-wise correlation.
-# i.e., probability at each distance.
-# number density of particls is num_p/V_eff
+# i.e., distance and relative angle.
 # periodic images have to be considered.
 #############################################################
-
-	$coeff = $num_density_r/2.0/$pi/$num_o;
-
+	
+	$coeff = $num_density_r/$num_o/2.0;
+	
 	for($p=0;$p<$num_o; $p++)
-	{  
-	    for($q=0;$q<$num_t;$q++)
+	{
+	    for($q=$0;$q<$num_t;$q++)
 	    {
+		
 		$x_12 = $x_o[$p]-$x_t[$q];
 		$y_12 = $y_o[$p]-$y_t[$q];
-		$r_12 = sqrt($x_12**2+$y_12**2);
 		
-		#print "r_12: ", $r_12, "\n";
+		#print "x_12,y_12: ", $x_12, ' ', $y_12, "\n";
 		
 		for ($i=0;$i<$num_dr;$i++)
 		{
+		    ###########################################
+                    # Get relative position.
+		    ###########################################
 		    
-		    $r_idx=($r_12-$r_min)/$r_dr[$i];
+		    $x_idx=($x_12-$r_min)/$r_dr[$i];
+		    $y_idx=($y_12-$r_min)/$r_dr[$i];
+
+		    ###########################################
+                    # exclude two particles too far.
+                    ###########################################
 		    
+		    if( $x_idx<0 || $x_idx >= $r_num[$i] )
+		    {
+			next;
+		    }
+		    if( $y_idx<0 || $y_idx >= $r_num[$i] )
+		    {
+			next;
+		    }
+		   
+		    #print "x_idx, y_idx : ", $x_idx, ' ' , $y_idx, "\n";
+		    $num[$x_idx][$y_idx][$i] += ($coeff/$r_dr[$i]/$r_dr[$i]);
+		    
+		    ###########################################
+                    # Get reverse relative position.
+		    ###########################################
+
+		    $x_idx=(-$x_12-$r_min)/$r_dr[$i];
+		    $y_idx=(-$y_12-$r_min)/$r_dr[$i];
+		    
+		    ###########################################
+                    # exclude two particles too far.
                     ###########################################
-                    # exclude two particles too close or far.
-                    ###########################################
-		    if( $r_idx<0 || $r_idx >= $r_num[$i] )
+		    
+		    if( $x_idx<0 || $x_idx >= $r_num[$i] )
+		    {
+			next;
+		    }
+		    if( $y_idx<0 || $y_idx >= $r_num[$i] )
 		    {
 			next;
 		    }
 		    
+		    #print "x_idx, y_idx : ", $x_idx, ' ' , $y_idx, "\n";
 		    ############################################
                     # Add one contribution.
 		    ############################################
-		    $num[$r_idx][$i] += ($coeff/$r[$r_idx][$i]/$r_dr[$i]);
+		    $num[$x_idx][$y_idx][$i] += ($coeff/$r_dr[$i]/$r_dr[$i]);
 		    
 		} # i < num_dr
 	    } # q < num_t
@@ -248,35 +282,46 @@ foreach $f (@file_names_in)
     
 }# folder
 
+#print "number of particles: ", $num_p,"\n";
 print "number of files processed: ", $num_file, "\n";
 
-if ( $num_file > 0 ) 
+if ( $num_file > 0) 
 {
     for ($i=0; $i<$num_dr; $i++)
-    {
-	for ($j=0; $j<$r_num[$i]; $j++)
+    {	
+	for ($j=0;$j<$r_num[$i];$j++)
 	{
-	    $num[$j][$i] /= $num_file;
-	    
+	    for ($k=0;$k<$r_num[$i];$k++)
+	    {
+		$num[$j][$k][$i] /= $num_file;
+	    }
 	}
+	
     }
 }
 
 for ($i=0; $i<$num_dr; $i++)
 {
-    
     $file_out_name = ">".$file_out_prefix."_".$gap."_".$r_dr[$i].".dat";
     open(OUT, $file_out_name);
     
     for ($j=0;$j<$r_num[$i];$j++)
     {
-	print OUT $r[$j][$i],' ', $num[$j][$i], "\n";
+	for ($k=0;$k<$r_num[$i];$k++)
+	{
+	    $dij2 = $r[$j][$i]**2 + $r[$k][$i]**2;
+	    
+	    if ($dij2<=$R**2)
+	    {
+		$num[$j][$k][$i] = -1;
+	    }
+	    print OUT $r[$j][$i],' ', $r[$k][$i], ' ', $num[$j][$k][$i], "\n";
+	}
+	print OUT "\n";
     }
     
-    
-    print "writing output file : ", $file_out_name, "\n";
+    print "writing file : ", $file_out_name, "\n";
     close(OUT);
-    
 }
 
 sub stepstring

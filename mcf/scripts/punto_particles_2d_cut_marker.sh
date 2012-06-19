@@ -8,5 +8,5 @@ fi
 
 rm punto_particles_2d_cut_marker.dat
 
-perl  ~/project/trunk/mcf/scripts/particles_2d_cut_marker.perl ${dirname}
+perl  ~/MCF/mcf/scripts/particles_2d_cut_marker.perl ${dirname}
 

@@ -1,8 +1,8 @@
-open file_in, "mcf_boundary.dat";
 
+$dir=$ARGV[0];
+open file_in, $dir."/mcf_boundary.dat";
 $time=0.0;
-
-$time=$ARGV[0];
+$time=$ARGV[1];
 
 
 

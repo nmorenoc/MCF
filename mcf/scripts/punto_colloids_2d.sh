@@ -11,7 +11,7 @@ rm ${dirname}/punto_colloids.dat
 for F in ${dirname}/mcf_colloid*.out; do
     
     printf "%s" $F
-    perl  ~/project/trunk/mcf/scripts/colloids_2d.perl $F 'punto_colloids.dat'
+    perl  ~/MCF/mcf/scripts/colloids_2d.perl $F 'punto_colloids.dat'
     printf "\n" >> ${dirname}/punto_colloids.dat
 
 done
