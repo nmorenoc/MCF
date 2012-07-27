@@ -637,6 +637,7 @@
         PRINT *, "cw_repul_cut_off   : ", this%cw_repul_cut_off
         PRINT *, "cw_repul_cut_on    : ", this%cw_repul_cut_on
         PRINT *, "cw_repul_F0        : ", this%cw_repul_F0
+        PRINT *, "h                  : ", this%h
         
         PRINT *, "num_image          : ", this%num_image
         

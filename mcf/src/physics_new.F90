@@ -219,7 +219,7 @@
         PRINT *, "max_phys_t       : "
         PRINT *, this%max_phys_t(1:num_dim)
       
-        IF(this%num_dim ==2) THEN
+        IF( this%num_dim ==2 ) THEN
            
            SELECT CASE (this%lattice_type)
            CASE (1)
@@ -230,7 +230,7 @@
               PRINT *, "lattice type     : ", "  Hexagonal Lattice."
            END SELECT
            
-        ELSE IF(this%num_dim == 3) THEN
+        ELSE IF( this%num_dim == 3 ) THEN
            
            SELECT CASE (this%lattice_type)
            CASE (1)

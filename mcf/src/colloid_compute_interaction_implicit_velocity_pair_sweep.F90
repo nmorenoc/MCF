@@ -19,7 +19,9 @@
         !
         ! Remarks     :
         !
-        ! Revisions   : V0.1 25.05.2012, original version.
+        ! Revisions   : V0.2 17.07.2012, extended version for 3D
+        !
+        !               V0.1 25.05.2012, original version for 2D
         !----------------------------------------------------
         ! Author       : Xin Bian
         ! Contact      : xin.bian@aer.mw.tum.de
@@ -112,6 +114,8 @@
            
            F0  = 3.0_MK*mcf_pi*SQRT(2.0_MK)/4.0_MK
            F1  = 231.0_MK*mcf_pi*SQRT(2.0_MK) / 80.0_MK
+           
+        ELSE IF ( dim == 3 ) THEN
            
         ELSE
            
@@ -207,21 +211,42 @@
                           
                        END IF
                        
-                       !-------------------------------------
-                       ! dt_sweep/2/m is coefficient of Aij.
-                       ! Assuming now mi=mj
-                       !-------------------------------------
-                       
-                       Aij = -0.5_MK * this%eta * &
-                            ( (aa/h)**1.5_MK  * (F0 + h*F1/aa) - &
-                            (aa/hn_l)**1.5_MK * (F0 + hn_l*F1/aa) ) * &
-                            dt_sweep / this%m(i)
-                       
-                       !-------------------------------------
-                       ! Solve 2*2 linear system analytically.
-                       !-------------------------------------
+                       IF ( dim == 2 )THEN
+                          !----------------------------------
+                          ! dt_sweep/2/m is coefficient of Aij.
+                          ! Assuming now mi=mj
+                          !----------------------------------
+                          
+                          Aij = -0.5_MK * this%eta * &
+                               ( (aa/h)**1.5_MK  * (F0 + h*F1/aa) - &
+                               (aa/hn_l)**1.5_MK * (F0 + hn_l*F1/aa) ) * &
+                               dt_sweep / this%m(i)
+                          
+                          !----------------------------------
+                          ! Solve 2*2 linear system analytically.
+                          !----------------------------------
                        
 #include "velocity_pair_backward_Euler_2d.inc"
+                          
+                       ELSE IF ( dim == 3 ) THEN
+
+                          !----------------------------------
+                          ! dt_sweep/2/m is coefficient of Aij.
+                          ! Assuming now mi=mj
+                          !----------------------------------
+                          
+                          Aij = -6.0_MK * mcf_pi * this%eta * &
+                               ( ai*aj/aa )**2  * &
+                               ( 1.0_MK/h - 1.0_MK/hn_l )  * &
+                               dt_sweep / this%m(i)
+                          
+                          !----------------------------------
+                          ! Solve 3*3 linear system analytically.
+                          !----------------------------------
+                          
+#include "velocity_pair_backward_Euler_3d.inc"
+                          
+                       END IF
                        
                        !-------------------------------------
                        ! update velocity of the interacting
