@@ -229,16 +229,17 @@ restart_particles_relax_fmt   = FORMATTED
 #                           FORMATTED    (i.e. ASCII text)
 #                           UNFORMATTED  (i.e. binary)
 #
-# restart_freq_step: frequency for writing restart files
-#                       (physics and particles have same frequencey).
+# restart_freq_step: (Integer)frequency for writing restart files
+#                       (physics, particles and conformation tensor have same frequencey).
 #	   	        (in simulation time step)
 #
-# restart_freq_time: frequency for writing restart files
-#                       (physics and particles have same frequencey).
+# restart_freq_time: (Float)frequency for writing restart files
+#                       (physics, particles and conformation tensor have same frequencey).
 #	   	        (in simulation time)
-# restart_freq_time_wall: frequency for writing restart files
-#                      (physics and particles have same frequencey).
-#	   	       (in wall time)
+# restart_freq_time_wall: (Float)frequency for writing restart files
+#                      (physics, particles and conformation tensor have same frequencey).
+#	   	       (in wall time by hours)
+#
 #---------------------------------------------------------------------
 
 restart_physics_file    = mcf_restart_physics
@@ -252,7 +253,7 @@ restart_conformation_fmt  = FORMATTED
 
 restart_freq_step      = 20000
 restart_freq_time      = -1.0
-rsstart_freq_time_wall = -1.0
+restart_freq_time_wall = 0.05
 
 #*********************************************************************
 #
