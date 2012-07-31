@@ -36,8 +36,10 @@
            CHARACTER(LEN=MAX_CHAR)    :: job_name
            CHARACTER(LEN=MAX_CHAR)    :: job_submit_date
            CHARACTER(LEN=10)          :: job_execute_date
-           CHARACTER(LEN=10)          :: job_execute_time
-           CHARACTER(LEN=10)          :: job_execute_zone
+           CHARACTER(LEN=12)          :: job_execute_time
+           CHARACTER(LEN=7)           :: job_execute_zone
+           INTEGER, DIMENSION(10)     :: job_execute_values
+           REAL(MK)                   :: job_time_start
            INTEGER                    :: debug_flag
            LOGICAL                    :: relax_run
            LOGICAL                    :: colloid_relax

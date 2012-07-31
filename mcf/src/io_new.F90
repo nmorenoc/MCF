@@ -510,7 +510,10 @@
            CASE (2)
               PRINT *, "restart_freq_time        : ", this%restart_freq_time
            CASE (3)
-              PRINT *, "restart_freq_time_wall   : ", this%restart_freq_time_wall
+              PRINT *, "restart_freq_time_wall   : ", &
+                   this%restart_freq_time_wall, " hours"
+           CASE DEFAULT
+              PRINT *, "no such way of writting restart files!"
            END SELECT
            
         END IF ! write_restart

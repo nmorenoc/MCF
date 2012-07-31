@@ -419,3 +419,27 @@
         RETURN
         
       END FUNCTION control_get_write_restart
+
+      
+      REAL(MK) FUNCTION control_get_elapsed_wall_time(this,stat_info)
+
+        !####################################################
+        ! return elapsed wall time in hours
+        ! since this run starts.
+        !####################################################
+
+        TYPE(Control), INTENT(IN)       :: this
+        INTEGER, INTENT(out)            :: stat_info
+        
+        REAL(MK)                        :: elapse
+        
+        stat_info = 0
+        
+        CALL CPU_TIME(elapse)
+        
+        control_get_elapsed_wall_time = &
+             (elapse-this%job_time_start)/3600.0_MK
+        
+        RETURN
+        
+      END FUNCTION control_get_elapsed_wall_time

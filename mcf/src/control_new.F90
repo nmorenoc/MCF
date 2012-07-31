@@ -37,12 +37,21 @@
         
         this%job_name            = ""
         this%job_submit_date     = ""
+        
+        !----------------------------------------------------
+        ! For default, give current time of running 
+        ! as submit date. It should be overwritten by 
+        ! the parameter in ctrl.mcf file.
+        !----------------------------------------------------
         CALL DATE_AND_TIME(this%job_submit_date)
         this%job_execute_date     = ""
         this%job_execute_time     = ""
         this%job_execute_zone     = ""
         CALL DATE_AND_TIME(this%job_execute_date, &
-             this%job_execute_time, this%job_execute_zone)
+             this%job_execute_time, this%job_execute_zone,&
+             this%job_execute_values)
+        CALL CPU_TIME(this%job_time_start)
+        
         this%debug_flag          = 1
         this%relax_run           = .FALSE.
         this%colloid_relax       = .FALSE.
@@ -115,12 +124,19 @@
         PRINT *, "job_submit_date    : ", &
              this%job_submit_date(1:LEN_TRIM(this%job_submit_date))
         PRINT *, "job_execute_date   : ", &
-             this%job_execute_date(1:LEN_TRIM(this%job_execute_date))
+             this%job_execute_date(1:4),"_",&
+             this%job_execute_date(5:6),"_",&
+             this%job_execute_date(7:8)             
         PRINT *, "job_execute_time   : ", &
-             this%job_execute_time(1:LEN_TRIM(this%job_execute_time))
-        PRINT *, "job_execute_zone   : ", &
-             this%job_execute_zone(1:LEN_TRIM(this%job_execute_zone))
-     
+             this%job_execute_time(1:2),":", &
+             this%job_execute_time(3:4),":", &
+             this%job_execute_time(5:10)
+        !PRINT *, "job_execute_zone   : ", &
+        !     this%job_execute_zone(1:LEN_TRIM(this%job_execute_zone))
+        PRINT *, "job_execute_values : ", &
+             this%job_execute_values(1:8)
+        PRINT *, "job_time_start     : ", &
+             this%job_time_start
         PRINT *, "debug_flag         : ", this%debug_flag
         
         PRINT *, "relax run          : ", this%relax_run
@@ -145,7 +161,7 @@
            GOTO 9999
         END SELECT
         
-        PRINT *, "Inter-symmetry     : ", this%symmetry
+        PRINT *, "inter-symmetry     : ", this%symmetry
         
         SELECT CASE(this%rhs_density_type)
         CASE (1)

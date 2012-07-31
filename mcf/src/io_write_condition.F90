@@ -11,7 +11,8 @@
         !  Subroutine   :  io_write_condition_check
         !----------------------------------------------------
         !
-        !  Purpose      :  Check if write or not.
+        !  Purpose      :  Check if write or not at current
+        !                  step/time/wall_time
         !
         !  Reference    :
         !
@@ -54,6 +55,7 @@
         INTEGER                         :: stat_info_sub
         INTEGER                         :: step
         REAL(MK)                        :: time
+        REAL(MK)                        :: wall_time
         LOGICAL                         :: Newtonian
         INTEGER                         :: num_colloid
         INTEGER                         :: write_restart
@@ -70,8 +72,8 @@
         NULLIFY(tboundary)
         
         !----------------------------------------------------
-        ! Step since simulation start.
-        ! Time since simulation start.
+        ! Step since simulation starts at current run.
+        ! Time since simulation starts at current run.
         !----------------------------------------------------
         
         step = step_current - this%step_start
@@ -91,11 +93,26 @@
              boundary_get_num_shear(tboundary,stat_info_sub)
         
         
+        !----------------------------------------------------
+        ! Checking writting for output according to different
+        ! time measurement,
+        ! 1: simulation step
+        ! 2: simulation time
+        !----------------------------------------------------
+
         SELECT CASE (this%write_output)
            
            !-------------------------------------------------
            ! Writting freq is based on simulation step.
            !-------------------------------------------------
+           
+        CASE (0)
+           
+           this%write_particles    = .FALSE.
+           this%write_conformation = .FALSE.
+           this%write_colloid      = .FALSE.
+           this%write_statistic    = .FALSE.
+           this%write_boundary     = .FALSE.
            
         CASE (1)
 
@@ -132,15 +149,6 @@
               this%write_boundary = .FALSE.
            END IF
            
-#if 0
-           IF ( step > 5000 ) THEN
-              
-              this%write_particles = .TRUE.
-              this%write_colloid = .TRUE.
-
-           END IF
-#endif
-      
            !-------------------------------------------------
            ! Writting freq is based on simulation time.
            !-------------------------------------------------
@@ -211,12 +219,31 @@
               
            END IF
            
+        CASE DEFAULT
+           
+           PRINT *,__FILE__, __LINE__, &
+                "no such way of writing output files!"
+           stat_info=-1
+           GOTO 9999
            
         END SELECT ! write_output
         
+        !----------------------------------------------------
+        ! Checking writting for restart according to different
+        ! time measurement,
+        ! 1: simulation step
+        ! 2: simulation time
+        ! 3: wall time
+        !----------------------------------------------------
+
         
         SELECT CASE ( this%write_restart ) 
            
+        CASE (0)
+           this%write_restart_physics      = .FALSE.
+           this%write_restart_particles    = .FALSE.
+           this%write_restart_conformation = .FALSE.
+                 
         CASE (1)
            
            IF( step > 0 .AND. &
@@ -266,11 +293,40 @@
            
         CASE (3)
 
-           PRINT *, __FILE__,__LINE__, &
-                "write_restart type not available!"
-           stat_info = -1
-           GOTO 9999
+           wall_time = &
+                control_get_elapsed_wall_time(this%ctrl,stat_info_sub)
            
+           IF( wall_time >= this%restart_freq_time_wall * &
+                this%restart_freq_time_num  ) THEN
+              
+              this%restart_freq_time_num = &
+                   this%restart_freq_time_num + 1
+              
+              this%write_restart_physics   = .TRUE.           
+              this%write_restart_particles = .TRUE.
+              
+              IF ( .NOT. Newtonian ) THEN
+                 this%write_restart_conformation = .TRUE.
+              ELSE
+                 this%write_restart_conformation = .FALSE.
+              END IF
+              
+           ELSE
+              
+              this%write_restart_physics      = .FALSE.
+              this%write_restart_particles    = .FALSE.
+              this%write_restart_conformation = .FALSE.
+              
+           END IF
+           
+           
+        CASE DEFAULT
+           
+           PRINT *,__FILE__, __LINE__, &
+                "no such way of writing restart files!"
+           stat_info=-1
+           GOTO 9999
+
         END SELECT ! write_restart
          
         

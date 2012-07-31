@@ -240,8 +240,7 @@
            END IF
 
            IF ( num_wall > 0 ) THEN
-              PRINT *, "no slip          : "
-              PRINT *, this%noslip_type
+              PRINT *, "no slip          : ", this%noslip_type
            END IF
            
         END IF
