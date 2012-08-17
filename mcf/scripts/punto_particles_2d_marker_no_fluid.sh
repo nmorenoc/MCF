@@ -14,6 +14,8 @@
 #otherwise it is zero.
 #if a 5th parameter is given, use it as folder name
 #otherwise use current directory.
+#
+#fluid particles are removed.
 #############################################################
 
 R=$1
@@ -35,11 +37,11 @@ fi
 #remove existing target output file.
 #############################################################
 
-rm punto_particles_marker.dat
+rm punto_particles_marker_no_fluid.dat
 
 #############################################################
 #start buliding up a punto particles file using perl script.
 #############################################################
 
-perl  ~/MCF/mcf/scripts/particles_2d_marker.perl ${R} ${Lx} ${Ly} ${Nc} ${dirname}
+perl  ~/MCF/mcf/scripts/particles_2d_marker_no_fluid.perl ${R} ${Lx} ${Ly} ${Nc} ${dirname}
 

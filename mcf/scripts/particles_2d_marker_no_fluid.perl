@@ -1,9 +1,10 @@
 #############################################################
 # Build up punto animation file with different colors
-# for solvent, colloid and orientation marker of colloid,
+# for colloid and orientation marker of colloid,
 # and wall particles.
 # NOTE:
-# We assume that x direction is possibly periodic.
+# We assume that x direction is possibly periodic and
+# fluid particles are removed.
 #############################################################
 
 
@@ -35,7 +36,7 @@ print "Processing directory: ", $folder_in, "\n";
 #open output file.
 #############################################################
 
-$name_out=">punto_particles_marker.dat";
+$name_out=">punto_particles_marker_no_fluid.dat";
 open file_out, $name_out;
 
 
@@ -224,21 +225,13 @@ foreach $f (@names_in_sorted)
 	    $sid=$data[$sid_index];
 	    
 	    #################################################
-	    #for a solvent, simply use assigned color.
-	    #################################################
-	    
-	    if ( $sid==0 )
-	    {
-		$hash_ps{$pid}=$color_s;
-	    }
-	    #################################################
 	    #for a colloidal boundary particle, 
 	    #scale its color according to min, max color
 	    #and number of total colloids.
 	    #Also determine if it is for indicating
 	    #orientation.
 	    #################################################
-	    elsif ( $sid>0 )
+	    if ( $sid>0 )
 	    {
 		if ($Nc>1)
 		{
@@ -324,18 +317,23 @@ foreach $f (@names_in_sorted)
 	{
 	    @data=split(' ', $line);
 	    $pid=$data[$pid_index];
+	    $sid=$data[$sid_index];
 	    
 	    #################################################
 	    #print x, y, vx, vy, and color.
 	    #################################################
 	    
-	    for($i=0;$i<4;$i++)
+	    if ( $sid != 0 ) 
 	    {
-		print file_out $data[$i], ' ';
+		for($i=0;$i<4;$i++)
+		{
+		    print file_out $data[$i], ' ';
+		}
+		print file_out $hash_ps{$pid}, "\n";
 	    }
-	    print file_out $hash_ps{$pid}, "\n";
 	}
 	print file_out "\n";
+	
 	
 	close(file_in);
     }
