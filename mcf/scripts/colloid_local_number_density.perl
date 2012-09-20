@@ -6,8 +6,7 @@
 $dir_name= $ARGV[0];
 $file_in_prefix="mcf_colloid";
 $file_out_prefix= $ARGV[1];
-$Lx=16.0;
-$Ly=16.0;
+
 $R=1.0;
 $pi=3.1415926;
 
@@ -24,17 +23,23 @@ $step_start=$ARGV[2];
 $step_end  =99999999;
 $step_end  =$ARGV[3];
 
+$Lx=16.0;
+$Ly=16.0;
+$Lx=$ARGV[4];
+$Ly=$ARGV[5];
 
 #############################################################
 # number of different resolutions.
 #############################################################
-$num_res=6;
+$num_res=3;
 
 #############################################################
 #the 0th resolution 
 #############################################################
 
 $res[0]=40;
+$res[0]=$ARGV[6];
+
 $h[0]=$Ly/$res[0];
 
 print "number of resolution : ", $num_res, "\n";

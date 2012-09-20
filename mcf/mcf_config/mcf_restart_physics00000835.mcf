@@ -1,0 +1,178 @@
+#--------------------------------------------------
+# The meaning of following variables can be
+# looked up in original physics_config.mcf file
+#--------------------------------------------------
+ 
+ 
+num_species =  2
+ 
+ 
+#--------------------------------------------------
+num_dim =  2
+ 
+min_phys =   0.00000000E+00,  0.00000000E+00
+ 
+max_phys =   0.10000000E+00,  0.10000000E+00
+ 
+num_part =   50,  50
+ 
+cut_off  =   0.96000000E-02
+ 
+ 
+#--------------------------------------------------
+dt       =   0.12800000E-01
+ 
+step_start =        835
+ 
+step_end   =      78125
+ 
+time_start =   0.10688000E+02
+ 
+time_end   =   0.10000000E+04
+ 
+ 
+#--------------------------------------------------
+rho      =   0.10000000E+04
+ 
+eta      =   0.10000000E+00
+ 
+eta_coef =   0.40000000E+01
+ 
+ksai     =   0.00000000E+00
+ 
+kt       =   0.00000000E+00
+ 
+c        =   0.20000000E-01
+ 
+rho_ref  =   0.90000000E+03
+ 
+gamma    =   0.70000000E+01
+ 
+ 
+#--------------------------------------------------
+relax_type     =          2
+ 
+dt_relax       =  -0.10000000E+01
+ 
+step_relax     =         -1
+ 
+time_relax     =  -0.10000000E+01
+ 
+disorder_level =   0.10000000E+00
+ 
+kt_relax       =   0.50000000E-09
+ 
+c_relax        =   0.10000000E+01
+ 
+ 
+#--------------------------------------------------
+body_force_type =   1
+ 
+body_force      =   0.50000000E-04,  0.00000000E+00
+ 
+body_force_d    =   0.00000000E+00,  0.00000000E+00
+ 
+ 
+#--------------------------------------------------
+flow_direction   =     1
+ 
+flow_width       =   0.10000000E+00
+ 
+flow_v           =   0.12000000E-03
+ 
+flow_adjust_freq =    10
+ 
+ 
+#--------------------------------------------------
+num_colloid =   1
+ 
+coll_adapt_t_coef =   0.10000000E+01
+ 
+coll_sub_time_step =            0
+ 
+coll_implicit_pair_num_sweep =            1
+ 
+coll_implicit_pair_sweep_adaptive =  F
+ 
+coll_implicit_pair_sweep_tolerance =   0.10000000E-02
+ 
+coll_implicit_pair_sweep_max =         1024
+ 
+coll_explicit_sub_time_step   =            0
+ 
+coll_rho   =   0.10000000E+04
+ 
+coll_rho_type =   0
+ 
+coll_translate =  F
+ 
+coll_rotate =  F
+ 
+coll_place =   1
+ 
+coll_noslip =   2
+ 
+coll_body_force_type =   1
+ 
+coll_body_force     =   0.00000000E+00,  0.00000000E+00
+ 
+ 
+cc_lub_cut_off   =   0.00000000E+00
+ 
+cc_lub_cut_on    =   0.00000000E+00
+ 
+cc_repul_cut_off =   0.00000000E+00
+ 
+cc_repul_cut_on  =   0.00000000E+00
+ 
+cc_repul_F0      =   0.00000000E+00
+ 
+cw_lub_cut_off   =   0.00000000E+00
+ 
+cw_lub_cut_on    =   0.00000000E+00
+ 
+cw_repul_cut_off =   0.00000000E+00
+ 
+cw_repul_cut_on  =   0.00000000E+00
+ 
+cw_repul_F0      =   0.00000000E+00
+ 
+ 
+coll_shape =   1
+ 
+coll_radius =   0.20000000E-01,  0.00000000E+00
+ 
+coll_freq =   0
+ 
+coll_m =   0.12566371E+01
+ 
+coll_mmi =   0.00000000E+00,  0.00000000E+00,  0.25132741E-03
+ 
+coll_x =   0.50000000E-01,  0.50000000E-01
+ 
+coll_v =   0.00000000E+00,  0.00000000E+00
+ 
+coll_rot_vector =   0.10000000E+01,  0.00000000E+00,  0.00000000E+00,  0.15700000E+01
+ 
+coll_theta =   0.00000000E+00,  0.00000000E+00,  0.00000000E+00
+ 
+coll_omega =   0.00000000E+00,  0.00000000E+00,  0.00000000E+00
+ 
+ 
+#--------------------------------------------------
+bcdef         =  1, 1, 1, 1
+ 
+shear_type    =  1, 1, 1, 1
+ 
+shear_v       =   0.00000000E+00,  0.00000000E+00,  0.00000000E+00,  0.00000000E+00
+ 
+shear_freq    =   0.00000000E+00,  0.00000000E+00,  0.00000000E+00,  0.00000000E+00
+ 
+wall_rho_type =   0
+ 
+wall_noslip   =  2
+ 
+ 
+#--------------------------------------------------
+# The restart physics file ends here
+#--------------------------------------------------

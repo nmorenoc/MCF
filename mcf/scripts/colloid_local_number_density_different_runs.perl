@@ -95,7 +95,7 @@ for ($fd=1;$fd<=$dir_num;$fd++)
     
     $num_file[$fd]=0;
     
-       foreach $f (@file_names_in)
+    foreach $f (@file_names_in)
     {
 	if (( $f ge $f_start) && ( $f lt $f_end ) )
 	{
@@ -108,7 +108,7 @@ for ($fd=1;$fd<=$dir_num;$fd++)
 	    
 	    open (IN, $file_name);
 	    
-	    $num_particle=0;
+	    $num_colloid=0;
 	    
 	    while ($line = <IN>)
 	    {
@@ -122,7 +122,7 @@ for ($fd=1;$fd<=$dir_num;$fd++)
 		    $num[$y/$h[$j]][$j] += 1.0;
 		}
 		
-		$num_particle++;
+		$num_colloid++;
 		
 	    }
 	    
@@ -130,7 +130,7 @@ for ($fd=1;$fd<=$dir_num;$fd++)
 	    
 	    close(IN);
 	    
-	}
+	} # if
 	
     } # each file
 }#each folder
@@ -150,7 +150,7 @@ if ($num_file_tot > 0 )
     {
 	for ($k=0;$k<=$res[$j];$k++)
 	{
-	    $num[$k][$j]=$num[$k][$j]*$res[$j]/$num_file_tot/$num_particle;
+	    $num[$k][$j]=$num[$k][$j]*$res[$j]/$num_file_tot/$num_colloid;
 	}
     }
 }

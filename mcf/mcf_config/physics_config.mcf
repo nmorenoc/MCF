@@ -338,7 +338,7 @@ flow_adjust_freq = 10
 #  cw_repul_cut_off : cut off for extra repulsive force which
 #                     keeps colloid and wall apart.
 #
-#  cc_repul_cut_on  : cut on of surface distance for repulsion
+#  cw_repul_cut_on  : cut on of surface distance for repulsion
 #                     interaction between colloid and colloid.
 #                     i.e., maximum threshold for repulsion force
 #                     is restricted at this miminum possible gap.

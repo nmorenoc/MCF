@@ -253,7 +253,7 @@ restart_conformation_fmt  = FORMATTED
 
 restart_freq_step      = 20000
 restart_freq_time      = -1.0
-restart_freq_time_wall = 0.05
+restart_freq_time_wall = 0.01
 
 #*********************************************************************
 #

@@ -114,32 +114,32 @@ mcf_io_config_file      = io_config.mcf
 #               
 #
 #       pp_interact_cc   : (Boolean)particle-particle interaction between 
-#                          solid boundary particles from any 
-#                          2 different solid particles.
+#                          colloid boundary particles from any 
+#                          2 different colloid particles.
 #
 #       pp_interact_cw   : (Boolean)particle-particle interaction between 
-#                          solid boundary particle and 
+#                          colloid boundary particle and 
 #                          wall boundary particles.
 #
 #**********************************************************************
 #       control of physical interaction force between 
-#       solid-solid particle and solid-wall.
+#       colloid-colloid particle and colloid-wall.
 #**********************************************************************
 
-#       cc_lub_type   : (Integer)direct lubrication between solid-solid particles
+#       cc_lub_type   : (Integer)direct lubrication between colloid-colloid particles
 #                       0 no interaction.
 #                       1 lubrication theory, 1st order.
 #
-#       cc_repul_type : (Integer)direct repulsion between solid-solid particles
+#       cc_repul_type : (Integer)direct repulsion between colloid-colloid particles
 #                       0 no interaction.
 #                       1 Hookean spring repulsive force.
 #                       2 DLVO type repulsive force.
 #
-#       cw_lub_type:      direct lubrication force between solid particle-wall
+#       cw_lub_type:      direct lubrication force between colloid particle-wall
 #                         0 no interaction.
 #                         1 lubrication theory, 1st order.
 #
-#       cw_repul_type:    direct repulsion between solid particle-wall
+#       cw_repul_type:    direct repulsion between colloid particle-wall
 #                         0 no interaction.
 #                         1 Hookean spring repulsive force.
 #                         2 DLVO type repulsive force.

@@ -4,15 +4,23 @@
 #####################################################################
 
 
-$dir_prefix=$ARGV[0];
-$num_dir=$ARGV[1];
+$dir_name=$ARGV[0];
 $file_in_prefix="mcf_particles";
-$file_out_prefix=$ARGV[2];
+$file_out_prefix=$ARGV[1];
 
+opendir(DIR, $dir_name) || die ("can not open directory");
+
+print "processing directory : ", $dir_name, "\n";
+@file_names_temp = readdir(DIR);
+@file_names_in=sort @file_names_temp;
+closedir(DIR);
+print "number of files inside    : ", scalar(@file_names_in), "\n";
+
+$num_file  = 0;
 $step_start=50000;
-$step_start=$ARGV[3];
+$step_start=$ARGV[2];
 $step_end  =9999999;
-$step_end=$ARGV[4];
+$step_end=$ARGV[3];
 
 ######################################
 # Lx,Ly: box size.
@@ -22,6 +30,8 @@ $step_end=$ARGV[4];
 
 $Lx=16.0;
 $Ly=16.0;
+$Lx=$ARGV[4];
+$Ly=$ARGV[5];
 
 #####################################################################
 # interested gap in x-direction.
@@ -35,12 +45,14 @@ $x_end  = $Lx;
 ##################################################
 # number of different resolutions.
 ##################################################
-$num_res=5;
+$num_res=3;
 
 ############
 #resolution 0
 ############
-$res[0]=40;
+$res[0]=80;
+$res[0]=$ARGV[6];
+
 $h[0]=$Ly/$res[0];
 
 print "number of resolution : ", $num_res, "\n";
@@ -72,83 +84,55 @@ for ($j=0;$j<$num_res;$j++)
     }
 }
 
+########################
+# Loop over files
+#######################
 
+$num_file=0;
 
-print "starting step : ", $step_start;
-print "ending  step  : ", $step_end;
-  
 $f_start = $file_in_prefix . stepstring($step_start). ".out";
 $f_end = $file_in_prefix . stepstring($step_end). ".out";
 print "starting file : ", $f_start, "\n";
 print "ending file : ", $f_end, "\n";
 
-###################################################
-#loop each folder given.
-###################################################
-
-for ($fd=1;$fd<=$num_dir;$fd++)
+foreach $f (@file_names_in)
 {
-    $dir_name=$dir_prefix."_".$fd."/";
-    opendir(DIR, $dir_name) || die ("can not open directory");
-    print "processing directory : ", $dir_name, "\n";
-
-    @file_names_temp = readdir(DIR);
-    @file_names_in=sort @file_names_temp;
-    print "number of files inside    : ", scalar(@file_names_in), "\n";
-    closedir(DIR);
-    
-    
-########################
-# Loop over files
-#######################
-    
-    $num_file[$fd]=0;
-
-    foreach $f (@file_names_in)
+    if (( $f ge $f_start) && ( $f lt $f_end ) )
     {
-	if (( $f ge $f_start) && ( $f lt $f_end ) )
+	$file_name = $dir_name . $f;
+	print "processing file : ", $file_name, "\n";
+	
+	open (IN, $file_name);
+	
+	while ($line = <IN>)
 	{
-	    $file_name = $dir_name . $f;
-	    print "processing file : ", $file_name, "\n";
+	    @data = split(' ', $line);
 	    
-	    open (IN, $file_name);
+	    $sx  = $data[0];
+	    $sid = $data[7];
+	    #print $sx, "\n";
 	    
-	    while ($line = <IN>)
+	    if( $sid==0 && $sx>=$x_start && $sx<=$x_end )
 	    {
-		@data = split(' ', $line);
+		$sy = $data[1];
+		$vx = $data[2];
 		
-		$sx  = $data[0];
-		$sid = $data[7];
-		#print $sx, "\n";
-		
-		if( $sid==0 && $sx>=$x_start && $sx<=$x_end )
+		for ($j=0; $j<$num_res; $j++)
 		{
-		    $sy = $data[1];
-		    $vx = $data[2];
-		    
-		    for ($j=0; $j<$num_res; $j++)
-		    {
-			#print "sy/$h : ", $sy/$h[$j], "\n";
-			$v[$sy/$h[$j]][$j] += $vx;
-			$n[$sy/$h[$j]][$j] ++;
-		    }
+		    #print "sy/$h : ", $sy/$h[$j], "\n";
+		    $v[$sy/$h[$j]][$j] += $vx;
+		    $n[$sy/$h[$j]][$j] ++;
 		}
 	    }
-	    
-	    $num_file[$fd]++;
-	    close(IN);  
-	}  
-    }# each file
-}#each folder
-
-$num_file_tot=0;
-for ($fd=1;$fd<=$num_dir;$fd++)
-{
-    $num_file_tot+=$num_file[$fd];
-    print "number of files processed: ", $num_file[$fd], "\n";
+	}
+	
+	$num_file++;
+	close(IN);  
+    }  
 }
 
-print "total number of files processed: ", $num_file_tot, "\n";
+print "number of files processed: ", $num_file, "\n";
+
 
 for ($j=0; $j<$num_res; $j++)
 {
@@ -158,7 +142,14 @@ for ($j=0; $j<$num_res; $j++)
     
     for ($k=0; $k<$res[$j]; $k++)
     {
-	$v[$k][$j] = $v[$k][$j]/$n[$k][$j];
+	if ( $n[$k][$j] == 0 )
+	{
+	    $v[$k][$j] = 0.0;
+	}
+	else
+	{
+	    $v[$k][$j] = $v[$k][$j]/$n[$k][$j];
+	}
 	print OUT $y[$k][$j],' ', $v[$k][$j], "\n";
     }
     print "writing file : ", $file_out_name, "\n";

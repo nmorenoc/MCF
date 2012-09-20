@@ -4,23 +4,15 @@
 #####################################################################
 
 
-$dir_name=$ARGV[0];
-$file_in_prefix="mcf_particles";
-$file_out_prefix=$ARGV[1];
+$dir_prefix=$ARGV[0];
+$num_dir=$ARGV[1];
+$file_in_prefix="mcf_colloid";
+$file_out_prefix=$ARGV[2];
 
-opendir(DIR, $dir_name) || die ("can not open directory");
-
-print "processing directory : ", $dir_name, "\n";
-@file_names_temp = readdir(DIR);
-@file_names_in=sort @file_names_temp;
-closedir(DIR);
-print "number of files inside    : ", scalar(@file_names_in), "\n";
-
-$num_file  = 0;
 $step_start=50000;
-$step_start=$ARGV[2];
+$step_start=$ARGV[3];
 $step_end  =9999999;
-$step_end=$ARGV[3];
+$step_end=$ARGV[4];
 
 ######################################
 # Lx,Ly: box size.
@@ -30,6 +22,8 @@ $step_end=$ARGV[3];
 
 $Lx=16.0;
 $Ly=16.0;
+$Lx=$ARGV[5];
+$Ly=$ARGV[6];
 
 #####################################################################
 # interested gap in x-direction.
@@ -43,7 +37,7 @@ $x_end  = $Lx;
 ##################################################
 # number of different resolutions.
 ##################################################
-$num_res=6;
+$num_res=3;
 
 ############
 #resolution 0
@@ -80,55 +74,82 @@ for ($j=0;$j<$num_res;$j++)
     }
 }
 
-########################
-# Loop over files
-#######################
 
-$num_file=0;
 
+print "starting step : ", $step_start;
+print "ending  step  : ", $step_end;
+  
 $f_start = $file_in_prefix . stepstring($step_start). ".out";
 $f_end = $file_in_prefix . stepstring($step_end). ".out";
 print "starting file : ", $f_start, "\n";
 print "ending file : ", $f_end, "\n";
 
-foreach $f (@file_names_in)
+###################################################
+#loop each folder given.
+###################################################
+
+for ($fd=1;$fd<=$num_dir;$fd++)
 {
-    if (( $f ge $f_start) && ( $f lt $f_end ) )
+    $dir_name=$dir_prefix."_".$fd."/";
+    opendir(DIR, $dir_name) || die ("can not open directory");
+    print "processing directory : ", $dir_name, "\n";
+
+    @file_names_temp = readdir(DIR);
+    @file_names_in=sort @file_names_temp;
+    print "number of files inside    : ", scalar(@file_names_in), "\n";
+    closedir(DIR);
+    
+    
+########################
+# Loop over files
+#######################
+    
+    $num_file[$fd]=0;
+
+    foreach $f (@file_names_in)
     {
-	$file_name = $dir_name . $f;
-	print "processing file : ", $file_name, "\n";
-	
-	open (IN, $file_name);
-	
-	while ($line = <IN>)
+	if (( $f ge $f_start) && ( $f lt $f_end ) )
 	{
-	    @data = split(' ', $line);
+	    $file_name = $dir_name . $f;
+	    print "processing file : ", $file_name, "\n";
 	    
-	    $sx  = $data[0];
-	    $sid = $data[7];
-	    #print $sx, "\n";
+	    open (IN, $file_name);
 	    
-	    if( $sid==0 && $sx>=$x_start && $sx<=$x_end )
+	    while ($line = <IN>)
 	    {
-		$sy = $data[1];
-		$vx = $data[2];
+		@data = split(' ', $line);
 		
-		for ($j=0; $j<$num_res; $j++)
+		$sx  = $data[0];
+		#print $sx, "\n";
+		
+		if( $sx>=$x_start && $sx<=$x_end )
 		{
-		    #print "sy/$h : ", $sy/$h[$j], "\n";
-		    $v[$sy/$h[$j]][$j] += $vx;
-		    $n[$sy/$h[$j]][$j] ++;
+		    $sy = $data[1];
+		    $vx = $data[2];
+		    
+		    for ($j=0; $j<$num_res; $j++)
+		    {
+			#print "sy/$h : ", $sy/$h[$j], "\n";
+			$v[$sy/$h[$j]][$j] += $vx;
+			$n[$sy/$h[$j]][$j] ++;
+		    }
 		}
 	    }
-	}
-	
-	$num_file++;
-	close(IN);  
-    }  
+	    
+	    $num_file[$fd]++;
+	    close(IN);  
+	}  
+    }# each file
+}#each folder
+
+$num_file_tot=0;
+for ($fd=1;$fd<=$num_dir;$fd++)
+{
+    $num_file_tot+=$num_file[$fd];
+    print "number of files processed: ", $num_file[$fd], "\n";
 }
 
-print "number of files processed: ", $num_file, "\n";
-
+print "total number of files processed: ", $num_file_tot, "\n";
 
 for ($j=0; $j<$num_res; $j++)
 {
@@ -138,7 +159,14 @@ for ($j=0; $j<$num_res; $j++)
     
     for ($k=0; $k<$res[$j]; $k++)
     {
-	$v[$k][$j] = $v[$k][$j]/$n[$k][$j];
+	if ( $n[$k][$j] == 0 )
+	{
+	    $v[$k][$j] = 0.0;
+	}
+	else
+	{
+	    $v[$k][$j] = $v[$k][$j]/$n[$k][$j];
+	}
 	print OUT $y[$k][$j],' ', $v[$k][$j], "\n";
     }
     print "writing file : ", $file_out_name, "\n";
