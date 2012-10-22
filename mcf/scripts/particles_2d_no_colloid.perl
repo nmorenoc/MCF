@@ -10,13 +10,16 @@ while($line = <file_in>)
  
     @data_in = split(' ', $line);
 
-    for($i=0;$i<8;++$i)
+    if ( $data_in[7] <=0 )
     {
-	#print $data_in[$i], ' ',
-	print file_out $data_in[$i], ' '
+	for($i=0;$i<8;++$i)
+	{
+	    #print $data_in[$i], ' ',
+	    print file_out $data_in[$i], ' '
+	}
+	#print "\n";
+	print file_out "\n";
     }
-    #print "\n";
-    print file_out "\n";
 }
 
 print $ARGV[1], "\n";

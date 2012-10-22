@@ -45,7 +45,7 @@ print "x_start, x_end: ", $x_start, ' ',$x_end, "\n";
 ##################################################
 # number of different resolutions.
 ##################################################
-$num_res=3;
+$num_res=1;
 
 ############
 #resolution 0
