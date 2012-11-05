@@ -1,3 +1,8 @@
+#########################################
+# Calculate correlation function of
+# radial distribution function and
+# shear stress.
+#########################################
 
 $filein_name=$ARGV[0];
 
